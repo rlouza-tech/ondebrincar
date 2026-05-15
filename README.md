@@ -30,3 +30,6 @@ pnpm build
 | `components/` | UI compartilhada |
 | `lib/` | Utilitários e domínio leve |
 | `database/` | Schema SQL de referência |
+
+## Onde Brincar
+Hub de descoberta de atrações infantis no Rio de Janeiro.
