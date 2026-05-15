@@ -2,6 +2,8 @@
 
 Hub de descoberta de atrações infantis no Rio de Janeiro (pré-lançamento Q1–Q2 2026). Curadoria humana + funcionalidade para pais cariocas planejando o programa de fim de semana.
 
+**URL:** https://ondebrincar.com.br
+
 **Stack:** Next.js 14 (App Router), TypeScript, pnpm, Sanity, Vercel, Resend, Vitest.
 
 ## Desenvolvimento
