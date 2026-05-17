@@ -1,18 +1,25 @@
 # Onde Brincar
 
-Hub de descoberta de atrações infantis no Rio de Janeiro (pré-lançamento Q1–Q2 2026). Curadoria humana + funcionalidade para pais cariocas planejando o programa de fim de semana.
+Hub de descoberta de atrações infantis no Rio de Janeiro.
 
-**URL:** https://ondebrincar.com.br
+**Stack:** Next.js 14 · TypeScript · Tailwind · Sanity CMS · Gemini Flash 2.5 · Vercel
 
-**Stack:** Next.js 14 (App Router), TypeScript, pnpm, Sanity, Vercel, Resend, Vitest.
+**Status:** Em desenvolvimento (MVP previsto pra dez/2026)
+
+**Produção:** [ondebrincar.com.br](https://ondebrincar.com.br) _(em breve)_
 
 ## Desenvolvimento
 
-Requisitos: Node.js 20+, pnpm 9+.
+Requisitos: Node.js 22+, pnpm 9+.
 
 ```bash
 pnpm install
-pnpm dev      # http://localhost:3000
+pnpm dev
+```
+
+Abre http://localhost:3000.
+
+```bash
 pnpm lint
 pnpm test
 pnpm build
@@ -21,17 +28,15 @@ pnpm build
 ## CI/CD
 
 - **GitHub Actions** (`.github/workflows/ci.yml`): `pnpm lint` + `pnpm test` em todo PR para `main`.
-- **Vercel**: importe o repositório no dashboard; previews automáticos por PR.
+- **Vercel**: previews automáticos por PR.
 - **Branch `main`**: proteção com review obrigatório (ver `docs/setup/github-vercel.md`).
 
 ## Estrutura
 
-| Caminho | Uso |
-|---------|-----|
-| `app/` | Rotas App Router |
+| Pasta | Função |
+|---|---|
+| `app/` | App Router do Next.js |
 | `components/` | UI compartilhada |
 | `lib/` | Utilitários e domínio leve |
 | `database/` | Schema SQL de referência |
-
-## Onde Brincar
-Hub de descoberta de atrações infantis no Rio de Janeiro.
+| `docs/` | Documentação técnica e ADRs |
