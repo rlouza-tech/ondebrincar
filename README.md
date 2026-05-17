@@ -40,4 +40,5 @@ pnpm build
 | `lib/` | Utilitários e domínio leve |
 | `database/` | Schema SQL de referência |
 | `docs/design-tokens.md` | Cores, tipografia, espaçamento e breakpoints |
+| `docs/components.md` | API dos componentes base (US-S3.2) |
 | `docs/` | Documentação técnica e ADRs |
