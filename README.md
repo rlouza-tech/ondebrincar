@@ -14,7 +14,12 @@ Requisitos: Node.js 22+, pnpm 9+.
 
 ```bash
 pnpm install
-pnpm dev      # http://localhost:3000
+pnpm dev
+```
+
+Abre http://localhost:3000.
+
+```bash
 pnpm lint
 pnpm test
 pnpm build
@@ -28,9 +33,10 @@ pnpm build
 
 ## Estrutura
 
-| Caminho | Uso |
-|---------|-----|
-| `app/` | Rotas App Router |
+| Pasta | Função |
+|---|---|
+| `app/` | App Router do Next.js |
 | `components/` | UI compartilhada |
 | `lib/` | Utilitários e domínio leve |
 | `database/` | Schema SQL de referência |
+| `docs/` | Documentação técnica e ADRs |
