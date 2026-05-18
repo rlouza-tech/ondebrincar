@@ -25,6 +25,17 @@ pnpm test
 pnpm build
 ```
 
+## Rotas (fase A — mock)
+
+| Rota | Descrição |
+|------|-----------|
+| `/` | Home com grid de atrações |
+| `/atracao/[slug]` | Ficha da atração (SSG) |
+| `/buscar?bairro=&idade=` | Lista filtrada (ex.: `?bairro=Tijuca&idade=4`) |
+| `/design-system` | Vitrine de componentes base |
+
+Dados em `lib/mock-atracoes.ts` até integração Sanity (US-I2.1).
+
 ## CI/CD
 
 - **GitHub Actions** (`.github/workflows/ci.yml`): `pnpm lint` + `pnpm test` em todo PR para `main`.
