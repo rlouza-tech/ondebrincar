@@ -3,9 +3,13 @@
 import { useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { AtracaoCardLink } from "@/components/AtracaoCardLink";
-import { filtrarAtracoes, getAllAtracoes } from "@/lib/atracoes";
+import { filtrarAtracoes, type Atracao } from "@/lib/atracoes";
 
-export function BuscarContent() {
+interface BuscarContentProps {
+  atracoes: Atracao[];
+}
+
+export function BuscarContent({ atracoes }: BuscarContentProps) {
   const searchParams = useSearchParams();
   const bairro = searchParams.get("bairro") ?? undefined;
   const idadeParam = searchParams.get("idade");
@@ -15,11 +19,11 @@ export function BuscarContent() {
       : undefined;
 
   const resultados = useMemo(() => {
-    return filtrarAtracoes(getAllAtracoes(), {
+    return filtrarAtracoes(atracoes, {
       bairro,
       idade: idade !== undefined && !Number.isNaN(idade) ? idade : undefined,
     });
-  }, [bairro, idade]);
+  }, [atracoes, bairro, idade]);
 
   const filtrosAtivos = [
     bairro ? `bairro: ${bairro}` : null,

@@ -15,12 +15,13 @@ interface AtracaoPageProps {
   params: { slug: string };
 }
 
-export function generateStaticParams() {
-  return getAtracaoSlugs().map((slug) => ({ slug }));
+export async function generateStaticParams() {
+  const slugs = await getAtracaoSlugs();
+  return slugs.map((slug) => ({ slug }));
 }
 
-export function generateMetadata({ params }: AtracaoPageProps): Metadata {
-  const atracao = getAtracaoBySlug(params.slug);
+export async function generateMetadata({ params }: AtracaoPageProps): Promise<Metadata> {
+  const atracao = await getAtracaoBySlug(params.slug);
 
   if (!atracao) {
     return {
@@ -34,8 +35,8 @@ export function generateMetadata({ params }: AtracaoPageProps): Metadata {
   };
 }
 
-export default function AtracaoPage({ params }: AtracaoPageProps) {
-  const atracao = getAtracaoBySlug(params.slug);
+export default async function AtracaoPage({ params }: AtracaoPageProps) {
+  const atracao = await getAtracaoBySlug(params.slug);
 
   if (!atracao) {
     notFound();

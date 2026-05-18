@@ -34,7 +34,20 @@ pnpm build
 | `/buscar?bairro=&idade=` | Lista filtrada (ex.: `?bairro=Tijuca&idade=4`) |
 | `/design-system` | Vitrine de componentes base |
 
-Dados em `lib/mock-atracoes.ts` até integração Sanity (US-I2.1).
+Dados vêm do Sanity quando configurado; `lib/mock-atracoes.ts` permanece como fallback para dev e dataset vazio.
+
+## Sanity Studio
+
+A Studio fica embarcada no Next.js em `/studio`.
+
+```bash
+pnpm dev
+```
+
+Abre http://localhost:3000/studio. Os valores reais ficam em `.env.local`
+(gitignored); use `.env.example` como referência.
+
+Decisão técnica: `docs/decisions/2026-05-15-s2-2-sanity-setup.md`.
 
 ## CI/CD
 
@@ -52,4 +65,5 @@ Dados em `lib/mock-atracoes.ts` até integração Sanity (US-I2.1).
 | `database/` | Schema SQL de referência |
 | `docs/design-tokens.md` | Cores, tipografia, espaçamento e breakpoints |
 | `docs/components.md` | API dos componentes base (US-S3.2) |
+| `sanity/schemas/` | Schemas editoriais do Sanity |
 | `docs/` | Documentação técnica e ADRs |

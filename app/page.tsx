@@ -3,14 +3,16 @@ import { AtracaoCardLink } from "@/components/AtracaoCardLink";
 import { SiteHeader } from "@/components/SiteHeader";
 import { getAllAtracoes } from "@/lib/atracoes";
 
-export const metadata: Metadata = {
-  title: "O que fazer com criança no Rio | Onde Brincar",
-  description:
-    "Curadoria de atrações infantis no Rio de Janeiro para pais planejando o fim de semana.",
-};
+export function generateMetadata(): Metadata {
+  return {
+    title: "O que fazer com criança no Rio | Onde Brincar",
+    description:
+      "Curadoria de atrações infantis no Rio de Janeiro para pais planejando o fim de semana.",
+  };
+}
 
-export default function HomePage() {
-  const atracoes = getAllAtracoes();
+export default async function HomePage() {
+  const atracoes = await getAllAtracoes();
 
   return (
     <>
