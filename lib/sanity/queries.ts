@@ -1,0 +1,49 @@
+import { groq } from "next-sanity";
+
+const atracaoProjection = groq`
+  _id,
+  nome,
+  slug,
+  categoria,
+  idade_min,
+  idade_max,
+  duracao_min,
+  preco,
+  link_compra,
+  partner,
+  bairro,
+  indoor_outdoor,
+  status,
+  descricao,
+  mini_review,
+  foto{
+    alt,
+    asset->{_ref, url}
+  }
+`;
+
+export const atracoesAtivas = groq`
+  *[_type == "atracao" && !(_id in path("drafts.**")) && status == "operando"]
+  | order(nome asc) {
+    ${atracaoProjection}
+  }
+`;
+
+export const atracaoBySlug = groq`
+  *[_type == "atracao" && !(_id in path("drafts.**")) && slug.current == $slug][0] {
+    ${atracaoProjection}
+  }
+`;
+
+export const atracoesPorBairro = groq`
+  *[_type == "atracao" && !(_id in path("drafts.**")) && status == "operando" && lower(bairro) == lower($bairro)]
+  | order(nome asc) {
+    ${atracaoProjection}
+  }
+`;
+
+export const todosSlugs = groq`
+  *[_type == "atracao" && !(_id in path("drafts.**")) && defined(slug.current)] {
+    "slug": slug.current
+  }
+`;

@@ -1,22 +1,8 @@
-export type PrecoTipo = "gratuito" | "pago";
-export type IndoorOutdoor = "indoor" | "outdoor" | "ambos";
+import type { Atracao, IndoorOutdoor, PrecoTipo } from "@/lib/sanity/types";
 
-export interface MockAtracao {
-  slug: string;
-  titulo: string;
-  categoria: string;
-  idadeMin: number;
-  idadeMax: number;
-  bairro: string;
-  precoTipo: PrecoTipo;
-  precoLabel?: string;
-  indoorOutdoor: IndoorOutdoor;
-  descricaoCurta: string;
-  imagemUrl: string;
-  linkExterno: string;
-}
+export type { Atracao as MockAtracao, IndoorOutdoor, PrecoTipo };
 
-export const mockAtracoes: MockAtracao[] = [
+export const mockAtracoes: Atracao[] = [
   {
     slug: "peca-o-pequeno-principe-teatro-clara-nunes",
     titulo: "O Pequeno Príncipe — versão musical",

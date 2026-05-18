@@ -1,15 +1,20 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
+import { getAllAtracoes } from "@/lib/atracoes";
 import { BuscarContent } from "./buscar-content";
 
-export const metadata: Metadata = {
-  title: "Buscar atrações | Onde Brincar",
-  description:
-    "Filtre atrações infantis no Rio por bairro e idade da criança.",
-};
+export function generateMetadata(): Metadata {
+  return {
+    title: "Buscar atrações | Onde Brincar",
+    description:
+      "Filtre atrações infantis no Rio por bairro e idade da criança.",
+  };
+}
 
-export default function BuscarPage() {
+export default async function BuscarPage() {
+  const atracoes = await getAllAtracoes();
+
   return (
     <>
       <SiteHeader />
@@ -33,7 +38,7 @@ export default function BuscarPage() {
             </p>
           }
         >
-          <BuscarContent />
+          <BuscarContent atracoes={atracoes} />
         </Suspense>
       </main>
     </>

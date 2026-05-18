@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { filtrarAtracoes, getAtracaoBySlug } from "./atracoes";
+import {
+  filtrarAtracoes,
+  getAtracaoBySlug,
+  type Atracao,
+} from "./atracoes";
 import { mockAtracoes } from "./mock-atracoes";
 
 describe("filtrarAtracoes", () => {
@@ -18,8 +22,30 @@ describe("filtrarAtracoes", () => {
 });
 
 describe("getAtracaoBySlug", () => {
-  it("retorna atração existente", () => {
-    const atracao = getAtracaoBySlug("peca-o-pequeno-principe-teatro-clara-nunes");
+  it("retorna atração existente usando fallback mock", async () => {
+    const atracao = await getAtracaoBySlug(
+      "peca-o-pequeno-principe-teatro-clara-nunes",
+    );
     expect(atracao?.titulo).toContain("Pequeno Príncipe");
+  });
+});
+
+describe("Atracao type", () => {
+  it("preserva o shape usado pelas rotas e cards", () => {
+    const atracao = mockAtracoes[0] satisfies Atracao;
+
+    expect(atracao).toMatchObject({
+      slug: expect.any(String),
+      titulo: expect.any(String),
+      categoria: expect.any(String),
+      idadeMin: expect.any(Number),
+      idadeMax: expect.any(Number),
+      bairro: expect.any(String),
+      precoTipo: expect.stringMatching(/gratuito|pago/),
+      indoorOutdoor: expect.stringMatching(/indoor|outdoor|ambos/),
+      descricaoCurta: expect.any(String),
+      imagemUrl: expect.any(String),
+      linkExterno: expect.any(String),
+    });
   });
 });
