@@ -25,6 +25,25 @@ const sizeStyles: Record<ButtonSize, string> = {
   lg: "h-12 px-6 text-lg gap-2",
 };
 
+export function buttonClassName({
+  variant = "primary",
+  size = "md",
+  className,
+}: {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  className?: string;
+}) {
+  return cn(
+    "inline-flex items-center justify-center rounded-lg font-medium transition-colors",
+    "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+    "disabled:pointer-events-none disabled:opacity-50",
+    variantStyles[variant],
+    sizeStyles[size],
+    className,
+  );
+}
+
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   (
     {
@@ -48,14 +67,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={isDisabled}
         aria-busy={loading || undefined}
         aria-disabled={isDisabled || undefined}
-        className={cn(
-          "inline-flex items-center justify-center rounded-lg font-medium transition-colors",
-          "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
-          "disabled:pointer-events-none disabled:opacity-50",
-          variantStyles[variant],
-          sizeStyles[size],
-          className,
-        )}
+        className={buttonClassName({ variant, size, className })}
         {...props}
       >
         {loading ? (
