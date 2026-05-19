@@ -193,6 +193,22 @@ export const atracao = defineType({
       ],
       validation: (Rule) => Rule.required(),
     }),
+    defineField({
+      name: "review_status",
+      title: "Status de revisão",
+      type: "string",
+      options: {
+        list: [
+          { title: "Aprovado automaticamente", value: "auto_ok" },
+          { title: "Precisa revisão humana", value: "needs_human" },
+          { title: "Revisado e aprovado", value: "human_approved" },
+        ],
+        layout: "radio",
+      },
+      initialValue: "needs_human",
+      description:
+        "Status do fluxo editorial. Drafts criados pela pipeline IA começam como 'auto_ok' ou 'needs_human'. Curador revisa e marca 'human_approved' antes de publicar.",
+    }),
   ],
   preview: {
     select: {
