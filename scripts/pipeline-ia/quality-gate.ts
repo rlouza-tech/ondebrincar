@@ -1,0 +1,89 @@
+import {
+  CATEGORIAS_VALIDAS,
+  INDOOR_OUTDOOR_VALIDOS,
+  type LinhaInput,
+  type QualityGateResult,
+  type RespostaGemini,
+} from "./types";
+
+const LOW_CONFIDENCE_SUBSTRINGS = [
+  "não tenho informação",
+  "[informação ausente]",
+  "não sei",
+  "talvez",
+  "provavelmente",
+];
+
+const CRITICAL_ABSTAIN_FIELDS = ["categoria", "bairro", "idade_min", "idade_max"];
+
+function hasLowConfidenceText(value: string): boolean {
+  const normalized = value.toLowerCase();
+  return LOW_CONFIDENCE_SUBSTRINGS.some((substring) =>
+    normalized.includes(substring),
+  );
+}
+
+export function evaluate(
+  linhaInput: LinhaInput,
+  resposta: RespostaGemini,
+): QualityGateResult {
+  const reasons: string[] = [];
+
+  if (resposta.error) {
+    reasons.push(`gemini_error:${resposta.error}`);
+  }
+
+  if (resposta.descricao.length < 50 || resposta.descricao.length > 600) {
+    reasons.push("descricao_tamanho_invalido");
+  }
+
+  if (
+    resposta.mini_review &&
+    (resposta.mini_review.length < 50 || resposta.mini_review.length > 400)
+  ) {
+    reasons.push("mini_review_tamanho_invalido");
+  }
+
+  if (resposta.idade_min > resposta.idade_max) {
+    reasons.push("idade_min_maior_que_idade_max");
+  }
+
+  if (resposta.idade_min < 0 || resposta.idade_max > 18) {
+    reasons.push("idade_fora_do_intervalo_0_18");
+  }
+
+  if (!linhaInput.bairro.trim()) {
+    reasons.push("bairro_vazio");
+  }
+
+  if (!CATEGORIAS_VALIDAS.includes(resposta.categoria)) {
+    reasons.push("categoria_invalida");
+  }
+
+  if (!INDOOR_OUTDOOR_VALIDOS.includes(resposta.indoor_outdoor)) {
+    reasons.push("indoor_outdoor_invalido");
+  }
+
+  if (resposta.confidence < 4) {
+    reasons.push("confidence_menor_que_4");
+  }
+
+  if (
+    hasLowConfidenceText(resposta.descricao) ||
+    hasLowConfidenceText(resposta.mini_review)
+  ) {
+    reasons.push("texto_com_baixa_confianca");
+  }
+
+  const abstainCritical = resposta.abstain_fields.filter((field) =>
+    CRITICAL_ABSTAIN_FIELDS.includes(field),
+  );
+  if (abstainCritical.length > 0) {
+    reasons.push(`abstencao_campo_critico:${abstainCritical.join("|")}`);
+  }
+
+  return {
+    status: reasons.length === 0 ? "auto_ok" : "needs_human",
+    reasons,
+  };
+}

@@ -25,6 +25,20 @@ pnpm test
 pnpm build
 ```
 
+## Pipeline IA (US-S4.1b)
+
+Enriquece o CSV cru do Clubinho com Gemini Flash 2.5 + quality gate. **Não importa para o Sanity** — só gera artefatos em `data/output/`.
+
+```bash
+# Copie .env.example → .env.local e preencha GEMINI_API_KEY
+pnpm pipeline-ia data/input/planilha-origem.csv
+pnpm pipeline-ia data/input/planilha-origem.csv --limit 5 --model gemini-2.5-flash
+```
+
+Saídas: `planilha-enriquecida-<timestamp>.csv` e `pipeline-report-<timestamp>.json`.
+
+Decisão técnica: `docs/decisions/2026-05-15-s4-1b-pipeline-ia.md`.
+
 ## Rotas (fase A — mock)
 
 | Rota | Descrição |
@@ -66,4 +80,7 @@ Decisão técnica: `docs/decisions/2026-05-15-s2-2-sanity-setup.md`.
 | `docs/design-tokens.md` | Cores, tipografia, espaçamento e breakpoints |
 | `docs/components.md` | API dos componentes base (US-S3.2) |
 | `sanity/schemas/` | Schemas editoriais do Sanity |
+| `scripts/pipeline-ia/` | CLI de enriquecimento com Gemini |
+| `data/input/` | CSV de entrada (Clubinho) |
+| `data/output/` | CSV/JSON gerados (gitignored) |
 | `docs/` | Documentação técnica e ADRs |
