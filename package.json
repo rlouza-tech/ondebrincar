@@ -12,6 +12,7 @@
     "start": "next start",
     "lint": "next lint",
     "pipeline-ia": "tsx scripts/pipeline-ia/index.ts",
+    "import-sanity": "tsx scripts/import-sanity/index.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },

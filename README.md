@@ -39,6 +39,19 @@ Saídas: `planilha-enriquecida-<timestamp>.csv` e `pipeline-report-<timestamp>.j
 
 Decisão técnica: `docs/decisions/2026-05-15-s4-1b-pipeline-ia.md`.
 
+## Import para Sanity (US-S4.1c)
+
+**Pré-requisitos:** CSV enriquecido em `data/output/` (rode `pnpm pipeline-ia` antes) e `.env.local` com as 3 variáveis Sanity (`NEXT_PUBLIC_SANITY_PROJECT_ID`, `NEXT_PUBLIC_SANITY_DATASET`, `SANITY_API_TOKEN`).
+
+```bash
+pnpm import-sanity --latest --limit 3 --dry-run
+pnpm import-sanity data/output/planilha-enriquecida-<timestamp>.csv
+```
+
+Cria **drafts** idempotentes (`drafts.atracao-<slug>`). Skip se slug já existe em draft ou publicado. Revise em https://ondebrincar.com.br/studio (ou `http://localhost:3000/studio` local).
+
+Decisão técnica: `docs/decisions/2026-05-19-s4-1c-import-sanity.md`.
+
 ## Rotas (fase A — mock)
 
 | Rota | Descrição |
@@ -81,6 +94,7 @@ Decisão técnica: `docs/decisions/2026-05-15-s2-2-sanity-setup.md`.
 | `docs/components.md` | API dos componentes base (US-S3.2) |
 | `sanity/schemas/` | Schemas editoriais do Sanity |
 | `scripts/pipeline-ia/` | CLI de enriquecimento com Gemini |
+| `scripts/import-sanity/` | CLI de import CSV → drafts Sanity |
 | `data/input/` | CSV de entrada (Clubinho) |
 | `data/output/` | CSV/JSON gerados (gitignored) |
 | `docs/` | Documentação técnica e ADRs |

@@ -1,0 +1,52 @@
+export type {
+  Categoria,
+  IndoorOutdoor,
+  LinhaEnriquecida,
+  Partner,
+  ReviewStatus,
+} from "../pipeline-ia/types";
+
+export interface SanitySlug {
+  _type: "slug";
+  current: string;
+}
+
+/** Documento Sanity para create() como draft (`drafts.atracao-<slug>`). */
+export interface SanityAtracaoDocInput {
+  _id: string;
+  _type: "atracao";
+  nome: string;
+  slug: SanitySlug;
+  categoria: string;
+  idade_min: number;
+  idade_max: number;
+  duracao_min?: number;
+  preco?: number;
+  link_compra: string;
+  partner: string;
+  bairro: string;
+  indoor_outdoor: string;
+  status: string;
+  descricao: string;
+  mini_review: string;
+  review_status: string;
+}
+
+export type ImportItemStatus = "created" | "skipped" | "error";
+
+export interface ImportReportItem {
+  slug: string;
+  status: ImportItemStatus;
+  reason?: string;
+}
+
+export interface ImportReport {
+  total: number;
+  created: number;
+  skipped: number;
+  errors: number;
+  items: ImportReportItem[];
+  source_csv: string;
+  started_at: string;
+  finished_at: string;
+}
