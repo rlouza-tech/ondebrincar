@@ -65,6 +65,21 @@ Faz patch de `foto` no draft (`drafts.atracao-<slug>`). Skip idempotente se `fot
 
 Decisão técnica: `docs/decisions/2026-05-19-s4-2-associate-imagens.md`.
 
+## Programação / temporalidade (US-I2.3)
+
+Campos no schema Sanity: `tipo_programacao`, `programacao_texto`, `proxima_data`. Preenchidos pela pipeline IA a partir de `dias_apresentacao` e exibidos na ficha (`/atracao/[slug]`).
+
+```bash
+# Re-gerar CSV com campos de programação
+pnpm pipeline-ia data/input/planilha-origem.csv --limit 3
+
+# Patch em drafts existentes (idempotente)
+pnpm update-drafts-programacao --latest --limit 3 --dry-run
+pnpm update-drafts-programacao --latest --limit 3
+```
+
+Decisão técnica: `docs/decisions/2026-05-20-i2-3-temporalidade-schema.md`.
+
 ## Rotas (fase A — mock)
 
 | Rota | Descrição |
@@ -109,6 +124,7 @@ Decisão técnica: `docs/decisions/2026-05-15-s2-2-sanity-setup.md`.
 | `scripts/pipeline-ia/` | CLI de enriquecimento com Gemini |
 | `scripts/import-sanity/` | CLI de import CSV → drafts Sanity |
 | `scripts/associate-imagens/` | CLI de imagens locais → foto em drafts |
+| `scripts/update-drafts-programacao/` | CLI de patch de programação em drafts |
 | `data/input/` | CSV de entrada (Clubinho) |
 | `data/output/` | CSV/JSON gerados (gitignored) |
 | `docs/` | Documentação técnica e ADRs |

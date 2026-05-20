@@ -8,8 +8,15 @@ export const CATEGORIAS_VALIDAS = [
 
 export const INDOOR_OUTDOOR_VALIDOS = ["indoor", "outdoor", "ambos"] as const;
 
+export const TIPOS_PROGRAMACAO_VALIDOS = [
+  "evento_pontual",
+  "evento_recorrente",
+  "permanente",
+] as const;
+
 export type Categoria = (typeof CATEGORIAS_VALIDAS)[number];
 export type IndoorOutdoor = (typeof INDOOR_OUTDOOR_VALIDOS)[number];
+export type TipoProgramacao = (typeof TIPOS_PROGRAMACAO_VALIDOS)[number];
 export type ReviewStatus = "auto_ok" | "needs_human";
 export type Partner = "sympla" | "eventim" | "outro";
 
@@ -33,6 +40,9 @@ export interface RespostaGemini {
   indoor_outdoor: IndoorOutdoor;
   descricao: string;
   mini_review: string;
+  tipo_programacao: TipoProgramacao;
+  programacao_texto: string;
+  proxima_data: string | null;
   confidence: number;
   abstain_fields: string[];
   notes_for_editor?: string;
@@ -54,6 +64,9 @@ export interface LinhaEnriquecida {
   status: "operando";
   descricao: string;
   mini_review: string;
+  tipo_programacao: TipoProgramacao;
+  programacao_texto: string;
+  proxima_data: string | null;
   foto_url: string;
   review_status: ReviewStatus;
   abstain_reasons: string[];

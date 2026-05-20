@@ -19,6 +19,9 @@ function baseLinha(overrides: Partial<LinhaEnriquecida> = {}): LinhaEnriquecida 
     descricao: "Adaptação musical do clássico, com duração de cerca de 60 minutos e figurinos coloridos para famílias.",
     mini_review:
       "Boa primeira peça para crianças a partir de 4 anos. Ressalva: sessão sem intervalo pode cansar os mais novos no final.",
+    tipo_programacao: "evento_recorrente",
+    programacao_texto: "Sábados e domingos 16h e 18h",
+    proxima_data: null,
     foto_url: "",
     review_status: "auto_ok",
     abstain_reasons: [],
@@ -48,6 +51,8 @@ describe("toSanityDoc", () => {
       bairro: "Tijuca",
       indoor_outdoor: "indoor",
       status: "operando",
+      tipo_programacao: "evento_recorrente",
+      programacao_texto: "Sábados e domingos 16h e 18h",
       descricao:
         "Adaptação musical do clássico, com duração de cerca de 60 minutos e figurinos coloridos para famílias.",
       mini_review:
@@ -65,6 +70,16 @@ describe("toSanityDoc", () => {
   it("omite duracao_min quando é null", () => {
     const doc = toSanityDoc(baseLinha({ duracao_min: null }));
     expect(doc).not.toHaveProperty("duracao_min");
+  });
+
+  it("omite proxima_data quando é null", () => {
+    const doc = toSanityDoc(baseLinha({ proxima_data: null }));
+    expect(doc).not.toHaveProperty("proxima_data");
+  });
+
+  it("inclui proxima_data quando preenchida", () => {
+    const doc = toSanityDoc(baseLinha({ proxima_data: "2026-05-23" }));
+    expect(doc.proxima_data).toBe("2026-05-23");
   });
 
   it("preserva review_status auto_ok e needs_human", () => {

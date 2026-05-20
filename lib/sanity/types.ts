@@ -1,6 +1,7 @@
 export type PrecoTipo = "gratuito" | "pago";
 export type IndoorOutdoor = "indoor" | "outdoor" | "ambos";
 export type StatusAtracao = "operando" | "encerrada" | "em_obras" | "esgotada";
+export type TipoProgramacao = "evento_pontual" | "evento_recorrente" | "permanente";
 
 export interface Atracao {
   slug: string;
@@ -12,6 +13,9 @@ export interface Atracao {
   precoTipo: PrecoTipo;
   precoLabel?: string;
   indoorOutdoor: IndoorOutdoor;
+  tipoProgramacao: TipoProgramacao;
+  programacaoTexto: string;
+  proximaData?: string;
   descricaoCurta: string;
   imagemUrl: string;
   linkExterno: string;
@@ -31,6 +35,9 @@ export interface SanityAtracaoDocument {
   bairro: string;
   indoor_outdoor: IndoorOutdoor;
   status: StatusAtracao;
+  tipo_programacao?: TipoProgramacao;
+  programacao_texto?: string;
+  proxima_data?: string | null;
   descricao: string;
   mini_review?: string;
   foto?: {

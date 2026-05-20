@@ -4,6 +4,7 @@ export type {
   LinhaEnriquecida,
   Partner,
   ReviewStatus,
+  TipoProgramacao,
 } from "../pipeline-ia/types";
 
 export interface SanitySlug {
@@ -27,6 +28,9 @@ export interface SanityAtracaoDocInput {
   bairro: string;
   indoor_outdoor: string;
   status: string;
+  tipo_programacao: string;
+  programacao_texto: string;
+  proxima_data?: string;
   descricao: string;
   mini_review: string;
   review_status: string;

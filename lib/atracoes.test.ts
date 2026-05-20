@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest";
 import {
   filtrarAtracoes,
   getAtracaoBySlug,
+  mapSanityAtracao,
   type Atracao,
 } from "./atracoes";
 import { mockAtracoes } from "./mock-atracoes";
+import type { SanityAtracaoDocument } from "./sanity/types";
 
 describe("filtrarAtracoes", () => {
   it("filtra por bairro Tijuca", () => {
@@ -43,9 +45,49 @@ describe("Atracao type", () => {
       bairro: expect.any(String),
       precoTipo: expect.stringMatching(/gratuito|pago/),
       indoorOutdoor: expect.stringMatching(/indoor|outdoor|ambos/),
+      tipoProgramacao: expect.stringMatching(
+        /evento_pontual|evento_recorrente|permanente/,
+      ),
+      programacaoTexto: expect.any(String),
       descricaoCurta: expect.any(String),
       imagemUrl: expect.any(String),
       linkExterno: expect.any(String),
     });
+  });
+});
+
+describe("mapSanityAtracao", () => {
+  function baseDocument(
+    overrides: Partial<SanityAtracaoDocument> = {},
+  ): SanityAtracaoDocument {
+    return {
+      _id: "atracao-teste",
+      nome: "Teste",
+      slug: { current: "teste" },
+      categoria: "teatro",
+      idade_min: 4,
+      idade_max: 10,
+      bairro: "Tijuca",
+      indoor_outdoor: "indoor",
+      status: "operando",
+      tipo_programacao: "evento_pontual",
+      programacao_texto: "Sessões nos dias 23, 30 e 31",
+      descricao: "Descrição de teste com comprimento suficiente para validação.",
+      ...overrides,
+    };
+  }
+
+  it("com proxima_data null → propriedade proximaData ausente", () => {
+    const atracao = mapSanityAtracao(
+      baseDocument({ proxima_data: null }),
+    );
+    expect(atracao).not.toHaveProperty("proximaData");
+  });
+
+  it("com proxima_data preenchida → mapeia proximaData", () => {
+    const atracao = mapSanityAtracao(
+      baseDocument({ proxima_data: "2026-05-23" }),
+    );
+    expect(atracao.proximaData).toBe("2026-05-23");
   });
 });

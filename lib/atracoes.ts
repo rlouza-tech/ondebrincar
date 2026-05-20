@@ -23,7 +23,7 @@ function precoLabelFromCents(preco?: number | null): string | undefined {
 }
 
 function mapSanityAtracao(document: SanityAtracaoDocument): Atracao {
-  return {
+  const atracao: Atracao = {
     slug: document.slug.current,
     titulo: document.nome,
     categoria: document.categoria,
@@ -33,11 +33,22 @@ function mapSanityAtracao(document: SanityAtracaoDocument): Atracao {
     precoTipo: document.preco === 0 ? "gratuito" : "pago",
     precoLabel: precoLabelFromCents(document.preco),
     indoorOutdoor: document.indoor_outdoor,
+    tipoProgramacao: document.tipo_programacao ?? "permanente",
+    programacaoTexto:
+      document.programacao_texto ?? "Consulte programação no link oficial",
     descricaoCurta: document.mini_review || document.descricao,
     imagemUrl: document.foto?.asset?.url || "/placeholder-atracao.svg",
     linkExterno: document.link_compra || "#",
   };
+
+  if (document.proxima_data) {
+    atracao.proximaData = document.proxima_data;
+  }
+
+  return atracao;
 }
+
+export { mapSanityAtracao };
 
 async function fetchSanityAtracoes(): Promise<Atracao[]> {
   if (!hasSanityConfig()) {

@@ -19,6 +19,12 @@ const responseSchema = {
     indoor_outdoor: { type: "string", enum: ["indoor", "outdoor", "ambos"] },
     descricao: { type: "string" },
     mini_review: { type: "string" },
+    tipo_programacao: {
+      type: "string",
+      enum: ["evento_pontual", "evento_recorrente", "permanente"],
+    },
+    programacao_texto: { type: "string" },
+    proxima_data: { type: "string", nullable: true },
     confidence: { type: "integer", minimum: 1, maximum: 5 },
     abstain_fields: {
       type: "array",
@@ -35,6 +41,9 @@ const responseSchema = {
     "indoor_outdoor",
     "descricao",
     "mini_review",
+    "tipo_programacao",
+    "programacao_texto",
+    "proxima_data",
     "confidence",
     "abstain_fields",
   ],
@@ -52,6 +61,9 @@ function errorResponse(message: string): RespostaGemini {
       "Processamento automático não concluído. Esta linha precisa de revisão humana antes de virar draft editorial.",
     mini_review:
       "A curadoria precisa revisar os dados originais, porque a IA não retornou uma resposta confiável para esta atração.",
+    tipo_programacao: "permanente",
+    programacao_texto: "Consulte programação no link oficial",
+    proxima_data: null,
     confidence: 1,
     abstain_fields: [
       "categoria",

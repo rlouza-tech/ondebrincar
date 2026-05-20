@@ -10,6 +10,7 @@ import {
   getAtracaoBySlug,
   getAtracaoSlugs,
 } from "@/lib/atracoes";
+import { formatadorDeData } from "@/lib/format-date";
 
 interface AtracaoPageProps {
   params: { slug: string };
@@ -95,6 +96,16 @@ export default async function AtracaoPage({ params }: AtracaoPageProps) {
                 </dd>
               </div>
             </dl>
+
+            <div className="rounded-lg bg-primary/5 px-4 py-3">
+              <p className="text-sm font-medium text-primary">Quando ir</p>
+              <p className="text-base text-secondary">{atracao.programacaoTexto}</p>
+              {atracao.proximaData ? (
+                <p className="mt-1 text-xs text-secondary">
+                  Próxima sessão: {formatadorDeData(atracao.proximaData)}
+                </p>
+              ) : null}
+            </div>
 
             <p className="text-base leading-relaxed text-secondary">
               {atracao.descricaoCurta}

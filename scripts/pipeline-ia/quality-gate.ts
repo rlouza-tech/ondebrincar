@@ -1,10 +1,21 @@
 import {
   CATEGORIAS_VALIDAS,
   INDOOR_OUTDOOR_VALIDOS,
+  TIPOS_PROGRAMACAO_VALIDOS,
   type LinhaInput,
   type QualityGateResult,
   type RespostaGemini,
 } from "./types";
+
+const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+function isValidIsoDate(value: string): boolean {
+  if (!ISO_DATE_PATTERN.test(value)) {
+    return false;
+  }
+  const date = new Date(`${value}T12:00:00.000Z`);
+  return !Number.isNaN(date.getTime()) && date.toISOString().startsWith(value);
+}
 
 const LOW_CONFIDENCE_SUBSTRINGS = [
   "não tenho informação",
@@ -62,6 +73,21 @@ export function evaluate(
 
   if (!INDOOR_OUTDOOR_VALIDOS.includes(resposta.indoor_outdoor)) {
     reasons.push("indoor_outdoor_invalido");
+  }
+
+  if (!TIPOS_PROGRAMACAO_VALIDOS.includes(resposta.tipo_programacao)) {
+    reasons.push("tipo_programacao_invalido");
+  }
+
+  if (
+    resposta.programacao_texto.length < 5 ||
+    resposta.programacao_texto.length > 200
+  ) {
+    reasons.push("programacao_texto_tamanho_invalido");
+  }
+
+  if (resposta.proxima_data !== null && !isValidIsoDate(resposta.proxima_data)) {
+    reasons.push("proxima_data_formato_invalido");
   }
 
   if (resposta.confidence < 4) {
