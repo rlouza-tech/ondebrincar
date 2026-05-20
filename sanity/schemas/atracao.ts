@@ -160,6 +160,37 @@ export const atracao = defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
+      name: "tipo_programacao",
+      title: "Tipo de programação",
+      type: "string",
+      options: {
+        list: [
+          { title: "Evento pontual (datas específicas)", value: "evento_pontual" },
+          { title: "Evento recorrente (semanal/mensal)", value: "evento_recorrente" },
+          { title: "Atração permanente", value: "permanente" },
+        ],
+        layout: "radio",
+      },
+      description: "Como o usuário deve entender a frequência da atração.",
+      initialValue: "permanente",
+      validation: (Rule) => Rule.required(),
+    }),
+    defineField({
+      name: "programacao_texto",
+      title: "Programação (texto)",
+      type: "string",
+      description:
+        "Frase humano-legível. Ex.: 'Sábados e domingos 16h e 18h', 'Diariamente 9h-18h', 'Em cartaz até 30/jun'. Max 200 chars.",
+      validation: (Rule) => Rule.required().min(5).max(200),
+    }),
+    defineField({
+      name: "proxima_data",
+      title: "Próxima data",
+      type: "date",
+      description:
+        "Data da próxima sessão. Só preenchido se tipo = evento_pontual com data definida e ainda não passada.",
+    }),
+    defineField({
       name: "descricao",
       title: "Descrição",
       type: "text",

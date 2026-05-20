@@ -14,6 +14,7 @@
     "pipeline-ia": "tsx scripts/pipeline-ia/index.ts",
     "import-sanity": "tsx scripts/import-sanity/index.ts",
     "associate-imagens": "tsx scripts/associate-imagens/index.ts",
+    "update-drafts-programacao": "tsx scripts/update-drafts-programacao/index.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },

@@ -27,6 +27,17 @@ Gere exclusivamente um JSON com os campos definidos no schema da resposta. Regra
 - indoor_outdoor: "indoor" | "outdoor" | "ambos"
 - descricao: 50-600 caracteres, objetiva
 - mini_review: 50-400 caracteres, voz autoral com ressalva franca
+- PROGRAMAÇÃO: a partir de dias_apresentacao do input, inferir:
+  - tipo_programacao:
+    * "evento_pontual" se dias_apresentacao lista datas específicas (ex.: "Dias 23, 30, 31", "Somente dia 24")
+    * "evento_recorrente" se dias_apresentacao indica frequência (ex.: "Sábados e domingos")
+    * "permanente" se dias_apresentacao indica abertura contínua (ex.: "Diariamente") ou está vazio
+  - programacao_texto: frase legível baseada em dias_apresentacao. Exemplos:
+    Input "Dias 23, 30, 31" → "Sessões nos dias 23, 30 e 31"
+    Input "Somente dia 24" → "Apenas no dia 24"
+    Input "Diariamente" → "Aberto diariamente"
+    Vazio + categoria=parque → "Aberto diariamente (consulte horário no link)"
+  - proxima_data: se conseguir inferir uma data específica (formato YYYY-MM-DD), preenche assumindo mês corrente. Se ambíguo ou recorrente, null.
 - confidence: inteiro 1-5 (5 = muito confiante; 1 = chutei)
 - abstain_fields: campos onde você não tem certeza
 - notes_for_editor: avisos curtos para revisão humana, se necessário`;

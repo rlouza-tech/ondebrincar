@@ -18,6 +18,8 @@ export function toSanityDoc(linha: LinhaEnriquecida): SanityAtracaoDocInput {
     bairro: linha.bairro,
     indoor_outdoor: linha.indoor_outdoor,
     status: "operando",
+    tipo_programacao: linha.tipo_programacao,
+    programacao_texto: linha.programacao_texto,
     descricao: linha.descricao,
     mini_review: linha.mini_review,
     review_status: linha.review_status,
@@ -29,6 +31,10 @@ export function toSanityDoc(linha: LinhaEnriquecida): SanityAtracaoDocInput {
 
   if (linha.preco_centavos !== null) {
     doc.preco = linha.preco_centavos;
+  }
+
+  if (linha.proxima_data !== null) {
+    doc.proxima_data = linha.proxima_data;
   }
 
   return doc;

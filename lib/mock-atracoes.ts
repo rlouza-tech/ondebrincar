@@ -13,6 +13,8 @@ export const mockAtracoes: Atracao[] = [
     precoTipo: "pago",
     precoLabel: "R$ 40",
     indoorOutdoor: "indoor",
+    tipoProgramacao: "evento_recorrente",
+    programacaoTexto: "Sábados e domingos 16h e 18h, em cartaz até 30/jul",
     descricaoCurta:
       "Adaptação musical do clássico de Saint-Exupéry, com figurinos coloridos e duração de cerca de 60 minutos. Boa primeira peça para crianças a partir de 4 anos.",
     imagemUrl: "/placeholder-atracao.svg",
@@ -27,6 +29,8 @@ export const mockAtracoes: Atracao[] = [
     bairro: "São Cristóvão",
     precoTipo: "gratuito",
     indoorOutdoor: "outdoor",
+    tipoProgramacao: "permanente",
+    programacaoTexto: "Aberto diariamente 6h-18h",
     descricaoCurta:
       "Áreas verdes amplas, playground e espaço para piquenique. Ideal para uma tarde leve sem gastar com ingresso.",
     imagemUrl: "/placeholder-atracao.svg",
@@ -42,6 +46,8 @@ export const mockAtracoes: Atracao[] = [
     precoTipo: "pago",
     precoLabel: "R$ 30",
     indoorOutdoor: "indoor",
+    tipoProgramacao: "permanente",
+    programacaoTexto: "Ter-dom 10h-18h. Fechado seg.",
     descricaoCurta:
       "Exposição interativa sobre ciência e futuro do planeta. Funciona melhor com crianças que já leem um pouco ou acompanham os adultos na leitura dos painéis.",
     imagemUrl: "/placeholder-atracao.svg",
@@ -57,6 +63,8 @@ export const mockAtracoes: Atracao[] = [
     precoTipo: "pago",
     precoLabel: "R$ 89",
     indoorOutdoor: "ambos",
+    tipoProgramacao: "permanente",
+    programacaoTexto: "Aberto diariamente 9h-17h",
     descricaoCurta:
       "Zoológico com foco em conservação; alguns recintos são cobertos. Reserve meio dia e protetor solar para os trechos ao ar livre.",
     imagemUrl: "/placeholder-atracao.svg",
@@ -72,6 +80,8 @@ export const mockAtracoes: Atracao[] = [
     precoTipo: "pago",
     precoLabel: "R$ 55",
     indoorOutdoor: "indoor",
+    tipoProgramacao: "evento_recorrente",
+    programacaoTexto: "Sábados 10h e 14h",
     descricaoCurta:
       "Oficina participativa de 90 minutos com jogos corporais e improviso. Grupo pequeno; vale chegar 10 minutos antes.",
     imagemUrl: "/placeholder-atracao.svg",

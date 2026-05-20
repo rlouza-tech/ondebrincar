@@ -4,19 +4,34 @@ import { createReadStream } from "node:fs";
 import { mkdir, readdir, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { parse } from "csv-parse";
-import { hasSanityConfig, sanityClient, sanityWriteClient } from "@/lib/sanity/client";
-import { toSanityDoc } from "./mapper";
-import type {
-  ImportReport,
-  ImportReportItem,
-  LinhaEnriquecida,
-} from "./types";
+import { hasSanityConfig, sanityWriteClient } from "@/lib/sanity/client";
+import { loadEnvLocal } from "../associate-imagens/env";
+import type { LinhaEnriquecida } from "../pipeline-ia/types";
+
+loadEnvLocal();
 
 interface CliOptions {
   csvPath?: string;
   latest: boolean;
   limit?: number;
   dryRun: boolean;
+}
+
+interface PatchReportItem {
+  slug: string;
+  status: "patched" | "skipped" | "error";
+  reason?: string;
+}
+
+interface PatchReport {
+  total: number;
+  patched: number;
+  skipped: number;
+  errors: number;
+  items: PatchReportItem[];
+  source_csv: string;
+  started_at: string;
+  finished_at: string;
 }
 
 function parseArgs(argv: string[]): CliOptions {
@@ -52,7 +67,7 @@ function parseArgs(argv: string[]): CliOptions {
 
   if (!options.latest && !options.csvPath) {
     throw new Error(
-      "Uso: pnpm import-sanity <csv> [--limit N] [--dry-run] | pnpm import-sanity --latest [...]",
+      "Uso: pnpm update-drafts-programacao <csv> [--limit N] [--dry-run] | pnpm update-drafts-programacao --latest [...]",
     );
   }
 
@@ -72,17 +87,17 @@ function parseNullableInt(value: string): number | null {
   return Number.isNaN(parsed) ? null : parsed;
 }
 
-function parseNullableDate(value: string): string | null {
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : null;
-}
-
 function parseIntRequired(value: string, field: string): number {
   const parsed = Number.parseInt(value.trim(), 10);
   if (Number.isNaN(parsed)) {
     throw new Error(`Campo numérico inválido: ${field}`);
   }
   return parsed;
+}
+
+function parseNullableDate(value: string): string | null {
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
 }
 
 async function readEnrichedCSV(path: string): Promise<LinhaEnriquecida[]> {
@@ -161,6 +176,27 @@ function timestampForFilename(iso: string): string {
   return iso.replace(/[:.]/g, "-");
 }
 
+function draftHasProgramacao(doc: Record<string, unknown> | null): boolean {
+  if (!doc) {
+    return false;
+  }
+  const texto = doc.programacao_texto;
+  return typeof texto === "string" && texto.trim().length > 0;
+}
+
+function buildPatchPayload(row: LinhaEnriquecida): Record<string, string> {
+  const payload: Record<string, string> = {
+    tipo_programacao: row.tipo_programacao,
+    programacao_texto: row.programacao_texto,
+  };
+
+  if (row.proxima_data !== null) {
+    payload.proxima_data = row.proxima_data;
+  }
+
+  return payload;
+}
+
 async function main() {
   const options = parseArgs(process.argv);
 
@@ -170,9 +206,10 @@ async function main() {
     );
   }
 
-  if (!process.env.SANITY_API_TOKEN && !options.dryRun) {
-    throw new Error("SANITY_API_TOKEN ausente (obrigatório fora de --dry-run)");
+  if (!process.env.SANITY_API_TOKEN) {
+    throw new Error("SANITY_API_TOKEN ausente (obrigatório — leitura/patch de drafts exige token)");
   }
+
   const startedAt = new Date().toISOString();
   const csvPath = options.latest
     ? await resolveLatestCsv()
@@ -180,66 +217,62 @@ async function main() {
 
   const allRows = await readEnrichedCSV(csvPath);
   const rows = options.limit ? allRows.slice(0, options.limit) : allRows;
-
-  const items: ImportReportItem[] = [];
-  let created = 0;
+  const items: PatchReportItem[] = [];
+  let patched = 0;
   let skipped = 0;
   let errors = 0;
 
   console.log(
-    `Import Sanity: ${rows.length}/${allRows.length} linhas de ${csvPath}${options.dryRun ? " [DRY-RUN]" : ""}`,
+    `Update drafts programação: ${rows.length}/${allRows.length} linhas de ${csvPath}${options.dryRun ? " [DRY-RUN]" : ""}`,
   );
 
   for (let index = 0; index < rows.length; index += 1) {
-    const linha = rows[index];
-    const draftId = `drafts.atracao-${linha.slug}`;
-    const publishedId = `atracao-${linha.slug}`;
+    const row = rows[index];
+    const draftId = `drafts.atracao-${row.slug}`;
 
     try {
-      const existingDraft = await sanityClient.getDocument(draftId);
-      if (existingDraft) {
+      const draft = (await sanityWriteClient.getDocument(draftId)) as Record<
+        string,
+        unknown
+      > | null;
+
+      if (!draft) {
         skipped += 1;
-        items.push({ slug: linha.slug, status: "skipped", reason: "draft_existe" });
-        console.log(`⊘ [${index + 1}/${rows.length}] ${linha.slug} (draft_existe)`);
+        items.push({ slug: row.slug, status: "skipped", reason: "draft_inexistente" });
+        console.log(`⊘ [${index + 1}/${rows.length}] ${row.slug} (draft_inexistente)`);
         continue;
       }
 
-      const existingPublished = await sanityClient.getDocument(publishedId);
-      if (existingPublished) {
+      if (draftHasProgramacao(draft)) {
         skipped += 1;
-        items.push({
-          slug: linha.slug,
-          status: "skipped",
-          reason: "published_existe",
-        });
-        console.log(`⊘ [${index + 1}/${rows.length}] ${linha.slug} (published_existe)`);
+        items.push({ slug: row.slug, status: "skipped", reason: "programacao_existe" });
+        console.log(`⊘ [${index + 1}/${rows.length}] ${row.slug} (programacao_existe)`);
         continue;
       }
 
       if (options.dryRun) {
-        created += 1;
-        items.push({ slug: linha.slug, status: "created", reason: "dry_run" });
-        console.log(`[DRY] [${index + 1}/${rows.length}] criaria draft ${linha.slug}`);
+        patched += 1;
+        items.push({ slug: row.slug, status: "patched", reason: "dry_run" });
+        console.log(`[DRY] [${index + 1}/${rows.length}] patcharia programação ${row.slug}`);
         continue;
       }
 
-      const doc = toSanityDoc(linha);
-      await sanityWriteClient.create(doc);
-      created += 1;
-      items.push({ slug: linha.slug, status: "created" });
-      console.log(`✓ [${index + 1}/${rows.length}] criado draft ${linha.slug}`);
+      await sanityWriteClient.patch(draftId).set(buildPatchPayload(row)).commit();
+      patched += 1;
+      items.push({ slug: row.slug, status: "patched" });
+      console.log(`✓ [${index + 1}/${rows.length}] programação atualizada ${row.slug}`);
     } catch (error) {
       errors += 1;
       const message = error instanceof Error ? error.message : "Erro desconhecido";
-      items.push({ slug: linha.slug, status: "error", reason: message });
-      console.log(`✗ [${index + 1}/${rows.length}] ${linha.slug} (${message})`);
+      items.push({ slug: row.slug, status: "error", reason: message });
+      console.log(`✗ [${index + 1}/${rows.length}] ${row.slug} (${message})`);
     }
   }
 
   const finishedAt = new Date().toISOString();
-  const report: ImportReport = {
+  const report: PatchReport = {
     total: rows.length,
-    created,
+    patched,
     skipped,
     errors,
     items,
@@ -252,13 +285,13 @@ async function main() {
   await mkdir(outputDir, { recursive: true });
   const reportPath = join(
     outputDir,
-    `import-report-${timestampForFilename(startedAt)}.json`,
+    `update-drafts-programacao-report-${timestampForFilename(startedAt)}.json`,
   );
   await writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
 
   console.log("\nResumo");
   console.log(`Total: ${report.total}`);
-  console.log(`Criados: ${report.created}`);
+  console.log(`Atualizados: ${report.patched}`);
   console.log(`Skipped: ${report.skipped}`);
   console.log(`Erros: ${report.errors}`);
   console.log(`Report: ${reportPath}`);

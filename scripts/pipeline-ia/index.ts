@@ -105,6 +105,9 @@ function buildLinhaEnriquecida(
     status: "operando",
     descricao: resposta.descricao,
     mini_review: resposta.mini_review,
+    tipo_programacao: resposta.tipo_programacao,
+    programacao_texto: resposta.programacao_texto,
+    proxima_data: resposta.proxima_data,
     foto_url: "",
     review_status: status,
     abstain_reasons: Array.from(
