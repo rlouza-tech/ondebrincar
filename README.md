@@ -52,6 +52,19 @@ Cria **drafts** idempotentes (`drafts.atracao-<slug>`). Skip se slug já existe 
 
 Decisão técnica: `docs/decisions/2026-05-19-s4-1c-import-sanity.md`.
 
+## Associar imagens (US-S4.2)
+
+**Pré-requisitos:** drafts no Sanity (`import-sanity`), imagens nomeadas por slug em `data/input/imagens/` (ex.: `{slug}.png`), CSV enriquecido em `data/output/`, `.env.local` com token Sanity **Editor** (obrigatório inclusive no `--dry-run` — leitura de drafts exige autenticação).
+
+```bash
+pnpm associate-imagens --latest --limit 3 --dry-run
+pnpm associate-imagens --latest --limit 3
+```
+
+Faz patch de `foto` no draft (`drafts.atracao-<slug>`). Skip idempotente se `foto` já existe. Sem imagem no disco → skip silencioso. Otimiza com sharp (1200×800 inside, WebP).
+
+Decisão técnica: `docs/decisions/2026-05-19-s4-2-associate-imagens.md`.
+
 ## Rotas (fase A — mock)
 
 | Rota | Descrição |
@@ -95,6 +108,7 @@ Decisão técnica: `docs/decisions/2026-05-15-s2-2-sanity-setup.md`.
 | `sanity/schemas/` | Schemas editoriais do Sanity |
 | `scripts/pipeline-ia/` | CLI de enriquecimento com Gemini |
 | `scripts/import-sanity/` | CLI de import CSV → drafts Sanity |
+| `scripts/associate-imagens/` | CLI de imagens locais → foto em drafts |
 | `data/input/` | CSV de entrada (Clubinho) |
 | `data/output/` | CSV/JSON gerados (gitignored) |
 | `docs/` | Documentação técnica e ADRs |

@@ -13,6 +13,7 @@
     "lint": "next lint",
     "pipeline-ia": "tsx scripts/pipeline-ia/index.ts",
     "import-sanity": "tsx scripts/import-sanity/index.ts",
+    "associate-imagens": "tsx scripts/associate-imagens/index.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -27,7 +28,8 @@
     "next-sanity": "^9.12.3",
     "react": "^18",
     "react-dom": "^18",
-    "sanity": "^3.99.0"
+    "sanity": "^3.99.0",
+    "sharp": "^0.34.5"
   },
   "devDependencies": {
     "@sanity/types": "^3.99.0",
