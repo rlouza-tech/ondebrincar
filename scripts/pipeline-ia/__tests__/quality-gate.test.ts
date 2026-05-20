@@ -28,7 +28,8 @@ function baseResposta(overrides: Partial<RespostaGemini> = {}): RespostaGemini {
     mini_review:
       "Boa opção para primeira ida ao teatro com crianças. Ressalva: sessão sem intervalo pode cansar os mais novos no final.",
     tipo_programacao: "evento_pontual",
-    programacao_texto: "Sessões nos dias 23, 30 e 31",
+    programacao_texto:
+      "Sessões nos dias 23, 30 e 31. Consulte horário ao clicar em 'Ver ingresso'.",
     proxima_data: "2026-05-23",
     confidence: 5,
     abstain_fields: [],
@@ -61,5 +62,28 @@ describe("evaluate — programação", () => {
 
     expect(result.status).toBe("needs_human");
     expect(result.reasons).toContain("proxima_data_formato_invalido");
+  });
+
+  it("proxima_data no passado → needs_human", () => {
+    const result = evaluate(
+      baseInput(),
+      baseResposta({ proxima_data: "2023-10-23" }),
+      { referenceDate: new Date("2026-05-20T12:00:00.000Z") },
+    );
+
+    expect(result.status).toBe("needs_human");
+    expect(result.reasons).toContain("proxima_data_no_passado");
+  });
+
+  it("dias sem horário no input e programacao sem ressalva → needs_human", () => {
+    const result = evaluate(
+      baseInput(),
+      baseResposta({
+        programacao_texto: "Sessões nos dias 23, 30 e 31",
+      }),
+    );
+
+    expect(result.status).toBe("needs_human");
+    expect(result.reasons).toContain("programacao_lacuna_horario_nao_sinalizada");
   });
 });

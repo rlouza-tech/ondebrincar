@@ -37,7 +37,9 @@ pnpm pipeline-ia data/input/planilha-origem.csv --limit 5 --model gemini-2.5-fla
 
 Saídas: `planilha-enriquecida-<timestamp>.csv` e `pipeline-report-<timestamp>.json`.
 
-Decisão técnica: `docs/decisions/2026-05-15-s4-1b-pipeline-ia.md`.
+O prompt injeta a **data atual** e exige **transparência** quando `dias_apresentacao` não traz horário (quality gate valida regressão).
+
+Decisão técnica: `docs/decisions/2026-05-15-s4-1b-pipeline-ia.md`, `docs/decisions/2026-05-20-s4-1e-f-prompt-transparencia.md`.
 
 ## Import para Sanity (US-S4.1c)
 

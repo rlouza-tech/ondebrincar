@@ -1,4 +1,10 @@
 import {
+  inputListaDiasSemHorario,
+  isProximaDataNoPassado,
+  programacaoSinalizaLacunaHorario,
+} from "./programacao-helpers";
+import { getReferenceDateIso } from "./reference-date";
+import {
   CATEGORIAS_VALIDAS,
   INDOOR_OUTDOOR_VALIDOS,
   TIPOS_PROGRAMACAO_VALIDOS,
@@ -37,8 +43,10 @@ function hasLowConfidenceText(value: string): boolean {
 export function evaluate(
   linhaInput: LinhaInput,
   resposta: RespostaGemini,
+  options?: { referenceDate?: Date },
 ): QualityGateResult {
   const reasons: string[] = [];
+  const referenceDateIso = getReferenceDateIso(options?.referenceDate ?? new Date());
 
   if (resposta.error) {
     reasons.push(`gemini_error:${resposta.error}`);
@@ -88,6 +96,21 @@ export function evaluate(
 
   if (resposta.proxima_data !== null && !isValidIsoDate(resposta.proxima_data)) {
     reasons.push("proxima_data_formato_invalido");
+  }
+
+  if (
+    resposta.proxima_data !== null &&
+    isValidIsoDate(resposta.proxima_data) &&
+    isProximaDataNoPassado(resposta.proxima_data, referenceDateIso)
+  ) {
+    reasons.push("proxima_data_no_passado");
+  }
+
+  if (
+    inputListaDiasSemHorario(linhaInput.dias_apresentacao) &&
+    !programacaoSinalizaLacunaHorario(resposta.programacao_texto)
+  ) {
+    reasons.push("programacao_lacuna_horario_nao_sinalizada");
   }
 
   if (resposta.confidence < 4) {
