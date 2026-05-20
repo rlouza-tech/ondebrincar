@@ -37,3 +37,6 @@ next-env.d.ts
 # generated pipeline outputs
 /data/output/*
 !/data/output/.gitkeep
+# imagens locais nomeadas por slug (não versionar binários)
+/data/input/imagens/*
+!/data/input/imagens/.gitkeep
