@@ -3,7 +3,7 @@
 import { stat } from "node:fs/promises";
 import { mkdir, readdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { hasSanityConfig, sanityClient, sanityWriteClient } from "@/lib/sanity/client";
+import { hasSanityConfig, sanityWriteClient } from "@/lib/sanity/client";
 import { buildFotoAlt } from "./alt";
 import { readEnrichedRows } from "./csv";
 import { loadEnvLocal } from "./env";
@@ -124,8 +124,10 @@ async function main() {
     );
   }
 
-  if (!process.env.SANITY_API_TOKEN && !options.dryRun) {
-    throw new Error("SANITY_API_TOKEN ausente (obrigatório fora de --dry-run)");
+  if (!process.env.SANITY_API_TOKEN) {
+    throw new Error(
+      "SANITY_API_TOKEN ausente (obrigatório — leitura de drafts exige token autenticado)",
+    );
   }
 
   const startedAt = new Date().toISOString();
@@ -164,7 +166,7 @@ async function main() {
     const draftId = `drafts.atracao-${row.slug}`;
 
     try {
-      const draft = (await sanityClient.getDocument(draftId)) as Record<
+      const draft = (await sanityWriteClient.getDocument(draftId)) as Record<
         string,
         unknown
       > | null;

@@ -54,7 +54,7 @@ Decisão técnica: `docs/decisions/2026-05-19-s4-1c-import-sanity.md`.
 
 ## Associar imagens (US-S4.2)
 
-**Pré-requisitos:** drafts no Sanity (`import-sanity`), imagens nomeadas por slug em `data/input/imagens/` (ex.: `{slug}.png`), CSV enriquecido em `data/output/`, `.env.local` com token Sanity Editor.
+**Pré-requisitos:** drafts no Sanity (`import-sanity`), imagens nomeadas por slug em `data/input/imagens/` (ex.: `{slug}.png`), CSV enriquecido em `data/output/`, `.env.local` com token Sanity **Editor** (obrigatório inclusive no `--dry-run` — leitura de drafts exige autenticação).
 
 ```bash
 pnpm associate-imagens --latest --limit 3 --dry-run
