@@ -211,7 +211,8 @@ export const atracao = defineType({
       name: "foto",
       title: "Foto",
       type: "image",
-      description: "Imagem principal da atração via Sanity Asset Pipeline, com hotspot.",
+      description:
+        "Imagem principal da atração via Sanity Asset Pipeline, com hotspot. Opcional: drafts sem foto usam placeholder local /placeholder-atracao.svg no site público.",
       options: { hotspot: true },
       fields: [
         defineField({
@@ -222,7 +223,6 @@ export const atracao = defineType({
           validation: (Rule) => Rule.required().min(5).max(160),
         }),
       ],
-      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: "review_status",

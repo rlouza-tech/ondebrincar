@@ -90,4 +90,9 @@ describe("mapSanityAtracao", () => {
     );
     expect(atracao.proximaData).toBe("2026-05-23");
   });
+
+  it("sem foto no documento Sanity → usa placeholder local", () => {
+    const atracao = mapSanityAtracao(baseDocument({ foto: undefined }));
+    expect(atracao.imagemUrl).toBe("/placeholder-atracao.svg");
+  });
 });
