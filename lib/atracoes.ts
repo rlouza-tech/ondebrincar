@@ -6,9 +6,33 @@ import {
   atracoesPorBairro,
   todosSlugs,
 } from "@/lib/sanity/queries";
-import type { Atracao, SanityAtracaoDocument } from "@/lib/sanity/types";
+import type { Atracao, IndoorOutdoor, PrecoTipo, SanityAtracaoDocument } from "@/lib/sanity/types";
 
 export type { Atracao };
+
+/** Normaliza categoria do catálogo (mock legível ou slug Sanity) para slug do schema. */
+export function normalizeCategoriaSlug(categoria: string): string {
+  const normalized = categoria.toLowerCase().trim();
+  if (normalized === "teatro" || normalized.includes("teatro")) {
+    return "teatro";
+  }
+  if (normalized === "parque" || normalized.includes("parque")) {
+    return "parque";
+  }
+  if (normalized === "museu" || normalized.includes("museu")) {
+    return "museu";
+  }
+  if (
+    normalized === "atividade-extra" ||
+    normalized.includes("atividade")
+  ) {
+    return "atividade-extra";
+  }
+  if (normalized === "evento" || normalized.includes("evento")) {
+    return "evento";
+  }
+  return normalized;
+}
 
 function precoLabelFromCents(preco?: number | null): string | undefined {
   if (preco === undefined || preco === null || preco === 0) {
@@ -152,6 +176,9 @@ export function formatPreco(atracao: Atracao): string {
 export interface FiltroBusca {
   bairro?: string;
   idade?: number;
+  categoria?: string;
+  preco?: PrecoTipo;
+  indoorOutdoor?: IndoorOutdoor;
 }
 
 export function filtrarAtracoes(
@@ -170,6 +197,21 @@ export function filtrarAtracoes(
       if (filtros.idade < atracao.idadeMin || atracao.idadeMax < filtros.idade) {
         return false;
       }
+    }
+
+    if (filtros.categoria) {
+      const filtroSlug = normalizeCategoriaSlug(filtros.categoria);
+      if (normalizeCategoriaSlug(atracao.categoria) !== filtroSlug) {
+        return false;
+      }
+    }
+
+    if (filtros.preco && atracao.precoTipo !== filtros.preco) {
+      return false;
+    }
+
+    if (filtros.indoorOutdoor && atracao.indoorOutdoor !== filtros.indoorOutdoor) {
+      return false;
     }
 
     return true;

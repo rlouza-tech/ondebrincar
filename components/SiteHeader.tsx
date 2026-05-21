@@ -12,7 +12,7 @@ export function SiteHeader() {
         </Link>
         <nav aria-label="Principal" className="flex gap-4 text-sm font-medium">
           <Link
-            href="/buscar"
+            href="/"
             className="text-secondary hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             Buscar

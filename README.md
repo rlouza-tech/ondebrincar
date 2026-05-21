@@ -82,13 +82,31 @@ pnpm update-drafts-programacao --latest --limit 3
 
 Decisão técnica: `docs/decisions/2026-05-20-i2-3-temporalidade-schema.md`.
 
+## Filtros na Home (US-I4.1)
+
+A Home (`/`) filtra o catálogo por URL:
+
+| Parâmetro | Valores |
+|-----------|---------|
+| `bairro` | Nome do bairro (lista dinâmica do catálogo) |
+| `idade` | `2`, `5`, `9`, `13` (faixas 0–2, 3–5, 6–9, 10–13 anos) |
+| `categoria` | `teatro`, `parque`, `museu`, `atividade-extra`, `evento` |
+| `preco` | `gratuito`, `pago` |
+| `ambiente` | `indoor`, `outdoor`, `ambos` |
+
+Exemplo: `/?bairro=Tijuca&idade=4&categoria=teatro&preco=gratuito&ambiente=indoor`
+
+`/buscar` redireciona permanentemente para `/` com os mesmos query params.
+
+Decisão técnica: `docs/decisions/2026-05-21-i4-1-filtros-home.md`.
+
 ## Rotas (fase A — mock)
 
 | Rota | Descrição |
 |------|-----------|
-| `/` | Home com grid de atrações |
+| `/` | Home com filtros e grid de atrações |
 | `/atracao/[slug]` | Ficha da atração (SSG) |
-| `/buscar?bairro=&idade=` | Lista filtrada (ex.: `?bairro=Tijuca&idade=4`) |
+| `/buscar?…` | Redireciona para `/` com os mesmos filtros |
 | `/design-system` | Vitrine de componentes base |
 
 Dados vêm do Sanity quando configurado; `lib/mock-atracoes.ts` permanece como fallback para dev e dataset vazio.
