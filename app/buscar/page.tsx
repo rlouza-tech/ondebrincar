@@ -1,46 +1,29 @@
-import type { Metadata } from "next";
-import { Suspense } from "react";
-import { SiteHeader } from "@/components/SiteHeader";
-import { getAllAtracoes } from "@/lib/atracoes";
-import { BuscarContent } from "./buscar-content";
+import { permanentRedirect } from "next/navigation";
 
-export function generateMetadata(): Metadata {
-  return {
-    title: "Buscar atrações | Onde Brincar",
-    description:
-      "Filtre atrações infantis no Rio por bairro e idade da criança.",
-  };
+interface BuscarPageProps {
+  searchParams?: Record<string, string | string[] | undefined>;
 }
 
-export default async function BuscarPage() {
-  const atracoes = await getAllAtracoes();
+function buildQueryString(
+  searchParams: Record<string, string | string[] | undefined>,
+): string {
+  const params = new URLSearchParams();
 
-  return (
-    <>
-      <SiteHeader />
-      <main className="mx-auto max-w-screen-lg px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
-        <div className="mb-8 space-y-2">
-          <h1 className="text-2xl font-semibold text-primary md:text-3xl">
-            Buscar
-          </h1>
-          <p className="text-base text-secondary">
-            Filtragem via URL — por exemplo{" "}
-            <code className="rounded bg-primary/5 px-1.5 py-0.5 text-sm">
-              /buscar?bairro=Tijuca&amp;idade=4
-            </code>
-          </p>
-        </div>
+  for (const [key, value] of Object.entries(searchParams)) {
+    if (typeof value === "string") {
+      params.set(key, value);
+    } else if (Array.isArray(value)) {
+      for (let index = 0; index < value.length; index += 1) {
+        params.append(key, value[index]);
+      }
+    }
+  }
 
-        <Suspense
-          fallback={
-            <p className="text-sm text-secondary" aria-live="polite">
-              Carregando resultados…
-            </p>
-          }
-        >
-          <BuscarContent atracoes={atracoes} />
-        </Suspense>
-      </main>
-    </>
-  );
+  return params.toString();
+}
+
+/** Redireciona /buscar → / preservando query params (filtros na Home). */
+export default function BuscarPage({ searchParams = {} }: BuscarPageProps) {
+  const query = buildQueryString(searchParams);
+  permanentRedirect(query ? `/?${query}` : "/");
 }

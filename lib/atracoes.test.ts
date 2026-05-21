@@ -3,6 +3,7 @@ import {
   filtrarAtracoes,
   getAtracaoBySlug,
   mapSanityAtracao,
+  normalizeCategoriaSlug,
   type Atracao,
 } from "./atracoes";
 import { mockAtracoes } from "./mock-atracoes";
@@ -20,6 +21,28 @@ describe("filtrarAtracoes", () => {
     expect(resultados.some((a) => a.slug.includes("pequeno-principe"))).toBe(
       true,
     );
+  });
+
+  it("filtra por categoria teatro (mock com label legível)", () => {
+    const resultados = filtrarAtracoes(mockAtracoes, { categoria: "teatro" });
+    expect(resultados.length).toBeGreaterThan(0);
+    expect(
+      resultados.every((a) => normalizeCategoriaSlug(a.categoria) === "teatro"),
+    ).toBe(true);
+  });
+
+  it("filtra por preço gratuito", () => {
+    const resultados = filtrarAtracoes(mockAtracoes, { preco: "gratuito" });
+    expect(resultados.length).toBeGreaterThan(0);
+    expect(resultados.every((a) => a.precoTipo === "gratuito")).toBe(true);
+  });
+
+  it("filtra por ambiente outdoor", () => {
+    const resultados = filtrarAtracoes(mockAtracoes, {
+      indoorOutdoor: "outdoor",
+    });
+    expect(resultados.length).toBeGreaterThan(0);
+    expect(resultados.every((a) => a.indoorOutdoor === "outdoor")).toBe(true);
   });
 });
 
