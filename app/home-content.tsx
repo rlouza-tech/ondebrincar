@@ -4,47 +4,18 @@ import { useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { AtracaoCardLink } from "@/components/AtracaoCardLink";
 import { HomeFilters } from "@/components/HomeFilters";
-import { filtrarAtracoes, type Atracao } from "@/lib/atracoes";
-import type { IndoorOutdoor, PrecoTipo } from "@/lib/sanity/types";
+import { filtrarAtracoes, filtrosFromSearchParams, type Atracao } from "@/lib/atracoes";
 
 interface HomeContentProps {
   atracoes: Atracao[];
   bairros: string[];
 }
 
-function parseIdadeParam(value: string | null): number | undefined {
-  if (!value) {
-    return undefined;
-  }
-  const parsed = Number.parseInt(value, 10);
-  return Number.isNaN(parsed) ? undefined : parsed;
-}
-
-function parsePrecoParam(value: string | null): PrecoTipo | undefined {
-  if (value === "gratuito" || value === "pago") {
-    return value;
-  }
-  return undefined;
-}
-
-function parseAmbienteParam(value: string | null): IndoorOutdoor | undefined {
-  if (value === "indoor" || value === "outdoor" || value === "ambos") {
-    return value;
-  }
-  return undefined;
-}
-
 export function HomeContent({ atracoes, bairros }: HomeContentProps) {
   const searchParams = useSearchParams();
 
   const filtros = useMemo(
-    () => ({
-      bairro: searchParams.get("bairro") ?? undefined,
-      idade: parseIdadeParam(searchParams.get("idade")),
-      categoria: searchParams.get("categoria") ?? undefined,
-      preco: parsePrecoParam(searchParams.get("preco")),
-      indoorOutdoor: parseAmbienteParam(searchParams.get("ambiente")),
-    }),
+    () => filtrosFromSearchParams(searchParams),
     [searchParams],
   );
 
@@ -73,7 +44,7 @@ export function HomeContent({ atracoes, bairros }: HomeContentProps) {
         </p>
       </div>
 
-      <HomeFilters bairros={bairros} />
+      <HomeFilters bairros={bairros} atracoes={atracoes} />
 
       <p className="text-sm font-medium text-secondary" aria-live="polite">
         {contagemLabel}

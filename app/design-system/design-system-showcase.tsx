@@ -132,7 +132,10 @@ export function DesignSystemShowcase() {
               imageUrl="/placeholder-atracao.svg"
               imageAlt="Área verde do parque com playground"
               favorite={favorite}
-              onFavoriteToggle={() => setFavorite((value) => !value)}
+              onFavoriteToggle={(event) => {
+                event.preventDefault();
+                setFavorite((value) => !value);
+              }}
             />
           </div>
         </ViewportFrame>
