@@ -2,8 +2,11 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { buttonClassName } from "@/components/Button";
+import { AtracaoDetailActions } from "@/components/AtracaoDetailActions";
+import { AttractionDetailTracker } from "@/components/AttractionDetailTracker";
+import { OutboundLink } from "@/components/OutboundLink";
 import { SiteHeader } from "@/components/SiteHeader";
+import { buttonClassName } from "@/components/Button";
 import {
   formatFaixaEtaria,
   formatPreco,
@@ -45,6 +48,7 @@ export default async function AtracaoPage({ params }: AtracaoPageProps) {
 
   return (
     <>
+      <AttractionDetailTracker atracao={atracao} />
       <SiteHeader />
       <main className="mx-auto max-w-screen-lg px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
         <Link
@@ -111,10 +115,12 @@ export default async function AtracaoPage({ params }: AtracaoPageProps) {
               {atracao.descricaoCurta}
             </p>
 
-            <a
+            <AtracaoDetailActions atracao={atracao} />
+
+            <OutboundLink
+              atracao={atracao}
               href={atracao.linkExterno}
-              target="_blank"
-              rel="noopener noreferrer"
+              ctaLabel="Ver ingresso"
               className={buttonClassName({
                 variant: "primary",
                 size: "lg",
@@ -122,7 +128,7 @@ export default async function AtracaoPage({ params }: AtracaoPageProps) {
               })}
             >
               Ver ingresso
-            </a>
+            </OutboundLink>
           </div>
         </article>
       </main>

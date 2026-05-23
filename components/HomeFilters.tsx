@@ -1,9 +1,15 @@
 "use client";
 
-import { useCallback, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FilterChip } from "@/components/FilterChip";
-import type { IndoorOutdoor, PrecoTipo } from "@/lib/sanity/types";
+import { trackEvent, type FilterUsedParams } from "@/lib/analytics";
+import {
+  countActiveFilters,
+  filtrarAtracoes,
+  filtrosFromSearchParams,
+} from "@/lib/atracoes";
+import type { Atracao, IndoorOutdoor, PrecoTipo } from "@/lib/sanity/types";
 
 export const FAIXAS_ETARIAS = [
   { label: "0–2 anos", value: "2" },
@@ -33,7 +39,16 @@ export const AMBIENTE_OPTIONS: Array<{ label: string; value: IndoorOutdoor }> = 
 
 interface HomeFiltersProps {
   bairros: string[];
+  atracoes: Atracao[];
 }
+
+const FILTER_TYPE_BY_PARAM: Record<string, FilterUsedParams["filter_type"]> = {
+  bairro: "neighborhood",
+  idade: "age",
+  categoria: "category",
+  preco: "price",
+  ambiente: "environment",
+};
 
 function FilterGroup({
   label,
@@ -52,7 +67,7 @@ function FilterGroup({
   );
 }
 
-export function HomeFilters({ bairros }: HomeFiltersProps) {
+export function HomeFilters({ bairros, atracoes }: HomeFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -62,22 +77,29 @@ export function HomeFilters({ bairros }: HomeFiltersProps) {
   const precoAtivo = searchParams.get("preco") ?? "";
   const ambienteAtivo = searchParams.get("ambiente") ?? "";
 
-  const setParam = useCallback(
-    (key: string, value: string | null) => {
-      const params = new URLSearchParams(searchParams.toString());
-      if (value === null || value === "") {
-        params.delete(key);
-      } else {
-        params.set(key, value);
-      }
-      const query = params.toString();
-      router.replace(query ? `/?${query}` : "/", { scroll: false });
-    },
-    [router, searchParams],
-  );
-
   const toggleParam = (key: string, value: string, ativo: string) => {
-    setParam(key, ativo === value ? null : value);
+    const params = new URLSearchParams(searchParams.toString());
+    const nextValue = ativo === value ? null : value;
+
+    if (nextValue === null) {
+      params.delete(key);
+    } else {
+      params.set(key, nextValue);
+    }
+
+    const filterType = FILTER_TYPE_BY_PARAM[key];
+    if (filterType) {
+      trackEvent("filter_used", {
+        filter_type: filterType,
+        filter_value: value,
+        active_filters_count: countActiveFilters(params),
+        results_count: filtrarAtracoes(atracoes, filtrosFromSearchParams(params))
+          .length,
+      } satisfies FilterUsedParams);
+    }
+
+    const query = params.toString();
+    router.replace(query ? `/?${query}` : "/", { scroll: false });
   };
 
   return (

@@ -181,6 +181,50 @@ export interface FiltroBusca {
   indoorOutdoor?: IndoorOutdoor;
 }
 
+const FILTER_PARAM_KEYS = [
+  "bairro",
+  "idade",
+  "categoria",
+  "preco",
+  "ambiente",
+] as const;
+
+function parseIdadeFromParam(value: string | null): number | undefined {
+  if (!value) {
+    return undefined;
+  }
+  const parsed = Number.parseInt(value, 10);
+  return Number.isNaN(parsed) ? undefined : parsed;
+}
+
+function parsePrecoFromParam(value: string | null): PrecoTipo | undefined {
+  if (value === "gratuito" || value === "pago") {
+    return value;
+  }
+  return undefined;
+}
+
+function parseAmbienteFromParam(value: string | null): IndoorOutdoor | undefined {
+  if (value === "indoor" || value === "outdoor" || value === "ambos") {
+    return value;
+  }
+  return undefined;
+}
+
+export function filtrosFromSearchParams(params: URLSearchParams): FiltroBusca {
+  return {
+    bairro: params.get("bairro") ?? undefined,
+    idade: parseIdadeFromParam(params.get("idade")),
+    categoria: params.get("categoria") ?? undefined,
+    preco: parsePrecoFromParam(params.get("preco")),
+    indoorOutdoor: parseAmbienteFromParam(params.get("ambiente")),
+  };
+}
+
+export function countActiveFilters(params: URLSearchParams): number {
+  return FILTER_PARAM_KEYS.filter((key) => params.get(key)).length;
+}
+
 export function filtrarAtracoes(
   atracoes: Atracao[],
   filtros: FiltroBusca,

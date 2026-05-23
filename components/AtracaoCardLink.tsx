@@ -1,33 +1,67 @@
+"use client";
+
 import Link from "next/link";
+import { useState, type MouseEvent } from "react";
 import { AtracaoCard } from "@/components/AtracaoCard";
 import {
   formatFaixaEtaria,
   formatPreco,
 } from "@/lib/atracoes";
-import type { MockAtracao } from "@/lib/mock-atracoes";
+import { trackEvent, trackShareClick, type SaveClickParams } from "@/lib/analytics";
+import { useAttractionView } from "@/hooks/useAttractionView";
+import type { Atracao } from "@/lib/sanity/types";
 import { cn } from "@/lib/cn";
 
 export interface AtracaoCardLinkProps {
-  atracao: MockAtracao;
+  atracao: Atracao;
   className?: string;
 }
 
 export function AtracaoCardLink({ atracao, className }: AtracaoCardLinkProps) {
+  const [favorite, setFavorite] = useState(false);
+  const cardRef = useAttractionView(atracao, "listing");
+
+  const handleFavoriteToggle = (event: MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!favorite) {
+      trackEvent("save_click", {
+        attraction_id: atracao.slug,
+        attraction_name: atracao.titulo,
+        category: atracao.categoria,
+        source: "listing_card",
+      } satisfies SaveClickParams);
+    }
+
+    setFavorite((value) => !value);
+  };
+
+  const handleShareClick = async (event: MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const shareUrl = `${window.location.origin}/atracao/${atracao.slug}`;
+    await trackShareClick(atracao, shareUrl, "listing_card");
+  };
+
   return (
-    <Link
-      href={`/atracao/${atracao.slug}`}
-      className={cn(
-        "block rounded-xl transition-shadow hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
-        className,
-      )}
-    >
-      <AtracaoCard
-        name={atracao.titulo}
-        ageRange={formatFaixaEtaria(atracao.idadeMin, atracao.idadeMax)}
-        price={formatPreco(atracao)}
-        imageUrl={atracao.imagemUrl}
-        imageAlt={`Foto: ${atracao.titulo}`}
-      />
-    </Link>
+    <div ref={cardRef} className={cn("relative", className)}>
+      <Link
+        href={`/atracao/${atracao.slug}`}
+        className="block rounded-xl transition-shadow hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+      >
+        <AtracaoCard
+          name={atracao.titulo}
+          ageRange={formatFaixaEtaria(atracao.idadeMin, atracao.idadeMax)}
+          price={formatPreco(atracao)}
+          imageUrl={atracao.imagemUrl}
+          imageAlt={`Foto: ${atracao.titulo}`}
+          favorite={favorite}
+          onFavoriteToggle={handleFavoriteToggle}
+          onShareClick={handleShareClick}
+        />
+      </Link>
+    </div>
   );
 }
