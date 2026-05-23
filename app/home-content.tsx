@@ -2,8 +2,10 @@
 
 import { useMemo } from "react";
 import { useSearchParams } from "next/navigation";
+import { ActiveFilters } from "@/components/ActiveFilters";
 import { AtracaoCardLink } from "@/components/AtracaoCardLink";
 import { HomeFilters } from "@/components/HomeFilters";
+import { ShareSearchButton } from "@/components/ShareSearchButton";
 import { filtrarAtracoes, filtrosFromSearchParams, type Atracao } from "@/lib/atracoes";
 
 interface HomeContentProps {
@@ -46,9 +48,14 @@ export function HomeContent({ atracoes, bairros }: HomeContentProps) {
 
       <HomeFilters bairros={bairros} atracoes={atracoes} />
 
-      <p className="text-sm font-medium text-secondary" aria-live="polite">
-        {contagemLabel}
-      </p>
+      <ActiveFilters searchParams={searchParams} atracoes={atracoes} />
+
+      <div className="flex items-center justify-between gap-4">
+        <p className="text-sm font-medium text-secondary" aria-live="polite">
+          {contagemLabel}
+        </p>
+        <ShareSearchButton searchParams={searchParams} />
+      </div>
 
       {resultados.length === 0 ? (
         <p className="rounded-lg border border-warn/30 bg-warn/10 px-4 py-3 text-sm text-primary">
