@@ -5,37 +5,17 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { FilterChip } from "@/components/FilterChip";
 import { trackEvent, type FilterUsedParams } from "@/lib/analytics";
 import {
+  AMBIENTE_OPTIONS,
+  CATEGORIA_OPTIONS,
+  FAIXAS_ETARIAS,
+  PRECO_OPTIONS,
+} from "@/lib/filter-options";
+import {
   countActiveFilters,
   filtrarAtracoes,
   filtrosFromSearchParams,
 } from "@/lib/atracoes";
-import type { Atracao, IndoorOutdoor, PrecoTipo } from "@/lib/sanity/types";
-
-export const FAIXAS_ETARIAS = [
-  { label: "0–2 anos", value: "2" },
-  { label: "3–5 anos", value: "5" },
-  { label: "6–9 anos", value: "9" },
-  { label: "10–13 anos", value: "13" },
-] as const;
-
-export const CATEGORIA_OPTIONS = [
-  { label: "Teatro", value: "teatro" },
-  { label: "Parque", value: "parque" },
-  { label: "Museu", value: "museu" },
-  { label: "Atividade extra", value: "atividade-extra" },
-  { label: "Evento", value: "evento" },
-] as const;
-
-export const PRECO_OPTIONS: Array<{ label: string; value: PrecoTipo }> = [
-  { label: "Gratuito", value: "gratuito" },
-  { label: "Pago", value: "pago" },
-];
-
-export const AMBIENTE_OPTIONS: Array<{ label: string; value: IndoorOutdoor }> = [
-  { label: "Indoor", value: "indoor" },
-  { label: "Outdoor", value: "outdoor" },
-  { label: "Ambos", value: "ambos" },
-];
+import type { Atracao } from "@/lib/sanity/types";
 
 interface HomeFiltersProps {
   bairros: string[];

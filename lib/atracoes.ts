@@ -181,13 +181,7 @@ export interface FiltroBusca {
   indoorOutdoor?: IndoorOutdoor;
 }
 
-const FILTER_PARAM_KEYS = [
-  "bairro",
-  "idade",
-  "categoria",
-  "preco",
-  "ambiente",
-] as const;
+import { FILTER_PARAM_KEYS } from "@/lib/filter-options";
 
 function parseIdadeFromParam(value: string | null): number | undefined {
   if (!value) {
