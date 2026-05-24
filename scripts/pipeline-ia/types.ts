@@ -31,6 +31,14 @@ export interface LinhaInput {
   desconto_percentual: string;
   preco_bruto: string;
   url_origem: string;
+  /** Campos opcionais — presentes quando gerado pelo scraper v2 */
+  sinopse_oficial?: string;
+  horarios_sessao?: string;
+  duracao_minutos?: string;
+  idade_minima?: string;
+  idade_maxima?: string;
+  preco_inteira_centavos?: string;
+  url_ingresso?: string;
 }
 
 export interface RespostaGemini {

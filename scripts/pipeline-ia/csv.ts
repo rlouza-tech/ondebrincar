@@ -16,6 +16,16 @@ const INPUT_COLUMNS: Array<keyof LinhaInput> = [
   "url_origem",
 ];
 
+const OPTIONAL_V2_COLUMNS: Array<keyof LinhaInput> = [
+  "sinopse_oficial",
+  "horarios_sessao",
+  "duracao_minutos",
+  "idade_minima",
+  "idade_maxima",
+  "preco_inteira_centavos",
+  "url_ingresso",
+];
+
 export async function readCSV(path: string): Promise<LinhaInput[]> {
   return new Promise((resolve, reject) => {
     const rows: LinhaInput[] = [];
@@ -29,11 +39,17 @@ export async function readCSV(path: string): Promise<LinhaInput[]> {
         }),
       )
       .on("data", (record: Record<string, string>) => {
-        rows.push(
-          Object.fromEntries(
-            INPUT_COLUMNS.map((column) => [column, record[column] ?? ""]),
-          ) as unknown as LinhaInput,
-        );
+        const row: Record<string, string> = {};
+        for (const column of INPUT_COLUMNS) {
+          row[column] = record[column] ?? "";
+        }
+        for (const column of OPTIONAL_V2_COLUMNS) {
+          const value = record[column]?.trim();
+          if (value) {
+            row[column] = value;
+          }
+        }
+        rows.push(row as unknown as LinhaInput);
       })
       .on("error", reject)
       .on("end", () => resolve(rows));

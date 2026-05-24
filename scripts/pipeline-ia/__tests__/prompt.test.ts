@@ -33,6 +33,20 @@ describe("buildPrompt", () => {
     expect(prompt).toContain("NUNCA gere proxima_data no passado");
   });
 
+  it("inclui bloco scraper v2 quando campos opcionais existem", () => {
+    const prompt = buildPrompt(
+      baseInput({
+        sinopse_oficial: "Sinopse oficial do teatro.",
+        horarios_sessao: "Sábados 16h",
+        idade_maxima: "12",
+        preco_inteira_centavos: "8000",
+      }),
+    );
+    expect(prompt).toContain("DADOS SCRAPER V2");
+    expect(prompt).toContain("Sinopse oficial do teatro.");
+    expect(prompt).toContain("priorize-os sobre qualquer inferência");
+  });
+
   it("inclui voz editorial e política de incerteza do voice-adapter", () => {
     const prompt = buildPrompt(baseInput());
     expect(prompt).toContain("VOZ EDITORIAL");

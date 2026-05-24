@@ -5,14 +5,42 @@ import {
 import { getReferenceDateIso } from "./reference-date";
 import type { LinhaInput } from "./types";
 
+function buildScraperV2Block(linha: LinhaInput): string {
+  const hasV2 =
+    linha.sinopse_oficial ||
+    linha.horarios_sessao ||
+    linha.idade_minima ||
+    linha.idade_maxima ||
+    linha.preco_inteira_centavos ||
+    linha.duracao_minutos;
+
+  if (!hasV2) {
+    return "";
+  }
+
+  return `
+DADOS SCRAPER V2 (priorize sobre inferência — vêm da página oficial do Clubinho):
+- sinopse_oficial: ${linha.sinopse_oficial ?? ""}
+- horarios_sessao: ${linha.horarios_sessao ?? ""}
+- duracao_minutos: ${linha.duracao_minutos ?? ""}
+- idade_minima: ${linha.idade_minima ?? ""}
+- idade_maxima: ${linha.idade_maxima ?? ""}
+- preco_inteira_centavos: ${linha.preco_inteira_centavos ?? ""}
+- url_ingresso: ${linha.url_ingresso ?? ""}
+
+Se sinopse_oficial, horarios_sessao, idade_minima, idade_maxima ou preco_inteira_centavos estiverem preenchidos, priorize-os sobre qualquer inferência do texto livre.`;
+}
+
 export function buildPrompt(linha: LinhaInput, referenceDate = new Date()): string {
   const dataAtual = getReferenceDateIso(referenceDate);
   const voice = buildVoiceSystemPrompt();
   const incerteza = buildIncertezaInstruction();
+  const scraperV2 = buildScraperV2Block(linha);
 
   return `${voice}
 
 ${incerteza}
+${scraperV2}
 
 CONTEXTO TEMPORAL
 Data atual de referência: ${dataAtual}
@@ -53,7 +81,7 @@ Gere exclusivamente um JSON com os campos definidos no schema da resposta. Regra
 - mini_review: 50-400 caracteres, voz autoral com ressalva franca
 
 REGRAS DE EXTRAÇÃO (revisão editorial — siga à risca):
-- idade_max: extraia o número exato mencionado no texto de entrada (nome, dias_apresentacao, categoria_origem, preco_bruto, url_origem). Nunca infira nem arredonde.
+- idade_max: extraia o número exato mencionado no texto de entrada (nome, dias_apresentacao, categoria_origem, preco_bruto, url_origem) ou use idade_maxima do scraper v2 quando preenchido. Nunca infira nem arredonde.
   Se o texto diz "até 12 anos" ou "12+", retorne idade_max: 12 — nunca 8 ou outro valor por suposição de faixa etária.
   Se não houver menção clara de idade máxima, marque idade_max em abstain_fields e use o menor valor plausível só se idade_min exigir coerência.
 - tipo_programacao: classifique assim:
@@ -68,7 +96,7 @@ REGRAS DE EXTRAÇÃO (revisão editorial — siga à risca):
   Se houver múltiplas datas listadas, retorne a mais próxima que ainda não passou (formato YYYY-MM-DD).
   Se a atração for permanente e não tiver data específica inferível, retorne null.
   Nunca invente uma data que não esteja implícita ou explícita no input.
-- preco_centavos: extraia o valor em centavos do preco_bruto ou de menções no texto (ex.: "R$ 80,00" -> 8000).
+- preco_centavos: use preco_inteira_centavos do scraper v2 quando preenchido; senão extraia do preco_bruto ou de menções no texto (ex.: "R$ 80,00" -> 8000).
   Se mencionar "gratuito" ou "entrada franca", retorne 0.
   Só retorne null se não houver absolutamente nenhuma menção de preço no input.
 - indoor_outdoor + voz editorial:
