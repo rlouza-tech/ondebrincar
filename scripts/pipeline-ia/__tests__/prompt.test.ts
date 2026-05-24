@@ -33,6 +33,14 @@ describe("buildPrompt", () => {
     expect(prompt).toContain("NUNCA gere proxima_data no passado");
   });
 
+  it("inclui voz editorial e política de incerteza do voice-adapter", () => {
+    const prompt = buildPrompt(baseInput());
+    expect(prompt).toContain("VOZ EDITORIAL");
+    expect(prompt).toContain("POLÍTICA DE INCERTEZA");
+    expect(prompt).toContain("[INCERTO]");
+    expect(prompt).toContain("Daniel Mendes");
+  });
+
   it("inclui TRANSPARÊNCIA SOBRE LACUNAS com exemplo de horário no ingresso", () => {
     const prompt = buildPrompt(baseInput());
     expect(prompt).toContain("TRANSPARÊNCIA SOBRE LACUNAS");

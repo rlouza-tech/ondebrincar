@@ -87,3 +87,18 @@ describe("evaluate — programação", () => {
     expect(result.reasons).toContain("programacao_lacuna_horario_nao_sinalizada");
   });
 });
+
+describe("evaluate — incerteza", () => {
+  it("marcador [INCERTO] → needs_human", () => {
+    const result = evaluate(
+      baseInput(),
+      baseResposta({
+        mini_review:
+          "Programa interessante na região central. [INCERTO] Acessibilidade — confirme com a bilheteria antes de ir.",
+      }),
+    );
+
+    expect(result.status).toBe("needs_human");
+    expect(result.reasons).toContain("marcador_incerto");
+  });
+});

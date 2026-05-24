@@ -125,6 +125,9 @@ async function readEnrichedCSV(path: string): Promise<LinhaEnriquecida[]> {
           confidence: parseIntRequired(record.confidence ?? "", "confidence"),
           processed_at: record.processed_at ?? "",
           source_url: record.source_url ?? "",
+          ai_generated: (record.ai_generated ?? "false") === "true",
+          ai_model: (record.ai_model ?? "").trim() || null,
+          pipeline_failed: (record.pipeline_failed ?? "false") === "true",
         });
       })
       .on("error", reject)

@@ -1,3 +1,5 @@
+import type { CostSummary } from "./cost-log";
+
 export const CATEGORIAS_VALIDAS = [
   "teatro",
   "parque",
@@ -73,6 +75,21 @@ export interface LinhaEnriquecida {
   confidence: number;
   processed_at: string;
   source_url: string;
+  ai_generated: boolean;
+  ai_model: string | null;
+  pipeline_failed: boolean;
+}
+
+export interface EnrichResult {
+  resposta: RespostaGemini;
+  ai_generated: boolean;
+  ai_model: string | null;
+  pipeline_failed: boolean;
+  usage: {
+    input_tokens: number;
+    output_tokens: number;
+    custo_estimado_reais: number;
+  };
 }
 
 export interface PipelineReport {
@@ -85,6 +102,7 @@ export interface PipelineReport {
   started_at: string;
   finished_at: string;
   items_with_issues: Array<{ slug: string; motivos: string[] }>;
+  cost_summary: CostSummary;
 }
 
 export interface QualityGateResult {

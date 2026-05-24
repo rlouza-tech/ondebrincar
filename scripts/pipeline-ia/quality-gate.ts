@@ -52,6 +52,13 @@ export function evaluate(
     reasons.push(`gemini_error:${resposta.error}`);
   }
 
+  if (
+    resposta.descricao.includes("[INCERTO]") ||
+    resposta.mini_review.includes("[INCERTO]")
+  ) {
+    reasons.push("marcador_incerto");
+  }
+
   if (resposta.descricao.length < 50 || resposta.descricao.length > 600) {
     reasons.push("descricao_tamanho_invalido");
   }

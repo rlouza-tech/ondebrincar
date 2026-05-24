@@ -3,6 +3,8 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { basename, join } from "node:path";
 import { readCSV, writeCSV } from "./csv";
+import type { CostLogEntry, CostSummary } from "./cost-log";
+import { buildCostSummary } from "./cost-log";
 import { enrichLinha, waitForRateLimit } from "./gemini";
 import { evaluate } from "./quality-gate";
 import type {
@@ -89,6 +91,7 @@ function buildLinhaEnriquecida(
   status: LinhaEnriquecida["review_status"],
   reasons: string[],
   processedAt: string,
+  meta: Pick<LinhaEnriquecida, "ai_generated" | "ai_model" | "pipeline_failed">,
 ): LinhaEnriquecida {
   return {
     nome: linha.nome,
@@ -116,6 +119,9 @@ function buildLinhaEnriquecida(
     confidence: resposta.confidence,
     processed_at: processedAt,
     source_url: linha.url_origem,
+    ai_generated: meta.ai_generated,
+    ai_model: meta.ai_model,
+    pipeline_failed: meta.pipeline_failed,
   };
 }
 
@@ -124,6 +130,7 @@ function buildReport(
   model: string,
   startedAt: string,
   finishedAt: string,
+  costSummary: CostSummary,
 ): PipelineReport {
   const motivosTop: Record<string, number> = {};
   const itemsWithIssues: PipelineReport["items_with_issues"] = [];
@@ -153,6 +160,7 @@ function buildReport(
     started_at: startedAt,
     finished_at: finishedAt,
     items_with_issues: itemsWithIssues,
+    cost_summary: costSummary,
   };
 }
 
@@ -166,6 +174,9 @@ async function main() {
   const inputRows = await readCSV(options.inputPath);
   const rowsToProcess = options.limit ? inputRows.slice(0, options.limit) : inputRows;
   const enrichedRows: LinhaEnriquecida[] = [];
+  const costLogEntries: CostLogEntry[] = [];
+  const outputDir = join(process.cwd(), "data", "output");
+  const costLogPath = join(outputDir, "pipeline-cost-log.jsonl");
 
   console.log(
     `Pipeline IA: ${rowsToProcess.length}/${inputRows.length} linhas de ${basename(
@@ -175,21 +186,41 @@ async function main() {
 
   for (let index = 0; index < rowsToProcess.length; index += 1) {
     const linha = rowsToProcess[index];
-    const resposta = await enrichLinha(linha, options.model);
-    const gate = evaluate(linha, resposta);
+    const slug = buildSlug(linha);
+    const enrich = await enrichLinha(linha, options.model, { costLogPath, slug });
+    const gate = evaluate(linha, enrich.resposta);
     const processedAt = new Date().toISOString();
     const enriched = buildLinhaEnriquecida(
       linha,
-      resposta,
+      enrich.resposta,
       gate.status,
       gate.reasons,
       processedAt,
+      {
+        ai_generated: enrich.ai_generated,
+        ai_model: enrich.ai_model,
+        pipeline_failed: enrich.pipeline_failed,
+      },
     );
     enrichedRows.push(enriched);
 
+    costLogEntries.push({
+      timestamp: processedAt,
+      slug,
+      input_tokens: enrich.usage.input_tokens,
+      output_tokens: enrich.usage.output_tokens,
+      custo_estimado_reais: enrich.usage.custo_estimado_reais,
+      model: options.model,
+      success_or_error: enrich.pipeline_failed ? "error" : "success",
+      error_message: enrich.resposta.error,
+    });
+
     const mark = gate.status === "auto_ok" ? "✓" : "✗";
+    const failTag = enrich.pipeline_failed ? " [pipeline_failed]" : "";
     const reasons = gate.reasons.length > 0 ? ` (${gate.reasons.join(", ")})` : "";
-    console.log(`${mark} [${index + 1}/${rowsToProcess.length}] ${enriched.slug}${reasons}`);
+    console.log(
+      `${mark} [${index + 1}/${rowsToProcess.length}] ${enriched.slug}${failTag}${reasons}`,
+    );
 
     if (index < rowsToProcess.length - 1) {
       await waitForRateLimit();
@@ -198,12 +229,18 @@ async function main() {
 
   const finishedAt = new Date().toISOString();
   const timestamp = timestampForFilename(startedAt);
-  const outputDir = join(process.cwd(), "data", "output");
   await mkdir(outputDir, { recursive: true });
 
   const csvPath = join(outputDir, `planilha-enriquecida-${timestamp}.csv`);
   const reportPath = join(outputDir, `pipeline-report-${timestamp}.json`);
-  const report = buildReport(enrichedRows, options.model, startedAt, finishedAt);
+  const costSummary = buildCostSummary(costLogEntries);
+  const report = buildReport(
+    enrichedRows,
+    options.model,
+    startedAt,
+    finishedAt,
+    costSummary,
+  );
 
   await writeCSV(csvPath, enrichedRows);
   await writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
@@ -214,6 +251,10 @@ async function main() {
   console.log(`auto_ok: ${report.auto_ok} (${autoOkPercent}%)`);
   console.log(`needs_human: ${report.needs_human}`);
   console.log(`Top motivos: ${JSON.stringify(report.motivos_top)}`);
+  console.log(
+    `Custo estimado: R$ ${costSummary.custo_estimado_total_reais} (projeção 60 fichas/mês: R$ ${costSummary.custo_estimado_mensal_60_fichas_reais})`,
+  );
+  console.log(`Cost log: ${costLogPath}`);
   console.log(`CSV: ${csvPath}`);
   console.log(`Report: ${reportPath}`);
 }
