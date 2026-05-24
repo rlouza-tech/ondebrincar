@@ -1,14 +1,17 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { FilterChip } from "@/components/FilterChip";
+import { FilterDropdown } from "@/components/FilterDropdown";
+import {
+  FiltersBottomSheet,
+  FiltersIcon,
+} from "@/components/FiltersBottomSheet";
 import { trackEvent, type FilterUsedParams } from "@/lib/analytics";
 import {
-  AMBIENTE_OPTIONS,
   CATEGORIA_OPTIONS,
   FAIXAS_ETARIAS,
-  PRECO_OPTIONS,
+  getFilterDisplayLabel,
 } from "@/lib/filter-options";
 import {
   countActiveFilters,
@@ -16,11 +19,14 @@ import {
   filtrosFromSearchParams,
 } from "@/lib/atracoes";
 import type { Atracao } from "@/lib/sanity/types";
+import { cn } from "@/lib/cn";
 
 interface HomeFiltersProps {
   bairros: string[];
   atracoes: Atracao[];
 }
+
+type PrimaryFilterKey = "idade" | "bairro" | "categoria";
 
 const FILTER_TYPE_BY_PARAM: Record<string, FilterUsedParams["filter_type"]> = {
   bairro: "neighborhood",
@@ -30,32 +36,28 @@ const FILTER_TYPE_BY_PARAM: Record<string, FilterUsedParams["filter_type"]> = {
   ambiente: "environment",
 };
 
-function FilterGroup({
-  label,
-  children,
-}: {
-  label: string;
-  children: ReactNode;
-}) {
-  return (
-    <div className="space-y-2">
-      <p className="text-sm font-medium text-primary">{label}</p>
-      <div className="-mx-1 flex flex-nowrap gap-2 overflow-x-auto px-1 pb-1">
-        {children}
-      </div>
-    </div>
-  );
-}
-
 export function HomeFilters({ bairros, atracoes }: HomeFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  const [openDropdown, setOpenDropdown] = useState<PrimaryFilterKey | null>(
+    null,
+  );
+  const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
 
   const bairroAtivo = searchParams.get("bairro") ?? "";
   const idadeAtiva = searchParams.get("idade") ?? "";
   const categoriaAtiva = searchParams.get("categoria") ?? "";
   const precoAtivo = searchParams.get("preco") ?? "";
   const ambienteAtivo = searchParams.get("ambiente") ?? "";
+
+  const secondaryActiveCount =
+    (precoAtivo ? 1 : 0) + (ambienteAtivo ? 1 : 0);
+
+  const bairroOptions = bairros.map((bairro) => ({
+    label: bairro,
+    value: bairro,
+  }));
 
   const toggleParam = (key: string, value: string, ativo: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -82,65 +84,107 @@ export function HomeFilters({ bairros, atracoes }: HomeFiltersProps) {
     router.replace(query ? `/?${query}` : "/", { scroll: false });
   };
 
+  const clearParam = (key: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete(key);
+    const query = params.toString();
+    router.replace(query ? `/?${query}` : "/", { scroll: false });
+  };
+
+  const clearSecondaryFilters = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("preco");
+    params.delete("ambiente");
+    const query = params.toString();
+    router.replace(query ? `/?${query}` : "/", { scroll: false });
+  };
+
+  const handleDropdownOpen = (key: PrimaryFilterKey, open: boolean) => {
+    setOpenDropdown(open ? key : null);
+    if (open) {
+      setBottomSheetOpen(false);
+    }
+  };
+
   return (
-    <section
-      className="space-y-4 rounded-xl border border-primary/10 bg-white p-4 shadow-sm"
-      aria-label="Filtros de busca"
-    >
-      <FilterGroup label="Bairro">
-        {bairros.map((bairro) => (
-          <FilterChip
-            key={bairro}
-            label={bairro}
-            selected={bairroAtivo === bairro}
-            onClick={() => toggleParam("bairro", bairro, bairroAtivo)}
-          />
-        ))}
-      </FilterGroup>
+    <section aria-label="Filtros de busca">
+      <div
+        className={cn(
+          "-mx-1 flex flex-nowrap items-center gap-2 overflow-x-auto px-1 pb-1",
+          "[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
+        )}
+      >
+        <FilterDropdown
+          pillLabel="Idade"
+          activeValue={idadeAtiva}
+          activeDisplayLabel={
+            idadeAtiva ? getFilterDisplayLabel("idade", idadeAtiva) : ""
+          }
+          options={FAIXAS_ETARIAS}
+          isOpen={openDropdown === "idade"}
+          onOpenChange={(open) => handleDropdownOpen("idade", open)}
+          onSelect={(value) => toggleParam("idade", value, idadeAtiva)}
+          onClear={() => clearParam("idade")}
+        />
 
-      <FilterGroup label="Idade da criança">
-        {FAIXAS_ETARIAS.map((faixa) => (
-          <FilterChip
-            key={faixa.value}
-            label={faixa.label}
-            selected={idadeAtiva === faixa.value}
-            onClick={() => toggleParam("idade", faixa.value, idadeAtiva)}
-          />
-        ))}
-      </FilterGroup>
+        <FilterDropdown
+          pillLabel="Bairro"
+          activeValue={bairroAtivo}
+          activeDisplayLabel={bairroAtivo}
+          options={bairroOptions}
+          isOpen={openDropdown === "bairro"}
+          onOpenChange={(open) => handleDropdownOpen("bairro", open)}
+          onSelect={(value) => toggleParam("bairro", value, bairroAtivo)}
+          onClear={() => clearParam("bairro")}
+        />
 
-      <FilterGroup label="Categoria">
-        {CATEGORIA_OPTIONS.map((opcao) => (
-          <FilterChip
-            key={opcao.value}
-            label={opcao.label}
-            selected={categoriaAtiva === opcao.value}
-            onClick={() => toggleParam("categoria", opcao.value, categoriaAtiva)}
-          />
-        ))}
-      </FilterGroup>
+        <FilterDropdown
+          pillLabel="Tipo"
+          activeValue={categoriaAtiva}
+          activeDisplayLabel={
+            categoriaAtiva
+              ? getFilterDisplayLabel("categoria", categoriaAtiva)
+              : ""
+          }
+          options={CATEGORIA_OPTIONS}
+          isOpen={openDropdown === "categoria"}
+          onOpenChange={(open) => handleDropdownOpen("categoria", open)}
+          onSelect={(value) => toggleParam("categoria", value, categoriaAtiva)}
+          onClear={() => clearParam("categoria")}
+        />
 
-      <FilterGroup label="Preço">
-        {PRECO_OPTIONS.map((opcao) => (
-          <FilterChip
-            key={opcao.value}
-            label={opcao.label}
-            selected={precoAtivo === opcao.value}
-            onClick={() => toggleParam("preco", opcao.value, precoAtivo)}
-          />
-        ))}
-      </FilterGroup>
+        <button
+          type="button"
+          onClick={() => {
+            setOpenDropdown(null);
+            setBottomSheetOpen(true);
+          }}
+          className={cn(
+            "inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full border border-primary/20 bg-white px-4 text-sm font-medium text-primary transition-colors",
+            "hover:border-primary/40 hover:bg-primary/5",
+            "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+            secondaryActiveCount > 0 && "border-primary/30 bg-primary/10",
+          )}
+        >
+          <FiltersIcon />
+          <span>Filtros</span>
+          {secondaryActiveCount > 0 ? (
+            <span className="inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-primary px-1.5 py-0.5 text-xs font-semibold text-primary-foreground">
+              {secondaryActiveCount}
+            </span>
+          ) : null}
+        </button>
+      </div>
 
-      <FilterGroup label="Ambiente">
-        {AMBIENTE_OPTIONS.map((opcao) => (
-          <FilterChip
-            key={opcao.value}
-            label={opcao.label}
-            selected={ambienteAtivo === opcao.value}
-            onClick={() => toggleParam("ambiente", opcao.value, ambienteAtivo)}
-          />
-        ))}
-      </FilterGroup>
+      <FiltersBottomSheet
+        open={bottomSheetOpen}
+        onClose={() => setBottomSheetOpen(false)}
+        precoAtivo={precoAtivo}
+        ambienteAtivo={ambienteAtivo}
+        onTogglePreco={(value) => toggleParam("preco", value, precoAtivo)}
+        onToggleAmbiente={(value) => toggleParam("ambiente", value, ambienteAtivo)}
+        onClearSecondary={clearSecondaryFilters}
+      />
     </section>
   );
 }
