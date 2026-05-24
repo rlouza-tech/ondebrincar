@@ -23,7 +23,13 @@ export function toSanityDoc(linha: LinhaEnriquecida): SanityAtracaoDocInput {
     descricao: linha.descricao,
     mini_review: linha.mini_review,
     review_status: linha.review_status,
+    ai_generated: linha.ai_generated,
+    pipeline_failed: linha.pipeline_failed,
   };
+
+  if (linha.ai_model) {
+    doc.ai_model = linha.ai_model;
+  }
 
   if (linha.duracao_min !== null) {
     doc.duracao_min = linha.duracao_min;

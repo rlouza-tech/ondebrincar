@@ -34,6 +34,9 @@ export interface SanityAtracaoDocInput {
   descricao: string;
   mini_review: string;
   review_status: string;
+  ai_generated: boolean;
+  ai_model?: string;
+  pipeline_failed: boolean;
 }
 
 export type ImportItemStatus = "created" | "skipped" | "error";

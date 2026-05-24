@@ -240,6 +240,30 @@ export const atracao = defineType({
       description:
         "Status do fluxo editorial. Drafts criados pela pipeline IA começam como 'auto_ok' ou 'needs_human'. Curador revisa e marca 'human_approved' antes de publicar.",
     }),
+    defineField({
+      name: "ai_generated",
+      title: "Texto gerado por IA",
+      type: "boolean",
+      initialValue: false,
+      description:
+        "true quando descricao e mini_review foram adaptados com sucesso pela pipeline IA (US-S4.5).",
+    }),
+    defineField({
+      name: "ai_model",
+      title: "Modelo de IA",
+      type: "string",
+      description:
+        "Identificador do modelo usado na adaptação de voz (ex.: gemini-flash-2.5). Preencher apenas quando ai_generated=true.",
+      hidden: ({ document }) => document?.ai_generated !== true,
+    }),
+    defineField({
+      name: "pipeline_failed",
+      title: "Falha na pipeline IA",
+      type: "boolean",
+      initialValue: false,
+      description:
+        "true quando a chamada ao Gemini falhou e a ficha foi importada sem adaptação de voz (placeholder editorial).",
+    }),
   ],
   preview: {
     select: {

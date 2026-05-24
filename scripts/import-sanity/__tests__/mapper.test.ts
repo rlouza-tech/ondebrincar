@@ -28,6 +28,9 @@ function baseLinha(overrides: Partial<LinhaEnriquecida> = {}): LinhaEnriquecida 
     confidence: 5,
     processed_at: "2026-05-19T12:00:00.000Z",
     source_url: "https://clubinhodeofertas.com.br/rio-de-janeiro",
+    ai_generated: true,
+    ai_model: "gemini-flash-2.5",
+    pipeline_failed: false,
     ...overrides,
   };
 }
@@ -58,6 +61,9 @@ describe("toSanityDoc", () => {
       mini_review:
         "Boa primeira peça para crianças a partir de 4 anos. Ressalva: sessão sem intervalo pode cansar os mais novos no final.",
       review_status: "auto_ok",
+      ai_generated: true,
+      ai_model: "gemini-flash-2.5",
+      pipeline_failed: false,
     });
     expect(doc).not.toHaveProperty("foto");
   });
@@ -89,5 +95,18 @@ describe("toSanityDoc", () => {
     expect(
       toSanityDoc(baseLinha({ review_status: "needs_human" })).review_status,
     ).toBe("needs_human");
+  });
+
+  it("propaga flags de pipeline IA (S4.5)", () => {
+    const doc = toSanityDoc(
+      baseLinha({
+        ai_generated: false,
+        ai_model: null,
+        pipeline_failed: true,
+      }),
+    );
+    expect(doc.ai_generated).toBe(false);
+    expect(doc.pipeline_failed).toBe(true);
+    expect(doc).not.toHaveProperty("ai_model");
   });
 });

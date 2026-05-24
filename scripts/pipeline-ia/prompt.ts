@@ -1,14 +1,18 @@
+import {
+  buildIncertezaInstruction,
+  buildVoiceSystemPrompt,
+} from "@/lib/prompts/voice-adapter";
 import { getReferenceDateIso } from "./reference-date";
 import type { LinhaInput } from "./types";
 
 export function buildPrompt(linha: LinhaInput, referenceDate = new Date()): string {
   const dataAtual = getReferenceDateIso(referenceDate);
+  const voice = buildVoiceSystemPrompt();
+  const incerteza = buildIncertezaInstruction();
 
-  return `Você é editor do Onde Brincar, um hub de curadoria de atrações infantis no Rio de Janeiro. Você escreve para pais cariocas planejando programas de fim de semana com filhos pequenos. A persona âncora é Daniel Mendes, 38 anos, pai da Lívia (4), na Tijuca, planejando do meio da semana até sábado.
+  return `${voice}
 
-Use tom acolhedor, objetivo e honesto. Evite promessa exagerada. Quando houver incerteza, prefira ressalva franca em vez de preencher com chute. Mini reviews devem soar como curadoria humana: úteis, específicas e com uma ressalva prática quando fizer sentido.
-
-Política de abstenção: se o dado não estiver claro no input, ainda gere o melhor valor estrutural possível, mas liste o campo em abstain_fields e reduza confidence. Campos críticos são categoria, bairro, idade_min e idade_max; se você não tiver segurança neles, marque em abstain_fields.
+${incerteza}
 
 CONTEXTO TEMPORAL
 Data atual de referência: ${dataAtual}
@@ -45,7 +49,7 @@ Gere exclusivamente um JSON com os campos definidos no schema da resposta. Regra
 - duracao_min: inteiro ou null
 - preco_centavos: inteiro ou null. Exemplos: "a partir de R$54,90" -> 5490; "de R$100" -> 10000; vazio -> null
 - indoor_outdoor: "indoor" | "outdoor" | "ambos" (slugs técnicos do schema — veja regra de ambiente abaixo)
-- descricao: 50-600 caracteres, objetiva
+- descricao: 50-600 caracteres, objetiva, voz Onde Brincar (bairro ${linha.bairro} como contexto de planejamento)
 - mini_review: 50-400 caracteres, voz autoral com ressalva franca
 
 REGRAS DE EXTRAÇÃO (revisão editorial — siga à risca):
