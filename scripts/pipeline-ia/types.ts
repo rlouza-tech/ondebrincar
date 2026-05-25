@@ -111,6 +111,8 @@ export interface PipelineReport {
   finished_at: string;
   items_with_issues: Array<{ slug: string; motivos: string[] }>;
   cost_summary: CostSummary;
+  /** Definido quando a pipeline parou antes de processar todas as linhas. */
+  stopped_reason?: string;
 }
 
 export interface QualityGateResult {

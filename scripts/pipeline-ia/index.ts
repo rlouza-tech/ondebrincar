@@ -5,7 +5,7 @@ import { basename, join } from "node:path";
 import { readCSV, writeCSV } from "./csv";
 import type { CostLogEntry, CostSummary } from "./cost-log";
 import { buildCostSummary } from "./cost-log";
-import { enrichLinha, waitForRateLimit } from "./gemini";
+import { enrichLinha, waitForRateLimit, QuotaExhaustedError } from "./gemini";
 import { evaluate } from "./quality-gate";
 import type {
   LinhaEnriquecida,
@@ -131,6 +131,7 @@ function buildReport(
   startedAt: string,
   finishedAt: string,
   costSummary: CostSummary,
+  stoppedReason?: string,
 ): PipelineReport {
   const motivosTop: Record<string, number> = {};
   const itemsWithIssues: PipelineReport["items_with_issues"] = [];
@@ -161,6 +162,7 @@ function buildReport(
     finished_at: finishedAt,
     items_with_issues: itemsWithIssues,
     cost_summary: costSummary,
+    ...(stoppedReason !== undefined ? { stopped_reason: stoppedReason } : {}),
   };
 }
 
@@ -177,6 +179,7 @@ async function main() {
   const costLogEntries: CostLogEntry[] = [];
   const outputDir = join(process.cwd(), "data", "output");
   const costLogPath = join(outputDir, "pipeline-cost-log.jsonl");
+  let stoppedReason: string | undefined;
 
   console.log(
     `Pipeline IA: ${rowsToProcess.length}/${inputRows.length} linhas de ${basename(
@@ -187,7 +190,23 @@ async function main() {
   for (let index = 0; index < rowsToProcess.length; index += 1) {
     const linha = rowsToProcess[index];
     const slug = buildSlug(linha);
-    const enrich = await enrichLinha(linha, options.model, { costLogPath, slug });
+
+    let enrich: Awaited<ReturnType<typeof enrichLinha>>;
+    try {
+      enrich = await enrichLinha(linha, options.model, { costLogPath, slug });
+    } catch (error) {
+      if (error instanceof QuotaExhaustedError) {
+        stoppedReason = `quota_exhausted: ${error.message}`;
+        console.log(`\n[pipeline] Cota diária atingida — parando graciosamente.`);
+        console.log(`[pipeline] Motivo: ${error.message}`);
+        console.log(
+          `[pipeline] Fichas salvas: ${enrichedRows.length}/${rowsToProcess.length}`,
+        );
+        break;
+      }
+      throw error;
+    }
+
     const gate = evaluate(linha, enrich.resposta);
     const processedAt = new Date().toISOString();
     const enriched = buildLinhaEnriquecida(
@@ -240,6 +259,7 @@ async function main() {
     startedAt,
     finishedAt,
     costSummary,
+    stoppedReason,
   );
 
   await writeCSV(csvPath, enrichedRows);
@@ -247,7 +267,10 @@ async function main() {
 
   const autoOkPercent = report.total === 0 ? 0 : Math.round((report.auto_ok / report.total) * 100);
   console.log("\nResumo");
-  console.log(`Total: ${report.total}`);
+  if (stoppedReason) {
+    console.log(`[AVISO] Pipeline parou antes do fim: ${stoppedReason}`);
+  }
+  console.log(`Total processado: ${report.total}`);
   console.log(`auto_ok: ${report.auto_ok} (${autoOkPercent}%)`);
   console.log(`needs_human: ${report.needs_human}`);
   console.log(`Top motivos: ${JSON.stringify(report.motivos_top)}`);

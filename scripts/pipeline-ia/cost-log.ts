@@ -18,6 +18,8 @@ export interface TokenUsage {
 export interface CostLogEntry {
   timestamp: string;
   slug?: string;
+  /** Número da tentativa que gerou este log (1 = sem retry, >1 = após retry). */
+  attempt?: number;
   input_tokens: number;
   output_tokens: number;
   custo_estimado_reais: number;
