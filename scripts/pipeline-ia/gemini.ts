@@ -12,6 +12,59 @@ import type { EnrichResult, LinhaInput, RespostaGemini } from "./types";
 const THIRTY_SECONDS_MS = 30_000;
 const RATE_LIMIT_DELAY_MS = 4_100;
 
+// ---------------------------------------------------------------------------
+// Retry / quota-aware (US-S4.1g)
+// Estratégia: até MAX_ATTEMPTS tentativas para erros transitórios (429 rate-limit
+// e 503). Quota diária esgotada (429 + RESOURCE_EXHAUSTED / "quota") não é
+// retentável — lança QuotaExhaustedError para parar o pipeline graciosamente.
+// Backoff exponencial: INITIAL_BACKOFF_MS * 2^(attempt-1) → 2s, 4s, 8s.
+// ---------------------------------------------------------------------------
+
+/** Número máximo de tentativas por chamada (1 original + 3 retries = 4 total). */
+const MAX_ATTEMPTS = 4;
+const INITIAL_BACKOFF_MS = 2_000;
+const BACKOFF_MULTIPLIER = 2;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Classifica o erro retornado pelo SDK @google/genai para decidir a ação:
+ * - "quota_exhausted": cota diária atingida → parar pipeline
+ * - "retryable":       429 transitório ou 503 → retry com backoff
+ * - "non_retryable":   qualquer outro erro → falhar a ficha, continuar pipeline
+ */
+export type GeminiErrorKind = "quota_exhausted" | "retryable" | "non_retryable";
+
+export function classifyGeminiError(error: unknown): GeminiErrorKind {
+  const msg = (error instanceof Error ? error.message : String(error)).toLowerCase();
+  const rec = error as Record<string, unknown>;
+  const httpStatus = (rec?.status ?? rec?.statusCode) as number | undefined;
+
+  // Quota diária: RESOURCE_EXHAUSTED ou 429 com menção a "quota"
+  const isQuota =
+    msg.includes("resource_exhausted") ||
+    msg.includes("exceeded your current quota") ||
+    (msg.includes("quota") && (msg.includes("exceeded") || msg.includes("exhausted") || msg.includes("limit")));
+  if (isQuota) return "quota_exhausted";
+
+  // Rate-limit transitório (429) ou serviço indisponível (503)
+  const is429 = httpStatus === 429 || msg.includes("429") || msg.includes("too many requests") || msg.includes("rate limit");
+  const is503 = httpStatus === 503 || msg.includes("503") || msg.includes("service unavailable");
+  if (is429 || is503) return "retryable";
+
+  return "non_retryable";
+}
+
+/** Lançado quando a cota diária da API Gemini é atingida. */
+export class QuotaExhaustedError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "QuotaExhaustedError";
+  }
+}
+
 const PLACEHOLDER_DESCRICAO =
   "Processamento automático não concluído. Esta linha precisa de revisão humana antes de virar draft editorial.";
 const PLACEHOLDER_MINI_REVIEW =
@@ -111,6 +164,72 @@ export interface EnrichOptions {
   slug?: string;
 }
 
+/**
+ * Chama generateContent com retry automático para erros transitórios.
+ * Lança QuotaExhaustedError se a cota diária for atingida.
+ * Lança o último erro recebido se todas as tentativas falharem.
+ */
+async function generateWithRetry(
+  ai: GoogleGenAI,
+  modelName: string,
+  linha: LinhaInput,
+  abortSignal: AbortSignal,
+  slug?: string,
+): Promise<{ rawText: string; response: unknown; attempt: number }> {
+  let lastError: unknown;
+
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      const response = await ai.models.generateContent({
+        model: modelName,
+        contents: buildPrompt(linha),
+        config: {
+          temperature: 0.2,
+          responseMimeType: "application/json",
+          responseSchema,
+          abortSignal,
+        },
+      });
+
+      const rawText = response.text;
+      if (!rawText) throw new Error("Resposta vazia do Gemini");
+
+      return { rawText, response, attempt };
+    } catch (error) {
+      lastError = error;
+      const kind = classifyGeminiError(error);
+
+      if (kind === "quota_exhausted") {
+        throw new QuotaExhaustedError(
+          error instanceof Error ? error.message : String(error),
+        );
+      }
+
+      if (kind === "retryable" && attempt < MAX_ATTEMPTS) {
+        const delayMs = INITIAL_BACKOFF_MS * Math.pow(BACKOFF_MULTIPLIER, attempt - 1);
+        console.log(
+          JSON.stringify({
+            timestamp: new Date().toISOString(),
+            slug,
+            event: "retry",
+            attempt,
+            max_attempts: MAX_ATTEMPTS,
+            delay_ms: delayMs,
+            error_message: error instanceof Error ? error.message : String(error),
+          }),
+        );
+        await sleep(delayMs);
+        continue;
+      }
+
+      // non_retryable ou tentativas esgotadas — sai do loop
+      break;
+    }
+  }
+
+  throw lastError;
+}
+
 export async function enrichLinha(
   linha: LinhaInput,
   modelName: string,
@@ -127,23 +246,13 @@ export async function enrichLinha(
   const timestamp = new Date().toISOString();
 
   try {
-    const response = await ai.models.generateContent({
-      model: modelName,
-      contents: buildPrompt(linha),
-      config: {
-        temperature: 0.2,
-        responseMimeType: "application/json",
-        responseSchema,
-        abortSignal: abortController.signal,
-      },
-    });
-
-    const rawText = response.text;
-    if (!rawText) {
-      const failed = buildFailedResult("Resposta vazia do Gemini", modelName);
-      await logCall(options, timestamp, modelName, failed, "Resposta vazia do Gemini");
-      return failed;
-    }
+    const { rawText, response, attempt } = await generateWithRetry(
+      ai,
+      modelName,
+      linha,
+      abortController.signal,
+      options.slug,
+    );
 
     const usage = extractTokenUsage(response);
     const custo = estimateCostBrl(usage);
@@ -160,11 +269,12 @@ export async function enrichLinha(
       },
     };
 
-    await logCall(options, timestamp, modelName, result, undefined);
+    await logCall(options, timestamp, modelName, result, undefined, attempt);
     console.log(
       JSON.stringify({
         timestamp,
         slug: options.slug,
+        attempt,
         input_tokens: usage.input_tokens,
         output_tokens: usage.output_tokens,
         custo_estimado_reais: custo,
@@ -175,13 +285,17 @@ export async function enrichLinha(
 
     return result;
   } catch (error) {
+    // QuotaExhaustedError propaga para o pipeline poder parar graciosamente
+    if (error instanceof QuotaExhaustedError) throw error;
+
     const message = error instanceof Error ? error.message : "Erro desconhecido";
     const failed = buildFailedResult(message, modelName);
-    await logCall(options, timestamp, modelName, failed, message);
+    await logCall(options, timestamp, modelName, failed, message, MAX_ATTEMPTS);
     console.log(
       JSON.stringify({
         timestamp,
         slug: options.slug,
+        attempt: MAX_ATTEMPTS,
         input_tokens: 0,
         output_tokens: 0,
         custo_estimado_reais: 0,
@@ -202,6 +316,7 @@ async function logCall(
   modelName: string,
   result: EnrichResult,
   errorMessage: string | undefined,
+  attempt: number,
 ): Promise<void> {
   if (!options.costLogPath) {
     return;
@@ -210,6 +325,7 @@ async function logCall(
   const entry: CostLogEntry = {
     timestamp,
     slug: options.slug,
+    attempt,
     input_tokens: result.usage.input_tokens,
     output_tokens: result.usage.output_tokens,
     custo_estimado_reais: result.usage.custo_estimado_reais,
