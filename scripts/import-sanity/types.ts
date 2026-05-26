@@ -45,6 +45,8 @@ export interface ImportReportItem {
   slug: string;
   status: ImportItemStatus;
   reason?: string;
+  image_gen_failed?: boolean;
+  image_gen_error?: string;
 }
 
 export interface ImportReport {
@@ -52,6 +54,8 @@ export interface ImportReport {
   created: number;
   skipped: number;
   errors: number;
+  images_generated: number;
+  images_failed: number;
   items: ImportReportItem[];
   source_csv: string;
   started_at: string;
