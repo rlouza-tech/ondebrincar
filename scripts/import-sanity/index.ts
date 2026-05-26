@@ -5,6 +5,8 @@ import { mkdir, readdir, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { parse } from "csv-parse";
 import { hasSanityConfig, sanityClient, sanityWriteClient } from "@/lib/sanity/client";
+import { buildImagePrompt } from "@/lib/prompts/image-adapter";
+import { generateImage } from "@/scripts/pipeline-ia/imagen";
 import { toSanityDoc } from "./mapper";
 import type {
   ImportReport,
@@ -164,6 +166,64 @@ function timestampForFilename(iso: string): string {
   return iso.replace(/[:.]/g, "-");
 }
 
+/**
+ * Gera imagem via Gemini e faz upload como asset no Sanity.
+ * Idempotente: pula se o draft já tiver campo foto definido.
+ * Em caso de falha, loga image_gen_failed: true e mantém placeholder SVG.
+ */
+async function generateAndAttachImage(
+  linha: LinhaEnriquecida,
+  draftId: string,
+): Promise<{ failed: boolean; error?: string }> {
+  // Verifica idempotência: pula se foto já existe no draft
+  const existingDoc = await sanityClient.getDocument(draftId);
+  if (existingDoc?.foto) {
+    console.log(`  ↩ imagem já existe, pulando geração (${linha.slug})`);
+    return { failed: false };
+  }
+
+  const prompt = buildImagePrompt(linha.nome, linha.categoria, linha.descricao);
+
+  console.log(`  🎨 gerando imagem para ${linha.slug}...`);
+  const result = await generateImage(prompt);
+
+  if (result.failed || !result.imageBuffer) {
+    console.log(`  ✗ image_gen_failed: ${result.error}`);
+    return { failed: true, error: result.error };
+  }
+
+  try {
+    // Upload do buffer como asset no Sanity
+    const asset = await sanityWriteClient.assets.upload(
+      "image",
+      result.imageBuffer,
+      {
+        filename: `${linha.slug}.png`,
+        contentType: result.mimeType,
+      },
+    );
+
+    // Patch do draft com referência ao asset e alt text
+    await sanityWriteClient
+      .patch(draftId)
+      .set({
+        foto: {
+          _type: "image",
+          asset: { _type: "reference", _ref: asset._id },
+          alt: `Ilustração de ${linha.nome}`,
+        },
+      })
+      .commit();
+
+    console.log(`  ✓ imagem anexada ao draft (${asset._id})`);
+    return { failed: false };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Erro desconhecido";
+    console.log(`  ✗ falha no upload/patch: ${message}`);
+    return { failed: true, error: message };
+  }
+}
+
 async function main() {
   const options = parseArgs(process.argv);
 
@@ -188,6 +248,8 @@ async function main() {
   let created = 0;
   let skipped = 0;
   let errors = 0;
+  let imagesGenerated = 0;
+  let imagesFailed = 0;
 
   console.log(
     `Import Sanity: ${rows.length}/${allRows.length} linhas de ${csvPath}${options.dryRun ? " [DRY-RUN]" : ""}`,
@@ -228,9 +290,25 @@ async function main() {
 
       const doc = toSanityDoc(linha);
       await sanityWriteClient.create(doc);
-      created += 1;
-      items.push({ slug: linha.slug, status: "created" });
       console.log(`✓ [${index + 1}/${rows.length}] criado draft ${linha.slug}`);
+
+      // Gera e anexa imagem ao draft recém-criado
+      const imageResult = await generateAndAttachImage(linha, draftId);
+      const reportItem: ImportReportItem = {
+        slug: linha.slug,
+        status: "created",
+        image_gen_failed: imageResult.failed,
+        image_gen_error: imageResult.error,
+      };
+
+      if (imageResult.failed) {
+        imagesFailed += 1;
+      } else {
+        imagesGenerated += 1;
+      }
+
+      created += 1;
+      items.push(reportItem);
     } catch (error) {
       errors += 1;
       const message = error instanceof Error ? error.message : "Erro desconhecido";
@@ -245,6 +323,8 @@ async function main() {
     created,
     skipped,
     errors,
+    images_generated: imagesGenerated,
+    images_failed: imagesFailed,
     items,
     source_csv: csvPath,
     started_at: startedAt,
@@ -264,6 +344,8 @@ async function main() {
   console.log(`Criados: ${report.created}`);
   console.log(`Skipped: ${report.skipped}`);
   console.log(`Erros: ${report.errors}`);
+  console.log(`Imagens geradas: ${report.images_generated}`);
+  console.log(`Imagens falhas: ${report.images_failed}`);
   console.log(`Report: ${reportPath}`);
 }
 
