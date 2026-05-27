@@ -1,0 +1,205 @@
+<!DOCTYPE html><html lang="pt-BR"><head><script async="" src="/bn2o/"></script><script>(function(w,i,g){w[g]=w[g]||[];if(typeof w[g].push=='function')w[g].push(i)})
+(window,'GTM-P5DXQN3','google_tags_first_party');</script><script>(function(w,d,s,l){w[l]=w[l]||[];(function(){w[l].push(arguments);})('set', 'developer_id.dY2E1Nz', true);
+		var f=d.getElementsByTagName(s)[0],
+		j=d.createElement(s);j.async=true;j.src='/bn2o/';
+		f.parentNode.insertBefore(j,f);
+		})(window,document,'script','dataLayer');</script>
+    <!--<script async="" src="https://www.googletagmanager.com/gtag/js?id=UA-21097715-1" type="text/javascript"></script>-->
+    <!--<script type="text/javascript">
+      window.dataLayer = window.dataLayer || [];
+
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+
+      gtag('js', new Date());
+      gtag('config', 'UA-21097715-1', {
+            'optimize_id': 'GTM-T39J96R'
+                  }
+      );
+
+      gtag('config', 'AW-810369436', { 'send_page_view': false });
+
+      window.gServices = {
+        ua: 'UA-21097715-1',
+        aw: {
+          global: 'AW-810369436',
+          subscribe: 'AW-810369436/MkYmCIWMuX8QnIO1ggM'
+        }
+      };
+
+        
+    </script>-->
+<!-- Google Tag Manager -->
+<!--<script type="text/javascript">(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-P5DXQN3');</script>-->
+<!-- End Google Tag Manager -->
+
+<!--<script async="" type="text/javascript">
+      (function(h, o, t, j, a, r) {
+        h.hj = h.hj || function() {
+          (h.hj.q = h.hj.q || []).push(arguments)
+        };
+        h._hjSettings = { hjid: 581966, hjsv: 5 };
+        a = o.getElementsByTagName('head')[0];
+        r = o.createElement('script');
+        r.async = 1;
+        r.src = t + h._hjSettings.hjid + j + h._hjSettings.hjsv;
+        a.appendChild(r);
+      })(window, document, '//static.hotjar.com/c/hotjar-', '.js?sv=');
+    </script>-->
+
+<meta charset="UTF-8">
+<link href="/static/manifest.json" rel="manifest">
+<meta name="theme-color" content="#FFF">
+<meta name="msapplication-navbutton-color" content="#FFF">
+<meta name="apple-mobile-web-app-status-bar-style" content="#FFF">
+<meta name="apple-touch-fullscreen" content="yes">
+<link rel="apple-touch-icon" href="https://clubinhodeofertas.com.br/assets/img/icons/icon-72x72.png">
+<link rel="apple-touch-icon" sizes="72x72" href="https://clubinhodeofertas.com.br/assets/img/icons/icon-72x72.png">
+<link rel="apple-touch-icon" sizes="128x128" href="https://clubinhodeofertas.com.br/assets/img/icons/icon-128x128.png">
+<link rel="apple-touch-icon" sizes="152x152" href="https://clubinhodeofertas.com.br/assets/img/icons/icon-152x152.png">
+
+
+
+<title>Teatro e programação infantil no Rio de Janeiro |  Clubinho de Ofertas</title>
+<meta name="description" content="Ofertas com desconto para Teatro Infantil, programação infantil, shows e muito mais para crianças no Clubinho de Ofertas. Venha conferir, se encantar e aproveitar muita diversão!">
+<meta name="keywords" content="Clubinho de Ofertas, desconto, teatro infantil, peça infantil, passeio com crianças, ingressos com desconto, promoção, infantil">
+<link rel="canonical" href="https://clubinhodeofertas.com.br/rio-de-janeiro">
+<meta property="og:title" content="Teatro e programação infantil no Rio de Janeiro | ">
+<meta property="og:description" content="Ofertas com desconto para Teatro Infantil, programação infantil, shows e muito mais para crianças no Clubinho de Ofertas. Venha conferir, se encantar e aproveitar muita diversão!">
+<meta property="og:url" content="https://clubinhodeofertas.com.br/rio-de-janeiro">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://s3.amazonaws.com/assets.cdn.clubinho.com.br/public/assets/img/og_image.jpg">
+
+<meta name="twitter:title" content="Teatro e programação infantil no Rio de Janeiro | ">
+<meta name="twitter:description" content="Ofertas com desconto para Teatro Infantil, programação infantil, shows e muito mais para crianças no Clubinho de Ofertas. Venha conferir, se encantar e aproveitar muita diversão!">
+<script type="application/ld+json">{"@context":"https://schema.org","name":"Teatro e programação infantil no Rio de Janeiro | ","description":"Ofertas com desconto para Teatro Infantil, programação infantil, shows e muito mais para crianças no Clubinho de Ofertas. Venha conferir, se encantar e aproveitar muita diversão!"}</script>
+
+
+<meta property="fb:app_id" content="1070297850347657">
+
+
+
+<meta name="csrf-token" content="ii3fhjg1AjArlM7Ose0nb8RZxNwlmLI64YCyxVOf">
+
+
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="icon" type="image/x-icon" href="https://clubinhodeofertas.com.br/assets/img/favicon.ico">
+<link rel="icon" type="image/png" href="https://clubinhodeofertas.com.br/assets/img/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="https://clubinhodeofertas.com.br/assets/img/favicon-16x16.png" sizes="16x16">
+
+
+<link rel="dns-prefetch" href="https://fonts.googleapis.com">
+<link rel="dns-prefetch" href="https://maxcdn.bootstrapcdn.com">
+<link rel="dns-prefetch" href="https://s3.amazonaws.com">
+<link rel="dns-prefetch" href="https://omnize.com">
+<link rel="dns-prefetch" href="https://widget.omnize.com">
+<link rel="dns-prefetch" href="https://static.hotjar.com">
+<link rel="dns-prefetch" href="https://hotjar.com">
+<link rel="dns-prefetch" href="https://socialminer.com">
+<link rel="dns-prefetch" href="https://static.socialminer.com">
+<link rel="dns-prefetch" href="https://cloudfront.net">
+<link rel="dns-prefetch" href="https://d335luupugsy2.cloudfront.net">
+<link rel="dns-prefetch" href="https://d37poupzmwluxg.cloudfront.net">
+<link rel="dns-prefetch" href="https://d29e5zzv3q13y8.cloudfront.net">
+<link rel="dns-prefetch" href="https://i.btg360.com.br">
+
+
+
+
+<link rel="stylesheet" href="/assets/css/shop.558891396ef39d27f43a.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@8/swiper-bundle.min.css">
+<link rel="stylesheet" href="/assets/css/new.41e4e7113669fd032b3a.css">
+
+<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.3.1/lazysizes.min.js" integrity="sha512-bYhVDhvd1S5L7xVr2ADJcUeue6MKoOsNCzGBUlChGdjF0WWnd7eqGVu3DfLy3MFZIE9qPkfvcdJNeGHvWBcc+A==" crossorigin="anonymous" referrerpolicy="no-referrer" type="text/javascript"></script>-->
+
+<!--<script src="https://www.google.com/recaptcha/api.js" type="text/javascript"></script>-->
+
+<style>
+    .text-rose-500 {
+        color: #ee2474;
+    }
+
+    .bg-blue-500:hover {
+        background-color: #2c5282;
+        color: white;
+    }
+
+    .bg-blue-500 {
+        background-color: #4299e1;
+    }
+
+    .border-blue-400 {
+        border-width: 0;
+        border-style: solid;
+        border-color: #63b3ed;
+    }
+
+    .bg-white {
+        background-color: #fff;
+    }
+
+    .rounded {
+        border-radius: 0.25rem;
+    }
+
+    .border {
+        border-width: 1px;
+    }
+
+    .border-b-2 {
+        border-bottom-width: 2px;
+    }
+
+    .cursor-pointer {
+        cursor: pointer;
+    }
+
+    .block {
+        display: block;
+    }
+
+    .flex {
+        display: -webkit-box;
+        display: flex;
+    }
+
+    .flex-row {
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        flex-direction: row;
+    }
+
+    .justify-center {
+        -webkit-box-pack: center;
+        justify-content: center;
+    }
+
+    .font-medium {
+        font-weight: 500;
+    }
+
+    .mx-1 {
+        margin-left: 0.25rem;
+        margin-right: 0.25rem;
+    }
+
+    .overflow-hidden {
+        overflow: hidden;
+    }
+
+    .mb-1 {
+        margin-bottom: 0.25rem;
+    }
+
+    .mb-2 {
+        margin-bottom: 0.5rem;
+    }
+
+   

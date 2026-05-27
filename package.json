@@ -26,6 +26,7 @@
     "@sanity/vision": "^3.99.0",
     "csv-parse": "^6.2.1",
     "csv-stringify": "^6.7.0",
+    "lucide-react": "^1.16.0",
     "next": "14.2.35",
     "next-sanity": "^9.12.3",
     "react": "^18",

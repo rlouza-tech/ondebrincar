@@ -1,63 +1,58 @@
-import type { Config } from "tailwindcss";
+import type { Config } from 'tailwindcss'
 
-/**
- * Design tokens — Onde Brincar (US-S3.1)
- * Documentação completa: docs/design-tokens.md
- */
 const config: Config = {
   content: [
-    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    './pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './components/**/*.{js,ts,jsx,tsx,mdx}',
+    './app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
-    // Mobile-first breakpoints (Tailwind default)
-    screens: {
-      sm: "640px",
-      md: "768px",
-      lg: "1024px",
-      xl: "1280px",
-    },
     extend: {
       colors: {
+        brand: {
+          primary:   '#F97316', // tangerina — CTA, links, logo accent
+          secondary: '#0EA5E9', // azul piscina — badges, ícones de categoria
+          accent:    '#84CC16', // verde parque — "hoje", "novo", tags positivas
+        },
+        surface: {
+          base:  '#FDFAF4', // fundo da página
+          card:  '#F5F2EC', // fundo de cards e seções alternadas
+          muted: '#E7E5E4', // bordas, separadores
+        },
+        ink: {
+          DEFAULT: '#1C1917', // texto principal
+          mid:     '#78716C', // subtítulos, metadados
+          soft:    '#A8A29E', // labels, placeholders
+        },
+        // Aliases para classes legadas (S3.1) até migração completa dos componentes
         primary: {
-          DEFAULT: "#1F3864",
-          foreground: "#FFFFFF",
+          DEFAULT: '#F97316',
+          foreground: '#FFFFFF',
         },
         secondary: {
-          DEFAULT: "#3B6EA8",
-          foreground: "#FFFFFF",
+          DEFAULT: '#0EA5E9',
+          foreground: '#FFFFFF',
         },
         success: {
-          DEFAULT: "#10B981",
-          foreground: "#FFFFFF",
+          DEFAULT: '#84CC16',
+          foreground: '#FFFFFF',
         },
         warn: {
-          DEFAULT: "#F59E0B",
-          foreground: "#1F3864",
+          DEFAULT: '#F59E0B',
+          foreground: '#1C1917',
         },
         error: {
-          DEFAULT: "#DC2626",
-          foreground: "#FFFFFF",
+          DEFAULT: '#DC2626',
+          foreground: '#FFFFFF',
         },
-        background: "var(--background)",
-        foreground: "var(--foreground)",
       },
       fontFamily: {
-        sans: ["var(--font-inter)", "system-ui", "sans-serif"],
-      },
-      // Escala tipográfica (5 níveis de corpo + 2xl para títulos)
-      fontSize: {
-        xs: ["0.75rem", { lineHeight: "1rem" }],
-        sm: ["0.875rem", { lineHeight: "1.25rem" }],
-        base: ["1rem", { lineHeight: "1.5rem" }],
-        lg: ["1.125rem", { lineHeight: "1.75rem" }],
-        xl: ["1.25rem", { lineHeight: "1.75rem" }],
-        "2xl": ["1.5rem", { lineHeight: "2rem" }],
+        display: ['var(--font-display)', 'Fraunces', 'serif'],
+        sans:    ['var(--font-sans)', 'Nunito', 'sans-serif'],
       },
     },
   },
   plugins: [],
-};
+}
 
-export default config;
+export default config

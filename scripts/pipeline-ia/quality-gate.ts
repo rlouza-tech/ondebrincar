@@ -113,8 +113,13 @@ export function evaluate(
     reasons.push("proxima_data_no_passado");
   }
 
+  // Só sinaliza lacuna de horário se o input também não trouxe horarios_sessao.
+  // O scraper v2 extrai horarios_sessao da página do produto — quando presente,
+  // o Gemini usa esses dados e preenche programacao_texto corretamente.
+  // A regra era necessária para o scraper v1 (sem horarios_sessao).
   if (
     inputListaDiasSemHorario(linhaInput.dias_apresentacao) &&
+    !linhaInput.horarios_sessao?.trim() &&
     !programacaoSinalizaLacunaHorario(resposta.programacao_texto)
   ) {
     reasons.push("programacao_lacuna_horario_nao_sinalizada");
