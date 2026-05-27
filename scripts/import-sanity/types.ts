@@ -39,7 +39,7 @@ export interface SanityAtracaoDocInput {
   pipeline_failed: boolean;
 }
 
-export type ImportItemStatus = "created" | "skipped" | "error";
+export type ImportItemStatus = "created" | "updated" | "skipped" | "error";
 
 export interface ImportReportItem {
   slug: string;
@@ -52,6 +52,7 @@ export interface ImportReportItem {
 export interface ImportReport {
   total: number;
   created: number;
+  updated: number;
   skipped: number;
   errors: number;
   images_generated: number;

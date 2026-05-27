@@ -176,7 +176,8 @@ async function generateAndAttachImage(
   draftId: string,
 ): Promise<{ failed: boolean; error?: string }> {
   // Verifica idempotência: pula se foto já existe no draft
-  const existingDoc = await sanityClient.getDocument(draftId);
+  // Drafts exigem cliente autenticado — usa sanityWriteClient
+  const existingDoc = await sanityWriteClient.getDocument(draftId);
   if (existingDoc?.foto) {
     console.log(`  ↩ imagem já existe, pulando geração (${linha.slug})`);
     return { failed: false };
@@ -246,6 +247,7 @@ async function main() {
 
   const items: ImportReportItem[] = [];
   let created = 0;
+  let updated = 0;
   let skipped = 0;
   let errors = 0;
   let imagesGenerated = 0;
@@ -261,42 +263,64 @@ async function main() {
     const publishedId = `atracao-${linha.slug}`;
 
     try {
-      const existingDraft = await sanityClient.getDocument(draftId);
-      if (existingDraft) {
-        skipped += 1;
-        items.push({ slug: linha.slug, status: "skipped", reason: "draft_existe" });
-        console.log(`⊘ [${index + 1}/${rows.length}] ${linha.slug} (draft_existe)`);
-        continue;
-      }
+      // Drafts só são visíveis para clientes autenticados — usa sanityWriteClient
+      const existingDraft = await sanityWriteClient.getDocument(draftId);
 
-      const existingPublished = await sanityClient.getDocument(publishedId);
+      // Publicados são públicos — sanityClient é suficiente
+      const existingPublished = !existingDraft
+        ? await sanityClient.getDocument(publishedId)
+        : null;
+
       if (existingPublished) {
+        // Não toca em documentos publicados automaticamente — requer revisão humana
         skipped += 1;
         items.push({
           slug: linha.slug,
           status: "skipped",
           reason: "published_existe",
         });
-        console.log(`⊘ [${index + 1}/${rows.length}] ${linha.slug} (published_existe)`);
+        console.log(`⊘ [${index + 1}/${rows.length}] ${linha.slug} (published_existe — pulado)`);
         continue;
       }
 
       if (options.dryRun) {
-        created += 1;
-        items.push({ slug: linha.slug, status: "created", reason: "dry_run" });
-        console.log(`[DRY] [${index + 1}/${rows.length}] criaria draft ${linha.slug}`);
+        const dryStatus = existingDraft ? "updated" : "created";
+        if (existingDraft) {
+          updated += 1;
+        } else {
+          created += 1;
+        }
+        items.push({ slug: linha.slug, status: dryStatus, reason: "dry_run" });
+        console.log(`[DRY] [${index + 1}/${rows.length}] ${dryStatus === "updated" ? "atualizaria" : "criaria"} draft ${linha.slug}`);
         continue;
       }
 
       const doc = toSanityDoc(linha);
-      await sanityWriteClient.create(doc);
-      console.log(`✓ [${index + 1}/${rows.length}] criado draft ${linha.slug}`);
+      let actionLabel: string;
 
-      // Gera e anexa imagem ao draft recém-criado
+      if (existingDraft) {
+        // Draft existe com texto placeholder — faz patch nos campos de texto,
+        // preservando foto e qualquer outro campo não gerenciado pela pipeline.
+        const { _id, _type, ...patchFields } = doc;
+        await sanityWriteClient
+          .patch(draftId)
+          .set(patchFields)
+          .commit();
+        updated += 1;
+        actionLabel = "atualizado";
+        console.log(`↻ [${index + 1}/${rows.length}] ${linha.slug} (draft atualizado)`);
+      } else {
+        await sanityWriteClient.create(doc);
+        created += 1;
+        actionLabel = "criado";
+        console.log(`✓ [${index + 1}/${rows.length}] criado draft ${linha.slug}`);
+      }
+
+      // Gera e anexa imagem — idempotente: pula se foto já existe no draft
       const imageResult = await generateAndAttachImage(linha, draftId);
       const reportItem: ImportReportItem = {
         slug: linha.slug,
-        status: "created",
+        status: existingDraft ? "updated" : "created",
         image_gen_failed: imageResult.failed,
         image_gen_error: imageResult.error,
       };
@@ -307,7 +331,6 @@ async function main() {
         imagesGenerated += 1;
       }
 
-      created += 1;
       items.push(reportItem);
     } catch (error) {
       errors += 1;
@@ -321,6 +344,7 @@ async function main() {
   const report: ImportReport = {
     total: rows.length,
     created,
+    updated,
     skipped,
     errors,
     images_generated: imagesGenerated,
@@ -342,7 +366,8 @@ async function main() {
   console.log("\nResumo");
   console.log(`Total: ${report.total}`);
   console.log(`Criados: ${report.created}`);
-  console.log(`Skipped: ${report.skipped}`);
+  console.log(`Atualizados: ${report.updated}`);
+  console.log(`Skipped (publicados): ${report.skipped}`);
   console.log(`Erros: ${report.errors}`);
   console.log(`Imagens geradas: ${report.images_generated}`);
   console.log(`Imagens falhas: ${report.images_failed}`);

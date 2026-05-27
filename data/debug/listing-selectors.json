@@ -1,0 +1,43 @@
+{
+  "selectorResults": {
+    "a.product-thumb[href]": 141,
+    "a.product-thumb": 141,
+    "[class*='product-thumb']": 1045,
+    "[class*='product-card']": 0,
+    "[class*='offer-thumb']": 0,
+    "[class*='offer-card']": 0,
+    "a[href*='/rio-de-janeiro/']": 182,
+    ".swiper-slide a[href]": 145,
+    "article a[href]": 141,
+    "[data-product]": 0,
+    "[data-offer]": 0
+  },
+  "linkClasses": [
+    {
+      "href": "/rio-de-janeiro/o-magico-de-oz-4000",
+      "classes": "search-bar__results__item",
+      "outerHTML": "<a href=\"/rio-de-janeiro/o-magico-de-oz-4000\" class=\"search-bar__results__item\"><div class=\"media\"><div class=\"media-left\"><figure class=\"image\"><img src=\"https://d37poupzmwluxg.cloudfront.net/uploads/11001/conversions/phpCmJX8r-flyer.jpg\" alt=\"\"></figure></div> <div class=\"media-content\"><div class"
+    },
+    {
+      "href": "/rio-de-janeiro/lilo-e-stitch-3999",
+      "classes": "search-bar__results__item",
+      "outerHTML": "<a href=\"/rio-de-janeiro/lilo-e-stitch-3999\" class=\"search-bar__results__item\"><div class=\"media\"><div class=\"media-left\"><figure class=\"image\"><img src=\"https://d37poupzmwluxg.cloudfront.net/uploads/10998/conversions/phpvzifEY-flyer.jpg\" alt=\"\"></figure></div> <div class=\"media-content\"><div class="
+    },
+    {
+      "href": "/rio-de-janeiro/sonic-o-show-2686",
+      "classes": "search-bar__results__item",
+      "outerHTML": "<a href=\"/rio-de-janeiro/sonic-o-show-2686\" class=\"search-bar__results__item\"><div class=\"media\"><div class=\"media-left\"><figure class=\"image\"><img src=\"https://d37poupzmwluxg.cloudfront.net/uploads/10997/conversions/phpqm4712-flyer.jpg\" alt=\"\"></figure></div> <div class=\"media-content\"><div class=\""
+    },
+    {
+      "href": "/rio-de-janeiro/hakuna-matata-as-aventuras-de-timao-e-pumba-3998",
+      "classes": "search-bar__results__item",
+      "outerHTML": "<a href=\"/rio-de-janeiro/hakuna-matata-as-aventuras-de-timao-e-pumba-3998\" class=\"search-bar__results__item\"><div class=\"media\"><div class=\"media-left\"><figure class=\"image\"><img src=\"https://d37poupzmwluxg.cloudfront.net/uploads/10996/conversions/phpGl3ri6-flyer.jpg\" alt=\"\"></figure></div> <div cla"
+    },
+    {
+      "href": "/rio-de-janeiro/arraia-da-emilia-3997",
+      "classes": "search-bar__results__item",
+      "outerHTML": "<a href=\"/rio-de-janeiro/arraia-da-emilia-3997\" class=\"search-bar__results__item\"><div class=\"media\"><div class=\"media-left\"><figure class=\"image\"><img src=\"https://d37poupzmwluxg.cloudfront.net/uploads/10995/conversions/phpPk6J9w-flyer.jpg\" alt=\"\"></figure></div> <div class=\"media-content\"><div cla"
+    }
+  ],
+  "foundAt": 1
+}
