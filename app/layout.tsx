@@ -32,19 +32,9 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className={`${nunito.variable} ${fraunces.variable}`}>
       <head>
-        {GTM_ID && (
-          <Script id="consent-mode" strategy="beforeInteractive">{`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('consent', 'default', {
-              analytics_storage: 'denied',
-              ad_storage: 'denied',
-              ad_user_data: 'denied',
-              ad_personalization: 'denied',
-              wait_for_update: 500
-            });
-          `}</Script>
-        )}
+        {/* Consent Mode removido temporariamente no MVP — sem banner de consentimento,
+            analytics_storage: denied bloqueava toda coleta. Revisitar com US-I14.1 (auth)
+            ou story dedicada de banner de consentimento. */}
       </head>
       <body className="font-sans antialiased">
         {GTM_ID && (
