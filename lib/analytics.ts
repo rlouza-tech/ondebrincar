@@ -60,9 +60,11 @@ export interface OutboundClickParams {
   attraction_name: string;
   category: string;
   destination_url: string;
-  destination_type: "sympla" | "eventim" | "official_site" | "instagram" | "other";
+  destination_type: "sympla" | "eventim" | "official_site" | "instagram" | "clubinho" | "other";
   cta_label: string;
   source: "detail_page" | "listing_card";
+  /** Canal de venda registrado no Sanity (sympla | eventim | outro). Útil para medir conversão por canal. */
+  partner?: string;
 }
 
 export function mapEnvironmentForAnalytics(
@@ -94,6 +96,7 @@ export function detectDestinationType(
   if (url.includes("sympla.com.br")) return "sympla";
   if (url.includes("eventim.com.br")) return "eventim";
   if (url.includes("instagram.com")) return "instagram";
+  if (url.includes("clubinhodeofertas.com.br")) return "clubinho";
   return "official_site";
 }
 
