@@ -121,19 +121,22 @@ describe("buildPrompt", () => {
 
   it("instrui override de idade_min quando sinopse contém Classificação Livre", () => {
     const prompt = buildPrompt(
-      baseInput({ sinopse_oficial: "Classificação: Livre. Sinopse da peça." }),
+      baseInput({
+        sinopse_oficial: "Classificação: Livre. Apresentações aos sábados.",
+        idade_minima: "2",
+      }),
     );
     expect(prompt).toContain("Classificação: Livre");
-    expect(prompt).toMatch(/idade_min.*0.*independente/i);
-    expect(prompt).toMatch(/meia.entrada.*não.*classificação|classificação.*meia.entrada/i);
+    expect(prompt).toMatch(/idade_min.*0.*independente/is);
+    expect(prompt).toMatch(/meia.entrada.*não.*classificação/is);
   });
 
   it("instrui descartar duracao_minutos ≤ 5 como dado suspeito", () => {
     const prompt = buildPrompt(
-      baseInput({ duracao_minutos: "3" }),
+      baseInput({ duracao_minutos: "1" }),
     );
     expect(prompt).toContain("duracao_minutos for ≤ 5");
     expect(prompt).toMatch(/caminhada|distância/i);
-    expect(prompt).toMatch(/duracao_min.*null/i);
+    expect(prompt).toMatch(/duracao_min.*null/is);
   });
 });

@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { buttonClassName } from "@/components/Button";
-import { trackEvent, trackShareClick, type SaveClickParams } from "@/lib/analytics";
+import { trackShareClick } from "@/lib/analytics";
 import type { Atracao } from "@/lib/sanity/types";
 import { cn } from "@/lib/cn";
 
@@ -51,20 +50,6 @@ function ShareIcon() {
 }
 
 export function AtracaoDetailActions({ atracao }: AtracaoDetailActionsProps) {
-  const [favorite, setFavorite] = useState(false);
-
-  const handleSaveClick = () => {
-    if (!favorite) {
-      trackEvent("save_click", {
-        attraction_id: atracao.slug,
-        attraction_name: atracao.titulo,
-        category: atracao.categoria,
-        source: "detail_page",
-      } satisfies SaveClickParams);
-    }
-    setFavorite((value) => !value);
-  };
-
   const handleShareClick = async () => {
     const shareUrl =
       typeof window !== "undefined"
@@ -77,20 +62,16 @@ export function AtracaoDetailActions({ atracao }: AtracaoDetailActionsProps) {
     <div className="flex flex-wrap gap-3">
       <button
         type="button"
-        onClick={handleSaveClick}
-        aria-pressed={favorite}
-        aria-label={
-          favorite
-            ? `Remover ${atracao.titulo} dos favoritos`
-            : `Salvar ${atracao.titulo}`
-        }
+        disabled
+        title="Em breve"
+        aria-label={`Salvar ${atracao.titulo} (em breve)`}
         className={cn(
           buttonClassName({ variant: "secondary", size: "md" }),
-          favorite && "text-error",
+          "cursor-not-allowed opacity-50",
         )}
       >
-        <HeartIcon filled={favorite} />
-        {favorite ? "Salvo" : "Salvar"}
+        <HeartIcon filled={false} />
+        Salvar
       </button>
       <button
         type="button"

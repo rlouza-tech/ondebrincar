@@ -31,12 +31,11 @@ DADOS SCRAPER V2 (priorize sobre inferência — vêm da página oficial do Club
 Se sinopse_oficial, horarios_sessao, idade_minima, idade_maxima ou preco_inteira_centavos estiverem preenchidos, priorize-os sobre qualquer inferência do texto livre.
 
 Exceção — classificação etária:
-- Se sinopse_oficial contiver "Classificação: Livre", use idade_min: 0, independente do valor de idade_minima.
-- O campo idade_minima do scraper reflete a regra de meia-entrada (preço), não a classificação do espetáculo.
+- Se sinopse_oficial contiver "Classificação: Livre" (ou variação como "classificação livre"), use idade_min: 0, independente do valor de idade_minima. O campo idade_minima do scraper reflete a regra de meia-entrada (preço), não a classificação do espetáculo.
+- Exemplo: idade_minima: 2 + sinopse "Classificação: Livre" → idade_min: 0 (a peça é livre, o 2 é só a faixa de meia-entrada).
 
 Exceção — duração suspeita:
-- Se duracao_minutos for ≤ 5, descarte esse valor (provavelmente veio de "X minutos de caminhada").
-- Trate duracao_min como null, marque em abstain_fields e adicione note_for_editor.`;
+- Se duracao_minutos for ≤ 5, descarte esse valor (provavelmente veio de "X minutos de caminhada" ou outro contexto errado). Trate duracao_min como null, marque em abstain_fields e adicione note_for_editor: "duracao_minutos no input (Xmin) parece dado de distância/caminhada, não duração do espetáculo."`;
 }
 
 export function buildPrompt(linha: LinhaInput, referenceDate = new Date()): string {
@@ -124,5 +123,10 @@ REGRAS DE EXTRAÇÃO (revisão editorial — siga à risca):
   - proxima_data: siga as regras de proxima_data acima.
 - confidence: inteiro 1-5 (5 = muito confiante; 1 = chutei)
 - abstain_fields: campos onde você não tem certeza
-- notes_for_editor: avisos curtos para revisão humana, se necessário`;
+- notes_for_editor: avisos curtos para revisão humana, se necessário
+
+CARTAZ ESTENDIDO / TEMPORADA PRORROGADA:
+Quando dias_apresentacao listar datas que se estendem por semanas ou meses (ex.: "Sessões de julho a setembro", "Sábados até dezembro"), classifique como "evento_recorrente" — não como "permanente".
+"Permanente" é só para atrações sem data de encerramento prevista que funcionam continuamente (parques, museus em operação regular).
+Se houver pista de "temporada prorrogada" ou "em cartaz estendido", use notes_for_editor para sinalizar ao editor.`;
 }

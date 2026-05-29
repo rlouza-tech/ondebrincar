@@ -6,27 +6,31 @@
 
 export const AI_MODEL_LABEL = "gemini-flash-2.5";
 
+/**
+ * Exemplos canônicos extraídos de fichas reais aprovadas (batch 2026-05-26, auto_ok, confidence 5).
+ * Atualizar sempre que novas fichas forem aprovadas e publicadas com padrão editorial superior.
+ */
 export const CANONICAL_EXAMPLES = [
   {
     titulo: "Peça com elenco infantil — primeira ida ao teatro (O Mágico de Oz, Gávea)",
     descricao:
-      "O Mágico de Oz com elenco infantil e trilha ao vivo no Teatro da Gávea. Ótima primeira ida ao teatro: história conhecida, ritmo leve e duração adequada para crianças de 4–8 anos.",
+      "O Mágico de Oz no Teatro Clara Nunes, no Shopping da Gávea, é um musical com 25 atores mirins que traz a história clássica de criança para criança. Ambiente fechado, sessão de 60 minutos — boa pedida para apresentar o teatro a crianças de 2 a 12 anos. Planeje o deslocamento para a Gávea.",
     mini_review:
-      "Indicado como primeira ida ao teatro — elenco de crianças segura a atenção dos pequenos. Ressalva: Teatro da Gávea fica no final da Gávea, garanta o translado antes de sair de casa.",
+      "Um clássico que ganha uma versão especial com elenco infantil, ideal para a primeira ida ao teatro. Com 60 minutos de duração, é um tempo bom para a faixa etária de 2 a 12 anos. Fica no Shopping da Gávea, então planeje o deslocamento. Ressalva: as vendas encerram 1 hora antes — garanta o ingresso com antecedência.",
   },
   {
     titulo: "Musical Disney com lista de personagens e ressalva de ingresso (Show Mickey, Cachambi)",
     descricao:
-      "Show do Mickey com personagens Disney em ambiente fechado no Espaço Unimed, Cachambi. Atração indicada para crianças de 2–8 anos fãs do universo Mickey Mouse.",
+      "O Show Musical do Mickey no Teatro Miguel Falabella, dentro do Norte Shopping (Cachambi), mistura bonecos, fantoches e humor com Mickey, Pateta, Moana, Mauí e a Ansiedade de Divertida Mente 2. Musical leve e interativo em ambiente fechado, 60 minutos, para crianças de 2 a 12 anos.",
     mini_review:
-      "Boa pedida para fãs do Mickey — personagens interagem com o público. Garanta o ingresso com antecedência: eventos Disney costumam esgotar rápido.",
+      "Um musical animado e colorido para os pequenos fãs da Disney. Com 60 minutos, é um programa ideal para o fim de semana no Norte Shopping, em Cachambi. Ressalva: as vendas encerram uma hora antes de cada sessão — garanta seu ingresso com antecedência para não perder a diversão.",
   },
   {
     titulo: "Peça temática com ressalva prática de deslocamento e horário (João e Maria, Cachambi)",
     descricao:
-      "João e Maria — espetáculo musical com cenário encantado e figurinos coloridos no Espaço Unimed, Cachambi. Indicado para crianças de 3–10 anos.",
+      "João e Maria - Uma Aventura Desconectada leva os irmãos a uma floresta encantada onde precisam resolver problemas sem internet. Encontram bruxa cozinheira e corvo amigável em 60 minutos de musical leve para crianças de 2 a 12 anos no Teatro Miguel Falabella, Norte Shopping (Cachambi).",
     mini_review:
-      "Boa opção no Cachambi para o fim de semana. Ressalva: confira o horário exato na página de ingresso antes de sair — sessões variam por data.",
+      "Uma boa pedida para o fim de semana no Norte Shopping, no Cachambi. A história com o toque 'desconectado' é atual e estimula a imaginação dos pequenos. A duração de 60 minutos é ideal para a faixa etária. Ressalva: as vendas de ingresso encerram 1 hora antes da sessão — garanta seu lugar com antecedência.",
   },
 ] as const;
 
@@ -42,10 +46,10 @@ Anti-padrão a evitar: NÃO afirme o valor incerto logo após [INCERTO].
 ❌ Errado: "[INCERTO] A duração de 30 minutos é ótima para os pequenos."
 ✅ Certo: "[INCERTO] Duração não confirmada no material disponível — confira antes de ir."
 
-LIMITES DE CARACTERES (obrigatórios):
-- descricao: entre 50 e 600 caracteres
-- mini_review: entre 50 e 500 caracteres. NUNCA ultrapasse 500
-- programacao_texto: entre 5 e 200 caracteres`;
+LIMITES DE CARACTERES (obrigatórios — o quality gate rejeita se violados):
+- descricao: entre 50 e 600 caracteres. Se estiver chegando perto de 600, encerre a frase antes de atingir o limite. Não trunce no meio de uma palavra.
+- mini_review: entre 50 e 500 caracteres. NUNCA ultrapasse 500 — o quality gate rejeita automaticamente. Ideal: até 400. Se estiver chegando em 500, corte na última frase completa antes do limite.
+- programacao_texto: entre 5 e 200 caracteres. Para programações com muitas datas, use formato compacto (ex.: "Sáb e dom, 16h e 18h" em vez de listar cada dia individualmente).`;
 }
 
 export function buildVoiceSystemPrompt(): string {

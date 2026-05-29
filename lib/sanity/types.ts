@@ -19,6 +19,8 @@ export interface Atracao {
   descricaoCurta: string;
   imagemUrl: string;
   linkExterno: string;
+  /** Canal de venda: "sympla" | "eventim" | "outro". Usado em analytics de conversão. */
+  partner?: "sympla" | "eventim" | "outro";
 }
 
 export interface SanityAtracaoDocument {
