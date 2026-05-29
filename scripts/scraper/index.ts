@@ -9,6 +9,7 @@ import {
 } from "./browser";
 import type { ClubinhoProductApi } from "./clubinho-api";
 import { writeScrapedCsv } from "./csv";
+import { isLocalizacaoRioDeJaneiro } from "./parse";
 import { scrapeAtracao } from "./scrape-atracao";
 import { scrapeListing } from "./scrape-listing";
 
@@ -104,9 +105,33 @@ async function main() {
   console.log(`Encontradas ${previews.length} atrações (${selected.length} a processar)`);
 
   const rows = [];
+  let aceitas = 0;
+  let descartadas = 0;
+
   for (let index = 0; index < selected.length; index += 1) {
     const preview = selected[index];
-    const row = await scrapeAtracao(session.page, preview);
+    let row;
+    try {
+      row = await scrapeAtracao(session.page, preview);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message.split("\n")[0] : String(err);
+      console.warn(
+        `[${index + 1}/${selected.length}] ERRO ao processar "${preview.nome}" (${preview.url}) — ${msg}`,
+      );
+      // Reseta o estado da página para evitar efeito dominó nas navegações seguintes
+      try { await session.page.goto("about:blank", { timeout: 5_000 }); } catch { /* ignora */ }
+      continue;
+    }
+
+    if (!isLocalizacaoRioDeJaneiro(row.venue, row.bairro)) {
+      descartadas += 1;
+      console.log(
+        `[${index + 1}/${selected.length}] DESCARTADO (fora do RJ) — ${row.nome} | venue: "${row.venue}"`,
+      );
+      continue;
+    }
+
+    aceitas += 1;
     rows.push(row);
     console.log(
       `[${index + 1}/${selected.length}] ${row.nome} | horários: ${
@@ -117,10 +142,12 @@ async function main() {
     );
   }
 
+  console.log(`\n${aceitas} eventos aceitos / ${descartadas} descartados (fora do município do RJ)`);
+
   await writeScrapedCsv(options.outputPath, rows);
   await session.browser.close();
 
-  console.log(`\nCSV salvo: ${options.outputPath} (${rows.length} linhas, 15 colunas)`);
+  console.log(`CSV salvo: ${options.outputPath} (${rows.length} linhas, 15 colunas)`);
 }
 
 main().catch((error) => {
