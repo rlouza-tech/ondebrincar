@@ -26,7 +26,7 @@ export function SearchButton() {
   }, []);
 
   return (
-    <>
+    <div style={{ position: "relative" }}>
       <button
         type="button"
         onClick={handleClick}
@@ -42,10 +42,9 @@ export function SearchButton() {
           role="status"
           aria-live="polite"
           style={{
-            position: "fixed",
-            bottom: "24px",
-            left: "50%",
-            transform: "translateX(-50%)",
+            position: "absolute",
+            top: "calc(100% + 8px)",
+            right: 0,
             backgroundColor: "#1C1917",
             color: "#FDFAF4",
             borderRadius: "8px",
@@ -63,6 +62,6 @@ export function SearchButton() {
           Busca chegando em breve
         </div>
       )}
-    </>
+    </div>
   );
 }
