@@ -28,7 +28,15 @@ DADOS SCRAPER V2 (priorize sobre inferência — vêm da página oficial do Club
 - preco_inteira_centavos: ${linha.preco_inteira_centavos ?? ""}
 - url_ingresso: ${linha.url_ingresso ?? ""}
 
-Se sinopse_oficial, horarios_sessao, idade_minima, idade_maxima ou preco_inteira_centavos estiverem preenchidos, priorize-os sobre qualquer inferência do texto livre.`;
+Se sinopse_oficial, horarios_sessao, idade_minima, idade_maxima ou preco_inteira_centavos estiverem preenchidos, priorize-os sobre qualquer inferência do texto livre.
+
+Exceção — classificação etária:
+- Se sinopse_oficial contiver "Classificação: Livre", use idade_min: 0, independente do valor de idade_minima.
+- O campo idade_minima do scraper reflete a regra de meia-entrada (preço), não a classificação do espetáculo.
+
+Exceção — duração suspeita:
+- Se duracao_minutos for ≤ 5, descarte esse valor (provavelmente veio de "X minutos de caminhada").
+- Trate duracao_min como null, marque em abstain_fields e adicione note_for_editor.`;
 }
 
 export function buildPrompt(linha: LinhaInput, referenceDate = new Date()): string {

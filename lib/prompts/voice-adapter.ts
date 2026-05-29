@@ -8,25 +8,25 @@ export const AI_MODEL_LABEL = "gemini-flash-2.5";
 
 export const CANONICAL_EXAMPLES = [
   {
-    titulo: "Primeira ida ao teatro (tom acolhedor)",
+    titulo: "Peça com elenco infantil — primeira ida ao teatro (O Mágico de Oz, Gávea)",
     descricao:
-      "Chapeuzinho Vermelho — musical leve, com coreografia simples e figurinos coloridos. Funciona bem como primeira ida ao teatro pra criança de 4–6 anos: sessão curta, história conhecida, ambiente acolhedor no Teatro Clara Nunes.",
+      "O Mágico de Oz com elenco infantil e trilha ao vivo no Teatro da Gávea. Ótima primeira ida ao teatro: história conhecida, ritmo leve e duração adequada para crianças de 4–8 anos.",
     mini_review:
-      "Boa porta de entrada pro teatro infantil. Ressalva: fica no final da Gávea — vale combinar transporte antes de sair de casa.",
+      "Indicado como primeira ida ao teatro — elenco de crianças segura a atenção dos pequenos. Ressalva: Teatro da Gávea fica no final da Gávea, garanta o translado antes de sair de casa.",
   },
   {
-    titulo: "Ressalva sobre duração",
+    titulo: "Musical Disney com lista de personagens e ressalva de ingresso (Show Mickey, Cachambi)",
     descricao:
-      "Adaptação de clássico com trilha ao vivo e cenas mais densas; duração anunciada de 90 minutos sem intervalo. Indicado a famílias que já têm experiência com espetáculos mais longos.",
+      "Show do Mickey com personagens Disney em ambiente fechado no Espaço Unimed, Cachambi. Atração indicada para crianças de 2–8 anos fãs do universo Mickey Mouse.",
     mini_review:
-      "Indicado a partir de 7 anos que já aguentam ficar sentados. Ressalva franca: 90 minutos direto cansa os de 4–5 anos — alinhe expectativa e leve lanche.",
+      "Boa pedida para fãs do Mickey — personagens interagem com o público. Garanta o ingresso com antecedência: eventos Disney costumam esgotar rápido.",
   },
   {
-    titulo: "Aviso sobre acessibilidade (incerteza explícita)",
+    titulo: "Peça temática com ressalva prática de deslocamento e horário (João e Maria, Cachambi)",
     descricao:
-      "Peça interativa em teatro histórico com escada na entrada. [INCERTO] Não há informação clara sobre acesso para cadeira de rodas no material disponível — confirme com a bilheteria.",
+      "João e Maria — espetáculo musical com cenário encantado e figurinos coloridos no Espaço Unimed, Cachambi. Indicado para crianças de 3–10 anos.",
     mini_review:
-      "Programa diferente pro fim de semana na região central. [INCERTO] Acessibilidade — ligue ou mande mensagem antes de contar com rampa ou assento reservado.",
+      "Boa opção no Cachambi para o fim de semana. Ressalva: confira o horário exato na página de ingresso antes de sair — sessões variam por data.",
   },
 ] as const;
 
@@ -36,7 +36,16 @@ Se você estiver em dúvida sobre um fato (preço exato, horário, acessibilidad
 Em vez disso:
 1. Marque o trecho duvidoso com a tag literal [INCERTO] em descricao ou mini_review.
 2. Liste o campo correspondente em abstain_fields (ex.: preco_centavos, duracao_min, idade_max).
-3. Prefira ressalva prática ("confirme no link de ingresso") a afirmação vaga.`;
+3. Prefira ressalva prática ("confirme no link de ingresso") a afirmação vaga.
+
+Anti-padrão a evitar: NÃO afirme o valor incerto logo após [INCERTO].
+❌ Errado: "[INCERTO] A duração de 30 minutos é ótima para os pequenos."
+✅ Certo: "[INCERTO] Duração não confirmada no material disponível — confira antes de ir."
+
+LIMITES DE CARACTERES (obrigatórios):
+- descricao: entre 50 e 600 caracteres
+- mini_review: entre 50 e 500 caracteres. NUNCA ultrapasse 500
+- programacao_texto: entre 5 e 200 caracteres`;
 }
 
 export function buildVoiceSystemPrompt(): string {

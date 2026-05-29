@@ -118,4 +118,22 @@ describe("buildPrompt", () => {
     expect(prompt).toMatch(/mais próxima que ainda não passou/i);
     expect(prompt).toContain("Nunca invente uma data");
   });
+
+  it("instrui override de idade_min quando sinopse contém Classificação Livre", () => {
+    const prompt = buildPrompt(
+      baseInput({ sinopse_oficial: "Classificação: Livre. Sinopse da peça." }),
+    );
+    expect(prompt).toContain("Classificação: Livre");
+    expect(prompt).toMatch(/idade_min.*0.*independente/i);
+    expect(prompt).toMatch(/meia.entrada.*não.*classificação|classificação.*meia.entrada/i);
+  });
+
+  it("instrui descartar duracao_minutos ≤ 5 como dado suspeito", () => {
+    const prompt = buildPrompt(
+      baseInput({ duracao_minutos: "3" }),
+    );
+    expect(prompt).toContain("duracao_minutos for ≤ 5");
+    expect(prompt).toMatch(/caminhada|distância/i);
+    expect(prompt).toMatch(/duracao_min.*null/i);
+  });
 });

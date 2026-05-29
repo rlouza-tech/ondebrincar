@@ -65,7 +65,7 @@ export function evaluate(
 
   if (
     resposta.mini_review &&
-    (resposta.mini_review.length < 50 || resposta.mini_review.length > 400)
+    (resposta.mini_review.length < 50 || resposta.mini_review.length > 500)
   ) {
     reasons.push("mini_review_tamanho_invalido");
   }
