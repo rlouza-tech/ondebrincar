@@ -273,3 +273,37 @@ export function extractBairroFromVenue(venue: string): string {
   }
   return parts[parts.length - 1];
 }
+
+/**
+ * Retorna true se a localização é compatível com o município do Rio de Janeiro.
+ *
+ * Lógica:
+ * 1. Marcador explícito de RJ ("Rio de Janeiro" ou ", RJ") → aceita.
+ * 2. Marcador explícito de outro estado ou município fluminense fora da cidade → rejeita.
+ * 3. Sem marcador geográfico → aceita (bairros cariocas ambíguos como Tijuca, Recreio).
+ */
+export function isLocalizacaoRioDeJaneiro(venue: string, bairro?: string): boolean {
+  const text = `${venue} ${bairro ?? ""}`.toLowerCase();
+
+  // Marcador explícito do município do RJ → aceita
+  if (/rio de janeiro|,\s*rj\b/.test(text)) {
+    return true;
+  }
+
+  // Outros estados brasileiros → rejeita
+  const outroEstado =
+    /s[aã]o paulo|,\s*sp\b|belo horizonte|,\s*mg\b|,\s*ba\b|,\s*es\b|,\s*pr\b|,\s*sc\b|,\s*rs\b|,\s*go\b|,\s*df\b/;
+  if (outroEstado.test(text)) {
+    return false;
+  }
+
+  // Municípios fluminenses fora da cidade do Rio de Janeiro → rejeita
+  const municipioForaDoRio =
+    /niter[oó]i|teres[oó]polis|petr[oó]polis|angra dos reis|b[uú]zios|arma[cç][aã]o dos b[uú]zios|cabo frio|mangaratiba|maric[aá]|itaipava|nova friburgo|s[aã]o gon[cç]alo|duque de caxias|nova igua[cç]u|paraty|parati|arraial do cabo|saquarema|volta redonda|ara[cç]atiba|vit[oó]ria\s+do\s+mero/;
+  if (municipioForaDoRio.test(text)) {
+    return false;
+  }
+
+  // Sem marcador geográfico → aceita (default carioca)
+  return true;
+}

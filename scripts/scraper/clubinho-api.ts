@@ -17,7 +17,11 @@ export interface ClubinhoProductApi {
   genres?: Array<{ name: string }>;
   venues?: Array<{
     name: string;
-    address?: { neighborhood?: string };
+    address?: {
+      neighborhood?: string;
+      city?: string;
+      state?: string;
+    };
   }>;
 }
 
