@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
+import { SearchButton } from "@/components/SearchButton";
 
 export function SiteHeader() {
   return (
@@ -12,12 +13,7 @@ export function SiteHeader() {
           <Logo variant="light" size="md" />
         </Link>
         <nav aria-label="Principal" className="flex gap-4 text-sm font-medium">
-          <Link
-            href="/"
-            className="text-ink-mid hover:text-brand-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary"
-          >
-            Buscar
-          </Link>
+          <SearchButton />
         </nav>
       </div>
     </header>
