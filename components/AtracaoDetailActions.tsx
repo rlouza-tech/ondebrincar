@@ -1,9 +1,12 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
+import { Clock } from "lucide-react";
 import { buttonClassName } from "@/components/Button";
-import { trackShareClick } from "@/lib/analytics";
+import { trackEvent, trackShareClick, type SaveClickParams } from "@/lib/analytics";
 import type { Atracao } from "@/lib/sanity/types";
-import { cn } from "@/lib/cn";
+
+const TOAST_DURATION_MS = 2500;
 
 interface AtracaoDetailActionsProps {
   atracao: Atracao;
@@ -50,6 +53,28 @@ function ShareIcon() {
 }
 
 export function AtracaoDetailActions({ atracao }: AtracaoDetailActionsProps) {
+  const [saveToastVisible, setSaveToastVisible] = useState(false);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function handleSaveClick() {
+    trackEvent("save_click", {
+      attraction_id: atracao.slug,
+      attraction_name: atracao.titulo,
+      category: atracao.categoria,
+      source: "detail_page",
+    } satisfies SaveClickParams);
+
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    setSaveToastVisible(true);
+    saveTimerRef.current = setTimeout(() => setSaveToastVisible(false), TOAST_DURATION_MS);
+  }
+
+  useEffect(() => {
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    };
+  }, []);
+
   const handleShareClick = async () => {
     const shareUrl =
       typeof window !== "undefined"
@@ -60,19 +85,44 @@ export function AtracaoDetailActions({ atracao }: AtracaoDetailActionsProps) {
 
   return (
     <div className="flex flex-wrap gap-3">
-      <button
-        type="button"
-        disabled
-        title="Em breve"
-        aria-label={`Salvar ${atracao.titulo} (em breve)`}
-        className={cn(
-          buttonClassName({ variant: "secondary", size: "md" }),
-          "cursor-not-allowed opacity-50",
+      <div style={{ position: "relative" }}>
+        <button
+          type="button"
+          onClick={handleSaveClick}
+          aria-label={`Salvar ${atracao.titulo}`}
+          className={buttonClassName({ variant: "secondary", size: "md" })}
+        >
+          <HeartIcon filled={false} />
+          Salvar
+        </button>
+
+        {saveToastVisible && (
+          <div
+            role="status"
+            aria-live="polite"
+            style={{
+              position: "absolute",
+              top: "calc(100% + 8px)",
+              left: 0,
+              backgroundColor: "#1C1917",
+              color: "#FDFAF4",
+              borderRadius: "8px",
+              padding: "10px 12px",
+              fontSize: "12px",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              zIndex: 9999,
+              whiteSpace: "nowrap",
+              pointerEvents: "none",
+            }}
+          >
+            <Clock size={14} strokeWidth={2} aria-hidden="true" />
+            Favoritos em breve
+          </div>
         )}
-      >
-        <HeartIcon filled={false} />
-        Salvar
-      </button>
+      </div>
+
       <button
         type="button"
         onClick={() => void handleShareClick()}

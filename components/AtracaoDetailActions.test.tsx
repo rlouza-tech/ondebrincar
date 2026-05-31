@@ -1,6 +1,6 @@
 /**
- * AtracaoDetailActions — testes unitários (US-F1)
- * Garante que o botão Salvar está desabilitado e não dispara save_click.
+ * AtracaoDetailActions — testes unitários (US-F1, revisado)
+ * Botão Salvar: clique → toast "Favoritos em breve" + evento save_click.
  */
 import { act } from "react";
 import { createRoot } from "react-dom/client";
@@ -40,8 +40,13 @@ function getSaveButton() {
   ) as HTMLButtonElement | null;
 }
 
+function getToast() {
+  return container.querySelector("[role='status']");
+}
+
 describe("AtracaoDetailActions — botão Salvar (US-F1)", () => {
   beforeEach(() => {
+    vi.useFakeTimers();
     container = document.createElement("div");
     document.body.appendChild(container);
   });
@@ -50,6 +55,7 @@ describe("AtracaoDetailActions — botão Salvar (US-F1)", () => {
     act(() => {
       document.body.removeChild(container);
     });
+    vi.useRealTimers();
     vi.clearAllMocks();
   });
 
@@ -58,29 +64,57 @@ describe("AtracaoDetailActions — botão Salvar (US-F1)", () => {
     expect(getSaveButton()).not.toBeNull();
   });
 
-  it("botão Salvar está desabilitado", () => {
+  it("botão Salvar está habilitado", () => {
     renderActions();
-    expect(getSaveButton()!.disabled).toBe(true);
+    expect(getSaveButton()!.disabled).toBe(false);
   });
 
-  it("botão Salvar exibe o texto 'Salvar'", () => {
+  it("não exibe toast inicialmente", () => {
     renderActions();
-    expect(getSaveButton()!.textContent).toContain("Salvar");
+    expect(getToast()).toBeNull();
   });
 
-  it("clique no botão desabilitado NÃO dispara save_click", () => {
+  it("exibe toast ao clicar no botão", () => {
     renderActions();
     act(() => {
       getSaveButton()!.click();
     });
-    expect(trackEvent).not.toHaveBeenCalledWith(
-      "save_click",
-      expect.anything(),
-    );
+    const toast = getToast();
+    expect(toast).not.toBeNull();
+    expect(toast!.textContent).toContain("Favoritos em breve");
   });
 
-  it("botão Salvar tem title 'Em breve'", () => {
+  it("toast desaparece após 2.5s", () => {
     renderActions();
-    expect(getSaveButton()!.title).toBe("Em breve");
+    act(() => { getSaveButton()!.click(); });
+    expect(getToast()).not.toBeNull();
+
+    act(() => { vi.advanceTimersByTime(2500); });
+    expect(getToast()).toBeNull();
+  });
+
+  it("dispara evento save_click ao clicar", () => {
+    renderActions();
+    act(() => { getSaveButton()!.click(); });
+    expect(trackEvent).toHaveBeenCalledWith("save_click", {
+      attraction_id: mockAtracao.slug,
+      attraction_name: mockAtracao.titulo,
+      category: mockAtracao.categoria,
+      source: "detail_page",
+    });
+  });
+
+  it("clique repetido reinicia o timer sem duplicar toasts", () => {
+    renderActions();
+    const btn = getSaveButton()!;
+
+    act(() => { btn.click(); });
+    act(() => { vi.advanceTimersByTime(1000); });
+    act(() => { btn.click(); });
+
+    expect(container.querySelectorAll("[role='status']")).toHaveLength(1);
+
+    act(() => { vi.advanceTimersByTime(2500); });
+    expect(getToast()).toBeNull();
   });
 });
