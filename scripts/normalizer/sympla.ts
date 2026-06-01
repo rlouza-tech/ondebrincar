@@ -1,11 +1,11 @@
 /**
  * Normalizer — Sympla
  *
- * Lê sympla-raw.json (output do sympla-scrape.ts) e retorna PipelineInput[].
+ * Lê sympla-raw-enriquecido.json (output do sympla-enrich.ts) e retorna PipelineInput[].
  *
  * Mapeamento de campos:
  *   nome            → nome
- *   venue           → venue  (endereço completo; bairro deixado vazio — Gemini infere)
+ *   venue           → venue
  *   data            → dias_apresentacao
  *   link            → url_origem + url_ingresso
  *   descricao_raw   → sinopse_oficial  (texto estruturado "Nome\n\nVenue\n\nData")
@@ -18,7 +18,26 @@
 import { readFile } from "node:fs/promises";
 import type { PipelineInput } from "@/lib/pipeline/types";
 
-export const DEFAULT_INPUT_PATH = "data/input/sympla-raw.json";
+export const DEFAULT_INPUT_PATH = "data/input/sympla-raw-enriquecido.json";
+
+/**
+ * Tenta extrair o bairro a partir do campo venue da Sympla.
+ *
+ * Padrões reconhecidos:
+ *   "Nome do Local - Bairro, RJ"         → "Bairro"
+ *   "Endereço, Nº - Rio de Janeiro, RJ"  → "Rio de Janeiro"
+ *
+ * Se não houver correspondência, retorna "" (comportamento atual, sem regressão).
+ * Não usa geocoding — decisão de MVP registrada no HANDOFF v11.
+ */
+export function extractBairro(venue: string): string {
+  const match = venue.match(/ - ([^,]+),\s*RJ/i);
+  if (!match) return "";
+  const token = match[1].trim();
+  // "Rio de Janeiro" é a cidade, não um bairro — tratar como sem informação
+  if (token.toLowerCase() === "rio de janeiro") return "";
+  return token;
+}
 
 interface SymplaRawItem {
   nome: string;
@@ -39,7 +58,7 @@ export async function normalizeSympla(
     nome: item.nome,
     categoria_origem: "Teatro Infantil",
     venue: item.venue,
-    bairro: "",                        // Gemini infere a partir do venue
+    bairro: extractBairro(item.venue),
     dias_apresentacao: item.data,
     desconto_percentual: "",
     preco_bruto: item.preco_raw,       // vazio em todos os eventos atuais
