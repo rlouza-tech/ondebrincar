@@ -14,30 +14,32 @@ import type {
   PipelineReport,
   RespostaGemini,
 } from "./types";
+import {
+  normalizeClubinho,
+  DEFAULT_INPUT_PATH as CLUBINHO_DEFAULT_PATH,
+} from "@/scripts/normalizer/clubinho";
+import {
+  normalizeSympla,
+  DEFAULT_INPUT_PATH as SYMPLA_DEFAULT_PATH,
+} from "@/scripts/normalizer/sympla";
+
+type Source = "clubinho" | "sympla";
 
 interface CliOptions {
-  inputPath: string;
+  inputPath?: string;
+  source?: Source;
   limit?: number;
   model: string;
 }
 
 function parseArgs(argv: string[]): CliOptions {
-  const [, , inputPath, ...rest] = argv;
+  const args = argv.slice(2);
+  const options: CliOptions = { model: "gemini-2.5-flash" };
+  const positional: string[] = [];
 
-  if (!inputPath) {
-    throw new Error(
-      "Uso: pnpm pipeline-ia <caminho.csv> [--limit N] [--model gemini-2.5-flash]",
-    );
-  }
-
-  const options: CliOptions = {
-    inputPath,
-    model: "gemini-2.5-flash",
-  };
-
-  for (let index = 0; index < rest.length; index += 1) {
-    const arg = rest[index];
-    const next = rest[index + 1];
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    const next = args[index + 1];
 
     if (arg === "--limit") {
       const parsed = Number.parseInt(next ?? "", 10);
@@ -52,12 +54,48 @@ function parseArgs(argv: string[]): CliOptions {
       }
       options.model = next;
       index += 1;
-    } else {
+    } else if (arg === "--source") {
+      if (next !== "clubinho" && next !== "sympla") {
+        throw new Error("--source precisa ser 'clubinho' ou 'sympla'");
+      }
+      options.source = next as Source;
+      index += 1;
+    } else if (arg.startsWith("-")) {
       throw new Error(`Argumento desconhecido: ${arg}`);
+    } else {
+      positional.push(arg);
     }
   }
 
+  if (positional.length > 0) {
+    options.inputPath = positional[0];
+  }
+
+  if (!options.source && !options.inputPath) {
+    throw new Error(
+      "Uso: pnpm pipeline-ia <caminho.csv> [--limit N] [--model gemini-2.5-flash]\n" +
+      "  ou: pnpm pipeline-ia --source clubinho|sympla [--limit N] [--model gemini-2.5-flash]",
+    );
+  }
+
   return options;
+}
+
+async function loadInput(options: CliOptions): Promise<{ rows: LinhaInput[]; label: string }> {
+  if (options.source === "clubinho") {
+    const path = options.inputPath ?? CLUBINHO_DEFAULT_PATH;
+    const rows = await normalizeClubinho(path);
+    return { rows, label: `clubinho:${path}` };
+  }
+  if (options.source === "sympla") {
+    const path = options.inputPath ?? SYMPLA_DEFAULT_PATH;
+    const rows = await normalizeSympla(path);
+    return { rows, label: `sympla:${path}` };
+  }
+  // Retrocompatibilidade: inputPath direto sem --source usa readCSV
+  const path = options.inputPath!;
+  const rows = await readCSV(path);
+  return { rows, label: path };
 }
 
 function slugify(value: string): string {
@@ -173,7 +211,7 @@ function timestampForFilename(iso: string): string {
 async function main() {
   const options = parseArgs(process.argv);
   const startedAt = new Date().toISOString();
-  const inputRows = await readCSV(options.inputPath);
+  const { rows: inputRows, label } = await loadInput(options);
   const rowsToProcess = options.limit ? inputRows.slice(0, options.limit) : inputRows;
   const enrichedRows: LinhaEnriquecida[] = [];
   const costLogEntries: CostLogEntry[] = [];
@@ -182,9 +220,7 @@ async function main() {
   let stoppedReason: string | undefined;
 
   console.log(
-    `Pipeline IA: ${rowsToProcess.length}/${inputRows.length} linhas de ${basename(
-      options.inputPath,
-    )} usando ${options.model}`,
+    `Pipeline IA: ${rowsToProcess.length}/${inputRows.length} linhas de ${basename(label)} usando ${options.model}`,
   );
 
   for (let index = 0; index < rowsToProcess.length; index += 1) {
