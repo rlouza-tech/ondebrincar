@@ -29,10 +29,6 @@ import { isLocalizacaoRioDeJaneiro } from "./parse";
 // ---------------------------------------------------------------------------
 
 /**
- * Categorias Sympla a varrer. Eventos de teatro e educação cadastrados
- * fora da categoria infantil são capturados e filtrados por isConteudoInfantil().
- */
-/**
  * Categorias Sympla para Rio de Janeiro.
  * URL pattern correto: /eventos/{cidade-estado}/{categoria}
  * O geo está no path — não precisamos de ?state= nem de filtro isLocalizacaoRioDeJaneiro.
@@ -54,7 +50,8 @@ const SYMPLA_URLS: Array<{ url: string; needsInfantilFilter: boolean }> = [
   { url: "https://www.sympla.com.br/eventos/rio-de-janeiro-rj/experiencias",      needsInfantilFilter: true  },
 ];
 
-const OUTPUT_PATH = join(process.cwd(), "data", "input", "sympla-raw.json");
+const OUTPUT_PATH         = join(process.cwd(), "data", "input", "sympla-raw.json");
+const PRE_FILTER_PATH     = join(process.cwd(), "data", "input", "sympla-raw-pre-filter.json");
 
 /** Quanto descer por iteração de scroll (px) */
 const SCROLL_STEP = 1200;
@@ -367,6 +364,7 @@ async function main() {
   // Dedup global por link (entre categorias)
   const globalSeen = new Set<string>();
   const aceitos: SymplarRawEvent[] = [];
+  const candidatosPosGeo: SymplarRawEvent[] = [];
 
   try {
     for (const { url, needsInfantilFilter } of SYMPLA_URLS) {
@@ -405,6 +403,8 @@ async function main() {
           totalForaRj++;
           continue;
         }
+        // Candidatos pós-geo: salvar antes do filtro de conteúdo (para enriquecimento)
+        candidatosPosGeo.push(ev);
         // Teatro/educação: filtra conteúdo adulto. Categoria infantil: passa direto.
         if (needsInfantilFilter && !isConteudoInfantil(ev.nome, ev.descricao_raw)) {
           totalAdulto++;
@@ -425,9 +425,13 @@ async function main() {
       process.exit(1);
     }
 
-    // Salva output
+    // Salva output principal (pós-filtro)
     mkdirSync(dirname(OUTPUT_PATH), { recursive: true });
     writeFileSync(OUTPUT_PATH, JSON.stringify(aceitos, null, 2), "utf-8");
+
+    // Salva candidatos pós-geo (pré-filtro de conteúdo) para enriquecimento
+    writeFileSync(PRE_FILTER_PATH, JSON.stringify(candidatosPosGeo, null, 2), "utf-8");
+    console.log(`📄  Pre-filter salvo em: ${PRE_FILTER_PATH} (${candidatosPosGeo.length} eventos)`);
 
     // Log final discriminado (AC4)
     const totalDescartados = totalExpirados + totalForaRj + totalAdulto;

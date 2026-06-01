@@ -14,6 +14,8 @@
     "pipeline-ia": "tsx scripts/pipeline-ia/index.ts",
     "scrape": "tsx scripts/scraper/index.ts",
     "sympla-scrape": "tsx scripts/scraper/sympla-scrape.ts",
+    "sympla-enrich": "tsx scripts/scraper/sympla-enrich.ts",
+    "sympla-aprovar": "tsx scripts/scraper/sympla-aprovar.ts",
     "import-sanity": "tsx scripts/import-sanity/index.ts",
     "associate-imagens": "tsx scripts/associate-imagens/index.ts",
     "update-drafts-programacao": "tsx scripts/update-drafts-programacao/index.ts",
