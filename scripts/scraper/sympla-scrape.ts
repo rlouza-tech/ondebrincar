@@ -28,8 +28,31 @@ import { isLocalizacaoRioDeJaneiro } from "./parse";
 // Constantes
 // ---------------------------------------------------------------------------
 
-const SYMPLA_URL =
-  "https://www.sympla.com.br/eventos/infantil?state=RJ";
+/**
+ * Categorias Sympla a varrer. Eventos de teatro e educação cadastrados
+ * fora da categoria infantil são capturados e filtrados por isConteudoInfantil().
+ */
+/**
+ * Categorias Sympla para Rio de Janeiro.
+ * URL pattern correto: /eventos/{cidade-estado}/{categoria}
+ * O geo está no path — não precisamos de ?state= nem de filtro isLocalizacaoRioDeJaneiro.
+ *
+ * - needsInfantilFilter: true  → categoria mista (teatro, educação): aplica isConteudoInfantil()
+ * - needsInfantilFilter: false → categoria já é infantil por definição
+ *
+ * Slugs de categoria verificados em sympla.com.br com filtro Rio de Janeiro:
+ *   infantil-familia  → /eventos/rio-de-janeiro-rj/infantil-familia  (confirmar slug se 404)
+ *   teatro-espetaculo → /eventos/rio-de-janeiro-rj/teatro-espetaculo (confirmado por Rafael)
+ */
+const SYMPLA_URLS: Array<{ url: string; needsInfantilFilter: boolean }> = [
+  // Categoria já é infantil — filtro de conteúdo dispensável
+  { url: "https://www.sympla.com.br/eventos/rio-de-janeiro-rj/infantil",          needsInfantilFilter: false },
+  // Categorias mistas — aplica isConteudoInfantil() para filtrar conteúdo adulto
+  { url: "https://www.sympla.com.br/eventos/rio-de-janeiro-rj/teatro-espetaculo", needsInfantilFilter: true  },
+  { url: "https://www.sympla.com.br/eventos/rio-de-janeiro-rj/festa-junina",      needsInfantilFilter: true  },
+  { url: "https://www.sympla.com.br/eventos/rio-de-janeiro-rj/copa",              needsInfantilFilter: true  },
+  { url: "https://www.sympla.com.br/eventos/rio-de-janeiro-rj/experiencias",      needsInfantilFilter: true  },
+];
 
 const OUTPUT_PATH = join(process.cwd(), "data", "input", "sympla-raw.json");
 
@@ -41,6 +64,34 @@ const MAX_IDLE_SCROLLS = 4;
 
 /** Timeout por tentativa de seletor (ms) */
 const SELECTOR_TIMEOUT_MS = 15_000;
+
+// ---------------------------------------------------------------------------
+// Filtro de conteúdo infantil
+// ---------------------------------------------------------------------------
+
+/**
+ * Palavras-chave que identificam conteúdo voltado ao público infantil.
+ * Busca case-insensitive no nome e na descrição bruta do evento.
+ */
+const KEYWORDS_INFANTIL = [
+  "infantil",
+  "criança",
+  "crianças",
+  "kids",
+  "para crianças",
+  "família",
+  "familia",
+  "mirim",
+];
+
+/**
+ * Retorna true se o evento parecer ser conteúdo infantil/familiar.
+ * Aceita se ao menos uma palavra-chave estiver presente em nome ou descricao_raw.
+ */
+export function isConteudoInfantil(nome: string, descricao_raw: string): boolean {
+  const texto = `${nome} ${descricao_raw}`.toLowerCase();
+  return KEYWORDS_INFANTIL.some((kw) => texto.includes(kw));
+}
 
 // Seletores candidatos para links de evento na Sympla (React SPA)
 const EVENT_LINK_SELECTORS = [
@@ -300,62 +351,91 @@ async function scrollAndCollect(
 async function main() {
   const opts = parseArgs();
 
-  console.log("\n=== Sympla Scraper ===");
-  console.log(`URL:    ${SYMPLA_URL}`);
+  console.log("\n=== Sympla Scraper — Multi-categoria ===");
+  console.log(`URLs:   ${SYMPLA_URLS.length} categorias (infantil, teatro, festa-junina, copa, experiencias) — Rio de Janeiro`);
   console.log(`Modo:   ${opts.headed ? "headed (visível)" : "headless"}`);
-  console.log(`Limite: ${opts.limit ?? "sem limite"}`);
+  console.log(`Limite: ${opts.limit ?? "sem limite"} (por categoria)`);
   console.log(`Output: ${OUTPUT_PATH}\n`);
 
   const { browser, page } = await createBrowserSession(opts.headed);
 
-  const descartados: Array<{ link: string; motivo: string }> = [];
+  // Contadores para o log final
+  let totalExpirados = 0;
+  let totalForaRj = 0;
+  let totalAdulto = 0;
+
+  // Dedup global por link (entre categorias)
+  const globalSeen = new Set<string>();
+  const aceitos: SymplarRawEvent[] = [];
 
   try {
-    await gotoWithRetry(page, SYMPLA_URL, 25_000);
-    console.log("Página carregada. Iniciando coleta...\n");
+    for (const { url, needsInfantilFilter } of SYMPLA_URLS) {
+      // Ex: ".../rio-de-janeiro-rj/teatro-espetaculo" → "teatro-espetaculo"
+      const segmentos = url.split("/eventos/")[1]?.split("?")[0]?.split("/") ?? [];
+      const categoria = segmentos[segmentos.length - 1] ?? url;
+      console.log(`\n── Categoria: ${categoria} ──`);
 
-    const raw = await scrollAndCollect(page, opts.limit);
+      await gotoWithRetry(page, url, 25_000);
+      console.log("Página carregada. Iniciando coleta...\n");
 
-    if (raw.length === 0) {
+      const raw = await scrollAndCollect(page, opts.limit);
+
+      if (raw.length === 0) {
+        // Diagnóstico: captura o HTML da página para ajudar a identificar seletor errado
+        const snippet = await page.evaluate(() =>
+          document.body?.innerHTML?.substring(0, 500)
+        );
+        console.warn(`⚠  Nenhum evento coletado em "${categoria}".`);
+        console.warn(`   HTML snippet: ${snippet?.replace(/\s+/g, " ").substring(0, 200)}`);
+        continue;
+      }
+
+      const candidatos = opts.limit ? raw.slice(0, opts.limit) : raw;
+
+      for (const ev of candidatos) {
+        // Dedup entre categorias
+        if (globalSeen.has(ev.link)) continue;
+        globalSeen.add(ev.link);
+
+        if (!isEventoAtivo(ev.data)) {
+          totalExpirados++;
+          continue;
+        }
+        if (!isLocalizacaoRioDeJaneiro(ev.venue)) {
+          totalForaRj++;
+          continue;
+        }
+        // Teatro/educação: filtra conteúdo adulto. Categoria infantil: passa direto.
+        if (needsInfantilFilter && !isConteudoInfantil(ev.nome, ev.descricao_raw)) {
+          totalAdulto++;
+          continue;
+        }
+        aceitos.push(ev);
+      }
+
+      console.log(`   → ${aceitos.length} aceitos até agora`);
+    }
+
+    if (aceitos.length === 0) {
       console.error(
-        "\n❌ Nenhum evento coletado.\n" +
+        "\n❌ Nenhum evento aceito após filtragem.\n" +
         "Dica: rode com --headed para verificar se a Sympla exibe um captcha ou tela de bloqueio."
       );
       await browser.close();
       process.exit(1);
     }
 
-    // Aplica limite se ainda não aplicado (pode ter sobrado mais do que o limite por causa do batch)
-    const candidatos = opts.limit ? raw.slice(0, opts.limit) : raw;
-
-    // Filtragem
-    const aceitos: SymplarRawEvent[] = [];
-
-    for (const ev of candidatos) {
-      if (!isEventoAtivo(ev.data)) {
-        descartados.push({ link: ev.link, motivo: "expirado" });
-        continue;
-      }
-      if (!isLocalizacaoRioDeJaneiro(ev.venue)) {
-        descartados.push({ link: ev.link, motivo: "fora do RJ" });
-        continue;
-      }
-      aceitos.push(ev);
-    }
-
     // Salva output
     mkdirSync(dirname(OUTPUT_PATH), { recursive: true });
     writeFileSync(OUTPUT_PATH, JSON.stringify(aceitos, null, 2), "utf-8");
 
-    // Log final
+    // Log final discriminado (AC4)
+    const totalDescartados = totalExpirados + totalForaRj + totalAdulto;
     console.log(`\n${"─".repeat(50)}`);
-    console.log(`✅  ${aceitos.length} coletados / ${descartados.length} descartados`);
-    if (descartados.length > 0) {
-      const expirados = descartados.filter((d) => d.motivo === "expirado").length;
-      const foraRj = descartados.filter((d) => d.motivo === "fora do RJ").length;
-      if (expirados > 0) console.log(`    ↳ ${expirados} expirados`);
-      if (foraRj > 0) console.log(`    ↳ ${foraRj} fora do município do RJ`);
-    }
+    console.log(`✅  ${aceitos.length} coletados / ${totalDescartados} descartados`);
+    if (totalExpirados > 0) console.log(`    ↳ ${totalExpirados} expirados`);
+    if (totalForaRj > 0) console.log(`    ↳ ${totalForaRj} fora do município do RJ`);
+    if (totalAdulto > 0) console.log(`    ↳ ${totalAdulto} conteúdo adulto (não infantil)`);
     console.log(`📄  Salvo em: ${OUTPUT_PATH}`);
     console.log("─".repeat(50) + "\n");
 
@@ -364,7 +444,12 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  console.error(err instanceof Error ? err.message : err);
-  process.exit(1);
-});
+// Guard: só executa main() quando o script for o entry point direto,
+// não quando for importado por testes ou outros módulos.
+import { fileURLToPath } from "node:url";
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main().catch((err) => {
+    console.error(err instanceof Error ? err.message : err);
+    process.exit(1);
+  });
+}
