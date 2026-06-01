@@ -135,8 +135,10 @@ Classificação: Livre`;
       expect(isLocalizacaoRioDeJaneiro("Teatro Recreio")).toBe(true);
     });
 
-    it("aceita venue sem nenhum marcador geográfico", () => {
-      expect(isLocalizacaoRioDeJaneiro("Teatro Municipal")).toBe(true);
+    it("rejeita venue sem nenhum marcador geográfico (v2: conservador)", () => {
+      // v2: sem bairro carioca reconhecido e sem "Rio de Janeiro, RJ" explícito → false.
+      // Para aceitar, venue precisa ter o bairro ou marcador completo.
+      expect(isLocalizacaoRioDeJaneiro("Teatro Municipal")).toBe(false);
     });
 
     it("rejeita venue Niterói com acento diferente (nitero)", () => {

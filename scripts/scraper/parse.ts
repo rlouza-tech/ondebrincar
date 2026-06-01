@@ -275,39 +275,74 @@ export function extractBairroFromVenue(venue: string): string {
 }
 
 /**
+ * Bairros oficiais do município do Rio de Janeiro (163 bairros).
+ * Usado para confirmar que um venue está dentro da cidade — não apenas no estado.
+ * Fonte: Lei Municipal nº 5.600/2013 + atualizações.
+ */
+export const BAIRROS_RIO: readonly string[] = [
+  "abolição", "acari", "água santa", "alto da boa vista", "anchieta", "andaraí", "anil",
+  "bancários", "bangu", "barra da tijuca", "barra de guaratiba", "barros filho",
+  "benfica", "bento ribeiro", "bonsucesso", "botafogo", "brás de pina",
+  "cachambi", "cacuia", "caju", "camorim", "campinho", "cascadura", "catete",
+  "catumbi", "cavalcanti", "centro", "cidade de deus", "cidade nova", "cidade universitária",
+  "cocotá", "coelho neto", "colégio", "complexo do alemão", "complexo da maré",
+  "copacabana", "cordovil", "costa barros", "cosmos", "covanca",
+  "del castilho", "deodoro", "encantado", "engenho da rainha", "engenho de dentro",
+  "engenho novo", "estácio", "fallet", "flamengo", "freguesia",
+  "galeão", "gamboa", "gardênia azul", "gávea", "glória", "grajaú", "grumari",
+  "guadalupe", "guaratiba", "higienópolis", "honório gurgel", "humaitá",
+  "ilha do governador", "inhaúma", "inhoaíba", "ipanema", "irajá", "itanhangá",
+  "jabour", "jacaré", "jacarepaguá", "jacarezinho",
+  "jardim américa", "jardim botânico", "jardim carioca", "jardim guanabara", "jardim sulacap",
+  "joá", "lagoa", "laranjeiras", "leme", "lins de vasconcelos",
+  "madureira", "mangueira", "manguinhos", "maracanã", "marechal hermes", "maré",
+  "méier", "moneró", "monjolos", "olaria", "oswaldo cruz", "padre miguel",
+  "paciência", "paquetá", "parque anchieta", "parque colúmbia", "pavuna",
+  "pedra de guaratiba", "penha", "penha circular", "piedade", "pilares",
+  "pitangueiras", "portuguesa", "praça da bandeira", "praça seca",
+  "quintino bocaiúva", "ramos", "realengo", "recreio dos bandeirantes", "recreio", "riachuelo",
+  "ribeira", "ricardo de albuquerque", "rio comprido", "rocha", "rocha miranda",
+  "rocinha", "sampaio", "santa cruz", "santa teresa", "santíssimo", "santo cristo",
+  "são conrado", "são cristóvão", "são francisco xavier", "saúde",
+  "senador camará", "senador vasconcelos", "sepetiba",
+  "taquara", "tijuca", "tomás coelho", "turiaçu", "urca",
+  "vargem grande", "vargem pequena", "vasco da gama", "vidigal",
+  "vila da penha", "vila isabel", "vila kennedy", "vila militar",
+  "vila valqueire", "vista alegre", "zumbi",
+];
+
+/**
  * Retorna true se a localização é compatível com o município do Rio de Janeiro.
  *
- * Lógica:
- * 1. Município fluminense fora da cidade → rejeita (antes de checar ", RJ").
- * 2. Outro estado brasileiro → rejeita.
- * 3. Marcador explícito do município do RJ ("Rio de Janeiro" ou ", RJ") → aceita.
- * 4. Sem marcador geográfico → aceita (bairros cariocas ambíguos como Tijuca, Recreio).
+ * Lógica (em ordem):
+ * 1. Outro estado brasileiro → rejeita.
+ * 2. Município fluminense fora da cidade → rejeita.
+ * 3. Bairro carioca reconhecido na whitelist → aceita.
+ * 4. "Rio de Janeiro" explícito no texto (sem ", RJ" sozinho) → aceita.
+ * 5. Nenhuma evidência → rejeita (conservador: melhor perder um evento que mostrar errado).
  *
- * A ordem importa: "Niterói, RJ" contém ", RJ" mas deve ser rejeitado.
- * Checar municípios antes do estado evita o falso positivo.
+ * Motivação da mudança (v2): ", RJ" sozinho não é suficiente — "Vale do Café, RJ",
+ * "Vassouras, Rio de Janeiro, RJ" etc. passavam indevidamente.
  */
 export function isLocalizacaoRioDeJaneiro(venue: string, bairro?: string): boolean {
   const text = `${venue} ${bairro ?? ""}`.toLowerCase();
 
-  // Municípios fluminenses fora da cidade do Rio de Janeiro → rejeita
-  const municipioForaDoRio =
-    /niter[oó]i|teres[oó]polis|petr[oó]polis|angra dos reis|b[uú]zios|arma[cç][aã]o dos b[uú]zios|cabo frio|mangaratiba|maric[aá]|itaipava|nova friburgo|s[aã]o gon[cç]alo|duque de caxias|nova igua[cç]u|paraty|parati|arraial do cabo|saquarema|volta redonda|ara[cç]atiba|vit[oó]ria\s+do\s+mero/;
-  if (municipioForaDoRio.test(text)) {
-    return false;
-  }
-
-  // Outros estados brasileiros → rejeita
+  // 1. Outros estados brasileiros → rejeita imediatamente
   const outroEstado =
-    /s[aã]o paulo|,\s*sp\b|belo horizonte|,\s*mg\b|,\s*ba\b|,\s*es\b|,\s*pr\b|,\s*sc\b|,\s*rs\b|,\s*go\b|,\s*df\b|,\s*pe\b|,\s*ce\b|,\s*am\b|,\s*pa\b|,\s*ma\b|,\s*pi\b|,\s*rn\b|,\s*pb\b|,\s*al\b|,\s*se\b|,\s*to\b|,\s*mt\b|,\s*ms\b|,\s*ro\b|,\s*ac\b|,\s*rr\b|,\s*ap\b/;
-  if (outroEstado.test(text)) {
-    return false;
-  }
+    /\bs[aã]o paulo\b|,\s*sp\b|\bbelo horizonte\b|,\s*mg\b|,\s*ba\b|,\s*es\b|,\s*pr\b|,\s*sc\b|,\s*rs\b|,\s*go\b|,\s*df\b|,\s*pe\b|,\s*ce\b|,\s*am\b|,\s*pa\b|,\s*ma\b|,\s*pi\b|,\s*rn\b|,\s*pb\b|,\s*al\b|,\s*se\b|,\s*to\b|,\s*mt\b|,\s*ms\b|,\s*ro\b|,\s*ac\b|,\s*rr\b|,\s*ap\b/;
+  if (outroEstado.test(text)) return false;
 
-  // Marcador explícito do município do RJ → aceita
-  if (/rio de janeiro|,\s*rj\b/.test(text)) {
-    return true;
-  }
+  // 2. Municípios fluminenses fora da cidade do Rio → rejeita
+  const municipioForaDoRio =
+    /\bniter[oó]i\b|teres[oó]polis|petr[oó]polis|angra dos reis|\bb[uú]zios\b|cabo frio|mangaratiba|\bmaric[aá]\b|itaipava|nova friburgo|s[aã]o gon[cç]alo|duque de caxias|nova igua[cç]u|\bparaty\b|\bparati\b|arraial do cabo|saquarema|volta redonda|vassouras|vale do caf[eé]|para[ií]ba do sul|tr[eê]s rios|resende|barra mansa|campos dos goytacazes|mac[aé]ae|s[aã]o jo[aã]o de meriti|belford roxo|nil[oó]polis|mesquita|queimados|japeri|serop[eé]dica|itaguaí/;
+  if (municipioForaDoRio.test(text)) return false;
 
-  // Sem marcador geográfico → aceita (default carioca)
-  return true;
+  // 3. Bairro carioca reconhecido → aceita
+  if (BAIRROS_RIO.some((b) => text.includes(b))) return true;
+
+  // 4. "Rio de Janeiro" explícito como cidade (ex: "- Rio de Janeiro, RJ") → aceita
+  if (/\brio de janeiro\s*,\s*rj\b/.test(text)) return true;
+
+  // 5. Sem evidência clara → rejeita
+  return false;
 }
