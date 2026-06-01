@@ -278,30 +278,34 @@ export function extractBairroFromVenue(venue: string): string {
  * Retorna true se a localização é compatível com o município do Rio de Janeiro.
  *
  * Lógica:
- * 1. Marcador explícito de RJ ("Rio de Janeiro" ou ", RJ") → aceita.
- * 2. Marcador explícito de outro estado ou município fluminense fora da cidade → rejeita.
- * 3. Sem marcador geográfico → aceita (bairros cariocas ambíguos como Tijuca, Recreio).
+ * 1. Município fluminense fora da cidade → rejeita (antes de checar ", RJ").
+ * 2. Outro estado brasileiro → rejeita.
+ * 3. Marcador explícito do município do RJ ("Rio de Janeiro" ou ", RJ") → aceita.
+ * 4. Sem marcador geográfico → aceita (bairros cariocas ambíguos como Tijuca, Recreio).
+ *
+ * A ordem importa: "Niterói, RJ" contém ", RJ" mas deve ser rejeitado.
+ * Checar municípios antes do estado evita o falso positivo.
  */
 export function isLocalizacaoRioDeJaneiro(venue: string, bairro?: string): boolean {
   const text = `${venue} ${bairro ?? ""}`.toLowerCase();
-
-  // Marcador explícito do município do RJ → aceita
-  if (/rio de janeiro|,\s*rj\b/.test(text)) {
-    return true;
-  }
-
-  // Outros estados brasileiros → rejeita
-  const outroEstado =
-    /s[aã]o paulo|,\s*sp\b|belo horizonte|,\s*mg\b|,\s*ba\b|,\s*es\b|,\s*pr\b|,\s*sc\b|,\s*rs\b|,\s*go\b|,\s*df\b/;
-  if (outroEstado.test(text)) {
-    return false;
-  }
 
   // Municípios fluminenses fora da cidade do Rio de Janeiro → rejeita
   const municipioForaDoRio =
     /niter[oó]i|teres[oó]polis|petr[oó]polis|angra dos reis|b[uú]zios|arma[cç][aã]o dos b[uú]zios|cabo frio|mangaratiba|maric[aá]|itaipava|nova friburgo|s[aã]o gon[cç]alo|duque de caxias|nova igua[cç]u|paraty|parati|arraial do cabo|saquarema|volta redonda|ara[cç]atiba|vit[oó]ria\s+do\s+mero/;
   if (municipioForaDoRio.test(text)) {
     return false;
+  }
+
+  // Outros estados brasileiros → rejeita
+  const outroEstado =
+    /s[aã]o paulo|,\s*sp\b|belo horizonte|,\s*mg\b|,\s*ba\b|,\s*es\b|,\s*pr\b|,\s*sc\b|,\s*rs\b|,\s*go\b|,\s*df\b|,\s*pe\b|,\s*ce\b|,\s*am\b|,\s*pa\b|,\s*ma\b|,\s*pi\b|,\s*rn\b|,\s*pb\b|,\s*al\b|,\s*se\b|,\s*to\b|,\s*mt\b|,\s*ms\b|,\s*ro\b|,\s*ac\b|,\s*rr\b|,\s*ap\b/;
+  if (outroEstado.test(text)) {
+    return false;
+  }
+
+  // Marcador explícito do município do RJ → aceita
+  if (/rio de janeiro|,\s*rj\b/.test(text)) {
+    return true;
   }
 
   // Sem marcador geográfico → aceita (default carioca)

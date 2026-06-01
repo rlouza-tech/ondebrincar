@@ -140,12 +140,9 @@ Classificação: Livre`;
     });
 
     it("rejeita venue Niterói com acento diferente (nitero)", () => {
-      expect(isLocalizacaoRioDeJaneiro("Teatro em Niterói, RJ")).toBe(
-        // Niterói está no texto mas ', RJ' também — RJ vence (é cidade do RJ no mapa, mas per business rule, Niterói é excluído)
-        // Na prática o venue de Niterói não terá ', RJ' — mas se vier junto, o marcador de RJ vence.
-        // Esse caso é edge: o regex de foraDoRj só roda se não encontrar RJ antes.
-        true, // ', RJ' detectado primeiro → aceito (edge case aceitável)
-      );
+      // Municípios fluminenses são checados antes do marcador ', RJ'.
+      // "Niterói, RJ" deve ser rejeitado porque Niterói não é o município do Rio.
+      expect(isLocalizacaoRioDeJaneiro("Teatro em Niterói, RJ")).toBe(false);
     });
   });
 });
