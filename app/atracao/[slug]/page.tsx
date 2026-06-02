@@ -95,8 +95,12 @@ export default async function AtracaoPage({ params }: AtracaoPageProps) {
               </div>
               <div>
                 <dt className="font-medium text-primary">Ambiente</dt>
-                <dd className="capitalize text-secondary">
-                  {atracao.indoorOutdoor}
+                <dd className="text-secondary">
+                  {atracao.indoorOutdoor === "indoor"
+                    ? "Interno"
+                    : atracao.indoorOutdoor === "outdoor"
+                      ? "Ao ar livre"
+                      : "Interno e externo"}
                 </dd>
               </div>
             </dl>
