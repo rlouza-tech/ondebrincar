@@ -11,9 +11,19 @@ export interface AtracaoCardProps extends HTMLAttributes<HTMLDivElement> {
   price: string;
   imageUrl: string;
   imageAlt: string;
+  proximaData?: string | null;
   favorite?: boolean;
   onFavoriteToggle?: (event: MouseEvent<HTMLButtonElement>) => void;
   onShareClick?: (event: MouseEvent<HTMLButtonElement>) => void;
+}
+
+function formatProximaData(isoDate: string): string {
+  const date = new Date(`${isoDate}T12:00:00`); // evita timezone shift
+  return date.toLocaleDateString("pt-BR", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  });
 }
 
 function ShareIcon() {
@@ -63,6 +73,7 @@ export function AtracaoCard({
   price,
   imageUrl,
   imageAlt,
+  proximaData,
   favorite = false,
   onFavoriteToggle,
   onShareClick,
@@ -137,6 +148,9 @@ export function AtracaoCard({
           {name}
         </h3>
         <p className="text-sm text-secondary">{ageRange}</p>
+        {proximaData && (
+          <p className="text-sm text-secondary">{formatProximaData(proximaData)}</p>
+        )}
         <p className="text-base font-medium text-primary">{price}</p>
       </div>
     </Card>
