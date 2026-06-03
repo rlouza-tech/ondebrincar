@@ -6,15 +6,34 @@ export const structure = (S: StructureBuilder) =>
   S.list()
     .title("Onde Brincar")
     .items([
-      // ── Todas as atrações ──────────────────────────────────────────────
+      // ── Fluxo editorial ───────────────────────────────────────────────
       S.listItem()
-        .title("Atrações")
-        .icon(() => "🎡")
+        .title("🔴 Revisar agora")
         .child(
           S.documentList()
-            .title("Todas as Atrações")
-            .filter('_type == "atracao"')
+            .title("Revisar agora — needs_human")
+            .filter('_type == "atracao" && review_status == "needs_human"')
             .defaultOrdering([{ field: "nome", direction: "asc" }]),
+        ),
+
+      S.listItem()
+        .title("✅ Prontas pra publicar")
+        .child(
+          S.documentList()
+            .title("Prontas pra publicar — auto_ok")
+            .filter('_type == "atracao" && review_status == "auto_ok" && (!defined(proxima_data) || proxima_data >= $hoje)')
+            .params({ hoje: hoje() })
+            .defaultOrdering([{ field: "nome", direction: "asc" }]),
+        ),
+
+      S.listItem()
+        .title("🟢 Ativas")
+        .child(
+          S.documentList()
+            .title("Ativas — publicadas com data válida")
+            .filter('_type == "atracao" && !(_id in path("drafts.**")) && defined(proxima_data) && proxima_data >= $hoje')
+            .params({ hoje: hoje() })
+            .defaultOrdering([{ field: "proxima_data", direction: "asc" }]),
         ),
 
       // ── Expiradas (proxima_data < hoje) ───────────────────────────────
@@ -26,6 +45,19 @@ export const structure = (S: StructureBuilder) =>
             .filter('_type == "atracao" && defined(proxima_data) && proxima_data < $hoje')
             .params({ hoje: hoje() })
             .defaultOrdering([{ field: "proxima_data", direction: "asc" }]),
+        ),
+
+      S.divider(),
+
+      // ── Todas as atrações ──────────────────────────────────────────────
+      S.listItem()
+        .title("Atrações")
+        .icon(() => "🎡")
+        .child(
+          S.documentList()
+            .title("Todas as Atrações")
+            .filter('_type == "atracao"')
+            .defaultOrdering([{ field: "nome", direction: "asc" }]),
         ),
 
       S.divider(),
