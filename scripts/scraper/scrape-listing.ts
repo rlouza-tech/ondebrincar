@@ -5,52 +5,39 @@ const PRODUCT_PATH_PATTERN =
   /^https:\/\/clubinhodeofertas\.com\.br\/rio-de-janeiro\/[a-z0-9-]+-\d+$/i;
 
 /**
- * Seletores de card de produto, em ordem de preferência.
- * Se o Clubinho renomear classes, o próximo seletor é tentado automaticamente.
+ * Seletor de card do novo layout "shop-new" (jun/2026).
+ * O Clubinho migrou para Tailwind + novo bundle CSS — todas as classes
+ * semânticas antigas (.product-thumb, etc.) foram removidas.
+ * Novo identificador estável: atributo aria-labelledby no <a> de cada card.
+ *
+ * Se o layout mudar novamente, rode scripts/scraper/diagnose-listing.ts
+ * para mapear os novos seletores antes de editar aqui.
  */
-const CARD_SELECTORS = [
-  "a.product-thumb[href]",
-  "a[class*='product-thumb'][href]",
-  "a[class*='product-card'][href]",
-  "a[class*='offer-thumb'][href]",
-  "a[class*='offer-card'][href]",
-];
+const CARD_SELECTOR = 'article:has(a[aria-labelledby^="shop-new-offer-card-title-"])';
 
 const WAIT_TIMEOUT_MS = 20_000;
 
 /**
- * Aguarda até 20s pelo primeiro seletor de card que encontrar elementos.
- * Retorna o seletor que funcionou, ou null se nenhum encontrou.
+ * Aguarda até 20s pelo seletor de card.
+ * Retorna true se encontrou elementos, false caso contrário.
  */
-async function waitForCardSelector(page: Page): Promise<string | null> {
-  // Tenta waitForSelector com o seletor principal primeiro (mais eficiente)
+async function waitForCardSelector(page: Page): Promise<boolean> {
   try {
-    await page.waitForSelector(CARD_SELECTORS[0], { timeout: WAIT_TIMEOUT_MS });
-    return CARD_SELECTORS[0];
+    await page.waitForSelector(CARD_SELECTOR, { timeout: WAIT_TIMEOUT_MS });
+    return true;
   } catch {
-    // Seletor principal não apareceu — testa os alternativos no DOM atual
+    return false;
   }
-
-  for (const sel of CARD_SELECTORS.slice(1)) {
-    const count = await page.evaluate((s) => document.querySelectorAll(s).length, sel);
-    if (count > 0) {
-      console.warn(`[scraper] Seletor principal não encontrado. Usando fallback: "${sel}" (${count} elementos)`);
-      return sel;
-    }
-  }
-
-  return null;
 }
 
 export async function scrapeListing(page: Page, listingUrl: string): Promise<ListingPreview[]> {
-  const cardSelector = await waitForCardSelector(page);
+  const found = await waitForCardSelector(page);
 
-  if (!cardSelector) {
-    // Nenhum seletor funcionou — loga diagnóstico útil antes de retornar vazio
+  if (!found) {
     const url = page.url();
     const title = await page.title();
     console.error(
-      `[scraper] ERRO: Nenhum seletor de card encontrou elementos após ${WAIT_TIMEOUT_MS / 1000}s.\n` +
+      `[scraper] ERRO: Nenhum card encontrado após ${WAIT_TIMEOUT_MS / 1000}s.\n` +
       `  URL atual: ${url}\n` +
       `  Título da página: "${title}"\n` +
       `  Hipóteses: (1) Cloudflare challenge ativo — tente --headed; ` +
@@ -59,8 +46,7 @@ export async function scrapeListing(page: Page, listingUrl: string): Promise<Lis
     return [];
   }
 
-  const previews = await page.evaluate((selector) => {
-    // selector é passado como argumento para evitar closure sobre variável externa
+  const previews = await page.evaluate((cardSel) => {
     const results: Array<{
       url: string;
       nome: string;
@@ -71,28 +57,43 @@ export async function scrapeListing(page: Page, listingUrl: string): Promise<Lis
       preco_bruto: string;
     }> = [];
 
-    const thumbs = document.querySelectorAll(selector);
-    thumbs.forEach((anchor) => {
+    const cards = document.querySelectorAll(cardSel);
+    cards.forEach((article) => {
+      // URL: href do <a aria-labelledby>
+      const anchor = article.querySelector('a[aria-labelledby^="shop-new-offer-card-title-"]');
+      if (!anchor) return;
       const href = anchor.getAttribute("href") ?? "";
       const url = href.startsWith("http")
         ? href
         : `https://clubinhodeofertas.com.br${href}`;
-      const nome = anchor.getAttribute("title") ?? "";
-      const venue =
-        anchor.querySelector(".product-thumb__venue")?.textContent?.trim() ?? "";
-      const dias =
-        anchor.querySelector(".product-thumb__days")?.textContent?.trim() ?? "";
-      const descontoRaw =
-        anchor.querySelector(".discount-tag__value")?.textContent?.trim() ?? "";
-      const desconto = descontoRaw.includes("%") ? descontoRaw : `${descontoRaw}%`;
-      const precoFull =
-        anchor.querySelector(".product-thumb__price__full")?.textContent?.trim() ?? "";
-      const precoSale =
-        anchor.querySelector(".product-thumb__price__sale")?.textContent?.trim() ?? "";
-      const preco_bruto = precoFull || precoSale;
 
+      // Nome: <h3 id="shop-new-offer-card-title-*">
+      const nome =
+        article.querySelector('h3[id^="shop-new-offer-card-title-"]')?.textContent?.trim() ?? "";
+
+      // Venue e dias: dentro de div.space-y-2
+      // Estrutura: <div class="space-y-2"><p>…<span>dias</span></p><p>…<span>venue</span></p></div>
+      const spaceY2 = article.querySelector("div.space-y-2");
+      const paragraphs = spaceY2 ? Array.from(spaceY2.querySelectorAll(":scope > p")) : [];
+      const dias =
+        paragraphs[0]?.querySelector("span:last-child")?.textContent?.trim() ?? "";
+      const venue =
+        paragraphs[1]?.querySelector("span:last-child")?.textContent?.trim() ?? "";
+
+      // Preço: span com font-semibold na área de preço
+      const preco_bruto =
+        article.querySelector("span.font-semibold")?.textContent?.trim() ?? "";
+
+      // Desconto: badge com rounded-full > span com font-bold
+      const descontoRaw =
+        article.querySelector("div.rounded-full span.font-bold")?.textContent?.trim() ?? "";
+      const desconto = descontoRaw
+        ? descontoRaw.includes("%") ? descontoRaw : `${descontoRaw}%`
+        : "";
+
+      // Categoria: heading da section/swiper mais próxima
       let categoria_origem = "Destaques";
-      const section = anchor.closest("section, .home-section, .swiper");
+      const section = article.closest("section, .home-section, .swiper");
       const heading = section?.querySelector("h2, h3");
       if (heading?.textContent?.trim()) {
         categoria_origem = heading.textContent.trim();
@@ -110,7 +111,7 @@ export async function scrapeListing(page: Page, listingUrl: string): Promise<Lis
     });
 
     return results;
-  }, cardSelector);
+  }, CARD_SELECTOR);
 
   const byUrl = new Map<string, ListingPreview>();
   for (const preview of previews) {
