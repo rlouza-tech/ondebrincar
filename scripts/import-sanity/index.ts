@@ -19,11 +19,13 @@ interface CliOptions {
   latest: boolean;
   limit?: number;
   dryRun: boolean;
+  source?: "sympla";
+  execute: boolean;
 }
 
 function parseArgs(argv: string[]): CliOptions {
   const args = argv.slice(2);
-  const options: CliOptions = { latest: false, dryRun: false };
+  const options: CliOptions = { latest: false, dryRun: false, execute: false };
   const positional: string[] = [];
 
   for (let index = 0; index < args.length; index += 1) {
@@ -34,6 +36,14 @@ function parseArgs(argv: string[]): CliOptions {
       options.latest = true;
     } else if (arg === "--dry-run") {
       options.dryRun = true;
+    } else if (arg === "--execute") {
+      options.execute = true;
+    } else if (arg === "--source") {
+      if (next !== "sympla") {
+        throw new Error(`--source aceita apenas "sympla" por enquanto`);
+      }
+      options.source = "sympla";
+      index += 1;
     } else if (arg === "--limit") {
       const parsed = Number.parseInt(next ?? "", 10);
       if (Number.isNaN(parsed) || parsed < 1) {
@@ -52,17 +62,59 @@ function parseArgs(argv: string[]): CliOptions {
     options.csvPath = positional[0];
   }
 
-  if (!options.latest && !options.csvPath) {
-    throw new Error(
-      "Uso: pnpm import-sanity <csv> [--limit N] [--dry-run] | pnpm import-sanity --latest [...]",
-    );
-  }
+  if (options.source === "sympla") {
+    // Com --source sympla, o CSV é resolvido automaticamente via --latest.
+    // É necessário passar --dry-run (preview) OU --execute (import real).
+    if (!options.dryRun && !options.execute) {
+      throw new Error(
+        "Com --source sympla é obrigatório passar --dry-run (preview) ou --execute (import real).\n" +
+        "  Preview:  pnpm import-sanity --source sympla --dry-run\n" +
+        "  Executar: pnpm import-sanity --source sympla --execute",
+      );
+    }
+    // --source sympla sempre usa o CSV mais recente
+    options.latest = true;
+  } else {
+    if (!options.latest && !options.csvPath) {
+      throw new Error(
+        "Uso: pnpm import-sanity <csv> [--limit N] [--dry-run] | pnpm import-sanity --latest [...]",
+      );
+    }
 
-  if (options.latest && options.csvPath) {
-    throw new Error("Use --latest OU informe o caminho do CSV, não ambos");
+    if (options.latest && options.csvPath) {
+      throw new Error("Use --latest OU informe o caminho do CSV, não ambos");
+    }
   }
 
   return options;
+}
+
+/**
+ * Busca todos os slugs já existentes no Sanity (published + drafts).
+ * Usa o cliente autenticado para ver os drafts.
+ * Retorna um Set de slugs (strings) para lookup O(1).
+ */
+export async function fetchExistingSlugs(): Promise<Set<string>> {
+  const docs = await sanityWriteClient.fetch<Array<{ slug?: { current?: string } }>>(
+    `*[_type == "atracao"]{slug}`,
+  );
+  const slugs = new Set<string>();
+  for (const doc of docs) {
+    const s = doc.slug?.current;
+    if (s) slugs.add(s);
+  }
+  return slugs;
+}
+
+/**
+ * Filtra linhas, retornando apenas as cujo slug não existe no Set.
+ */
+export function filterNewRows(
+  rows: LinhaEnriquecida[],
+  existingSlugs: Set<string>,
+): { newRows: LinhaEnriquecida[]; ignoredCount: number } {
+  const newRows = rows.filter((r) => !existingSlugs.has(r.slug));
+  return { newRows, ignoredCount: rows.length - newRows.length };
 }
 
 function parseNullableInt(value: string): number | null {
@@ -234,6 +286,7 @@ async function main() {
     );
   }
 
+  const isSymplaExecute = options.source === "sympla" && options.execute && !options.dryRun;
   if (!process.env.SANITY_API_TOKEN && !options.dryRun) {
     throw new Error("SANITY_API_TOKEN ausente (obrigatório fora de --dry-run)");
   }
@@ -243,7 +296,19 @@ async function main() {
     : join(process.cwd(), options.csvPath!);
 
   const allRows = await readEnrichedCSV(csvPath);
-  const rows = options.limit ? allRows.slice(0, options.limit) : allRows;
+  let rows = options.limit ? allRows.slice(0, options.limit) : allRows;
+
+  // Dedup Sympla: busca slugs existentes no Sanity antes de iterar.
+  // Isso evita recriação de fichas em rodadas semanais repetidas.
+  let dedupIgnored = 0;
+  if (options.source === "sympla") {
+    console.log("Buscando slugs existentes no Sanity para dedup...");
+    const existingSlugs = await fetchExistingSlugs();
+    const result = filterNewRows(rows, existingSlugs);
+    dedupIgnored = result.ignoredCount;
+    rows = result.newRows;
+    console.log(`Dedup: ${dedupIgnored} ignoradas (já existem no Sanity), ${rows.length} a processar`);
+  }
 
   const items: ImportReportItem[] = [];
   let created = 0;
@@ -253,8 +318,9 @@ async function main() {
   let imagesGenerated = 0;
   let imagesFailed = 0;
 
+  const modeLabel = options.dryRun ? " [DRY-RUN]" : (isSymplaExecute ? " [EXECUTE]" : "");
   console.log(
-    `Import Sanity: ${rows.length}/${allRows.length} linhas de ${csvPath}${options.dryRun ? " [DRY-RUN]" : ""}`,
+    `Import Sanity: ${rows.length}/${allRows.length} linhas de ${csvPath}${modeLabel}`,
   );
 
   for (let index = 0; index < rows.length; index += 1) {
@@ -349,6 +415,7 @@ async function main() {
     errors,
     images_generated: imagesGenerated,
     images_failed: imagesFailed,
+    dedup_ignored: dedupIgnored,
     items,
     source_csv: csvPath,
     started_at: startedAt,
@@ -364,7 +431,8 @@ async function main() {
   await writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
 
   console.log("\nResumo");
-  console.log(`Total: ${report.total}`);
+  console.log(`Total (após dedup): ${report.total}`);
+  if (dedupIgnored > 0) console.log(`Ignoradas (já existem no Sanity): ${dedupIgnored}`);
   console.log(`Criados: ${report.created}`);
   console.log(`Atualizados: ${report.updated}`);
   console.log(`Skipped (publicados): ${report.skipped}`);
