@@ -57,6 +57,8 @@ export interface ImportReport {
   errors: number;
   images_generated: number;
   images_failed: number;
+  /** Eventos ignorados pela dedup (slug já existia no Sanity). Só presente com --source sympla. */
+  dedup_ignored: number;
   items: ImportReportItem[];
   source_csv: string;
   started_at: string;
