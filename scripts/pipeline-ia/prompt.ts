@@ -49,6 +49,57 @@ export function buildPrompt(linha: LinhaInput, referenceDate = new Date()): stri
 ${incerteza}
 ${scraperV2}
 
+EXEMPLOS FEW-SHOT (use como referência de calibração — não copie os valores, aprenda o padrão)
+
+=== EXEMPLO 1 — CASO FÁCIL (Clubinho, campos V2 ricos) ===
+INPUT:
+- nome: Top 10 da Galinha Pintadinha
+- categoria_origem: Teatro Infantil
+- venue: Teatro Bangu Shopping
+- bairro: Bangu
+- dias_apresentacao: Somente dia 06/06
+- desconto_percentual: 50%
+- preco_bruto: de R$80
+- sinopse_oficial: "[...] Classificação: Livre. A Galinha Pintadinha desembarca no Rio com seleção das músicas mais amadas — Pintinho Amarelinho, Mariana, A Baratinha — em espetáculo de cores, dança e interatividade."
+- horarios_sessao: 06/06 às 15:00
+- duracao_minutos: 60
+- idade_minima: 2
+- idade_maxima: 12
+- preco_inteira_centavos: 8000
+OUTPUT:
+{"categoria":"teatro","idade_min":0,"idade_max":12,"duracao_min":60,"preco_centavos":8000,"indoor_outdoor":"indoor","descricao":"Show musical com a Galinha Pintadinha no Teatro Bangu Shopping. As músicas mais amadas da Popó — Pintinho Amarelinho, Mariana, A Baratinha — ganham vida em espetáculo de cores, dança e interatividade. Sessão única.","mini_review":"Clássico certeiro para crianças até 4-5 anos que cresceram com a Pintadinha. Sessão única em Bangu; reserve com antecedência.","tipo_programacao":"evento_pontual","programacao_texto":"Apenas no dia 6 de junho às 15h.","proxima_data":"2026-06-06","confidence":5,"abstain_fields":[],"notes_for_editor":null}
+NOTA: idade_min=0 porque sinopse diz "Classificação: Livre" — o campo idade_minima=2 é regra de meia-entrada, não classificação etária.
+
+=== EXEMPLO 2 — CASO MÉDIO (Sympla, texto livre, dois turnos, preço ausente) ===
+INPUT:
+- nome: Colônia de Férias - Na Cozinha com a Kapim - JUL26
+- categoria_origem: Teatro Infantil
+- venue: R. Cosme Velho, 599 - Rio de Janeiro, RJ
+- bairro: (vazio)
+- dias_apresentacao: 13 de Jul a 17 de Jul
+- preco_bruto: (vazio)
+- sinopse_oficial: "[...] Para crianças de 3 a 10 anos. Turma da manhã: das 9h às 12h. Turma da tarde: das 14h às 17h. Local: Espaço Cria – Cosme Velho. Data: 13 a 17 de julho de 2026."
+- horarios_sessao: (vazio)
+- duracao_minutos: (vazio)
+- idade_minima: (vazio)
+- preco_inteira_centavos: (vazio)
+OUTPUT:
+{"categoria":"atividade-extra","idade_min":3,"idade_max":10,"duracao_min":180,"preco_centavos":null,"indoor_outdoor":"indoor","descricao":"Colônia de férias de culinária infantil no Espaço Cria, Cosme Velho. 15ª edição com tema Volta ao Mundo dos Sabores: cada dia uma cozinha diferente. Turmas por faixa etária (3-10 anos), com presença diária da nutricionista Gabriela Kapim.","mini_review":"Uma das colônias mais bem estruturadas do Rio — culinária como aventura, não como obrigação. Vagas limitadas. Preço não listado na Sympla; clique no link para ver lotes.","tipo_programacao":"evento_pontual","programacao_texto":"13 a 17 de julho. Turma da manhã das 9h às 12h ou turma da tarde das 14h às 17h.","proxima_data":"2026-07-13","confidence":4,"abstain_fields":["preco_centavos"],"notes_for_editor":"Preço não disponível na Sympla — consultar diretamente. Confirmar disponibilidade por turno (manhã/tarde)."}
+NOTA: preco_centavos=null é aceitável quando Sympla não exibe preço. duracao_min=180 inferido dos horários explícitos na sinopse. Não use [INCERTO] no texto — sinalize incerteza apenas em abstain_fields e notes_for_editor.
+
+=== EXEMPLO 3 — CASO BORDERLINE (Sympla, falso positivo — abstenção legítima) ===
+INPUT:
+- nome: Rick Silveira em A VIDA É FREUD na Barra da Tijuca [14/06]
+- categoria_origem: Teatro Infantil
+- venue: Barra Point - Espaço Provocações - Rio de Janeiro, RJ
+- bairro: (vazio)
+- dias_apresentacao: Domingo, 14 de Jun às 19:00
+- preco_bruto: (vazio)
+- sinopse_oficial: "E se uma sessão de terapia virasse um show de stand-up comedy? [...] esse show é voltado para quem já passou por algum tipo de trauma psicológico [...] Classificação Etária: 14 anos. Menores de 14 anos, somente acompanhados pelos pais ou responsáveis."
+OUTPUT:
+{"categoria":"evento","idade_min":14,"idade_max":null,"duracao_min":60,"preco_centavos":null,"indoor_outdoor":"indoor","descricao":"Show de stand-up comedy sobre psicanálise, traumas psicológicos e saúde mental. Rick Silveira fala abertamente sobre ansiedade, depressão e psicanálise em formato cômico. Classificação 14 anos.","mini_review":"Espetáculo adulto sobre terapia — o humor não é leve. Não é conteúdo infantil.","tipo_programacao":"evento_pontual","programacao_texto":"Domingo, 14 de junho às 19h.","proxima_data":"2026-06-14","confidence":1,"abstain_fields":["preco_centavos","idade_max"],"notes_for_editor":"FALSO POSITIVO: stand-up para adultos sobre psicanálise. Classificação 14 anos. Conteúdo não é infantil. Recomendar exclusão do catálogo."}
+NOTA: quando o conteúdo claramente não é infantil, confidence=1 e notes_for_editor deve recomendar exclusão explicitamente. Não tente forçar um fit — abstenção total é a resposta correta.
+
 CONTEXTO TEMPORAL
 Data atual de referência: ${dataAtual}
 Quando inferir proxima_data, use essa data como referência.
