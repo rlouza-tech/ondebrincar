@@ -37,7 +37,7 @@ export function HomeContent({ atracoes, bairros }: HomeContentProps) {
         <p className="text-sm font-medium uppercase tracking-wide text-success">
           Curadoria humana
         </p>
-        <h1 className="text-2xl font-semibold text-primary md:text-3xl">
+        <h1 className="text-2xl font-display font-bold text-primary md:text-3xl">
           O que fazer com criança no Rio
         </h1>
         <p className="max-w-2xl text-base text-secondary">

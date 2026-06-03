@@ -74,7 +74,7 @@ export default async function AtracaoPage({ params }: AtracaoPageProps) {
             <p className="text-sm font-medium uppercase tracking-wide text-secondary">
               {atracao.categoria}
             </p>
-            <h1 className="text-2xl font-semibold text-primary md:text-3xl">
+            <h1 className="text-2xl font-display font-bold text-primary md:text-3xl">
               {atracao.titulo}
             </h1>
 
