@@ -442,7 +442,12 @@ async function main() {
   console.log(`Report: ${reportPath}`);
 }
 
-main().catch((error) => {
-  console.error(error instanceof Error ? error.message : error);
-  process.exit(1);
-});
+// Guard: só executa main() quando o arquivo é rodado diretamente (CLI),
+// não quando importado por testes ou outros módulos.
+import { fileURLToPath } from "node:url";
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main().catch((error) => {
+    console.error(error instanceof Error ? error.message : error);
+    process.exit(1);
+  });
+}
