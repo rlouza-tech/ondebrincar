@@ -19,7 +19,7 @@ interface CliOptions {
   latest: boolean;
   limit?: number;
   dryRun: boolean;
-  source?: "sympla";
+  source?: "sympla" | "clubinho";
   execute: boolean;
 }
 
@@ -39,10 +39,10 @@ function parseArgs(argv: string[]): CliOptions {
     } else if (arg === "--execute") {
       options.execute = true;
     } else if (arg === "--source") {
-      if (next !== "sympla") {
-        throw new Error(`--source aceita apenas "sympla" por enquanto`);
+      if (next !== "sympla" && next !== "clubinho") {
+        throw new Error(`--source aceita "sympla" ou "clubinho"`);
       }
-      options.source = "sympla";
+      options.source = next as "sympla" | "clubinho";
       index += 1;
     } else if (arg === "--limit") {
       const parsed = Number.parseInt(next ?? "", 10);
@@ -62,17 +62,17 @@ function parseArgs(argv: string[]): CliOptions {
     options.csvPath = positional[0];
   }
 
-  if (options.source === "sympla") {
-    // Com --source sympla, o CSV é resolvido automaticamente via --latest.
+  if (options.source === "sympla" || options.source === "clubinho") {
+    // Com --source sympla/clubinho, o CSV é resolvido automaticamente via --latest.
     // É necessário passar --dry-run (preview) OU --execute (import real).
     if (!options.dryRun && !options.execute) {
       throw new Error(
-        "Com --source sympla é obrigatório passar --dry-run (preview) ou --execute (import real).\n" +
-        "  Preview:  pnpm import-sanity --source sympla --dry-run\n" +
-        "  Executar: pnpm import-sanity --source sympla --execute",
+        `Com --source ${options.source} é obrigatório passar --dry-run (preview) ou --execute (import real).\n` +
+        `  Preview:  pnpm import-sanity --source ${options.source} --dry-run\n` +
+        `  Executar: pnpm import-sanity --source ${options.source} --execute`,
       );
     }
-    // --source sympla sempre usa o CSV mais recente
+    // --source sympla/clubinho sempre usa o CSV mais recente
     options.latest = true;
   } else {
     if (!options.latest && !options.csvPath) {
@@ -287,6 +287,7 @@ async function main() {
   }
 
   const isSymplaExecute = options.source === "sympla" && options.execute && !options.dryRun;
+  const isClubinhoExecute = options.source === "clubinho" && options.execute && !options.dryRun;
   if (!process.env.SANITY_API_TOKEN && !options.dryRun) {
     throw new Error("SANITY_API_TOKEN ausente (obrigatório fora de --dry-run)");
   }
@@ -318,7 +319,7 @@ async function main() {
   let imagesGenerated = 0;
   let imagesFailed = 0;
 
-  const modeLabel = options.dryRun ? " [DRY-RUN]" : (isSymplaExecute ? " [EXECUTE]" : "");
+  const modeLabel = options.dryRun ? " [DRY-RUN]" : (isSymplaExecute || isClubinhoExecute ? " [EXECUTE]" : "");
   console.log(
     `Import Sanity: ${rows.length}/${allRows.length} linhas de ${csvPath}${modeLabel}`,
   );
@@ -365,13 +366,28 @@ async function main() {
       let actionLabel: string;
 
       if (existingDraft) {
-        // Draft existe com texto placeholder — faz patch nos campos de texto,
-        // preservando foto e qualquer outro campo não gerenciado pela pipeline.
-        const { _id, _type, ...patchFields } = doc;
-        await sanityWriteClient
-          .patch(draftId)
-          .set(patchFields)
-          .commit();
+        if (options.source === "clubinho") {
+          // Clubinho: rodada semanal — só atualiza campos de data/programação.
+          // Preserva descrição, mini_review, foto e demais campos editoriais.
+          const dateFields: Record<string, unknown> = {
+            tipo_programacao: linha.tipo_programacao,
+            programacao_texto: linha.programacao_texto,
+          };
+          if (linha.proxima_data !== null) {
+            dateFields.proxima_data = linha.proxima_data;
+          }
+          await sanityWriteClient
+            .patch(draftId)
+            .set(dateFields)
+            .commit();
+        } else {
+          // Outros sources: patch completo (exceto _id, _type e foto).
+          const { _id, _type, ...patchFields } = doc;
+          await sanityWriteClient
+            .patch(draftId)
+            .set(patchFields)
+            .commit();
+        }
         updated += 1;
         actionLabel = "atualizado";
         console.log(`↻ [${index + 1}/${rows.length}] ${linha.slug} (draft atualizado)`);
