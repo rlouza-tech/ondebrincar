@@ -23,10 +23,14 @@ const CENA_BASE: Record<Categoria, string> = {
     "parque ao ar livre em dia ensolarado, escorregador colorido e trepa-trepa à esquerda, gramado verde com flores, céu azul com nuvens fofas, balanços ao fundo, borboletas voando, palmeiras e árvores frondosas, silhueta de prédios do Rio ao horizonte",
   museu:
     "salão amplo de museu com pé-direito alto, painéis coloridos nas paredes, vitrine iluminada com objetos curiosos ao centro, crianças observando com expressão de espanto e maravilha, luz natural entrando por janelas altas",
+  pracinha:
+    "praça de bairro aconchegante com parquinho colorido ao centro, escorregador e balanços, árvores com sombra, banco de madeira, crianças brincando livremente, calçada de pedra portuguesa ao redor",
   "atividade-extra":
     "espaço alegre e colorido com mesa grande coberta de materiais criativos, pincéis, tintas e papel espalhados, desenhos infantis pendurados em varal ao fundo, ambiente iluminado e acolhedor",
   evento:
     "palco festivo coberto de balões coloridos flutuando, confetes caindo do teto, bandeirolas e faixas de festa espalhadas, luzes cintilantes, clima de celebração e alegria, plateia animada ao fundo",
+  praia:
+    "praia carioca em dia de sol, areia branca e mar azul calmo, crianças brincando na beira d'água, coqueiros inclinados, pipa voando ao longe, quiosque colorido ao fundo",
 };
 
 /**
@@ -38,8 +42,10 @@ function buildPlaca(nome: string, categoria: Categoria): string {
     teatro: `letreiro luminoso no canto superior direito com o texto "${nome}"`,
     parque: `placa de madeira fincada no gramado com o texto "${nome}"`,
     museu: `placa institucional elegante na parede com o texto "${nome}"`,
+    pracinha: `placa de madeira fincada no gramado com o texto "${nome}"`,
     "atividade-extra": `lousa verde ao fundo com o texto "${nome}" escrito em letras coloridas`,
     evento: `faixa festiva no topo com o texto "${nome}"`,
+    praia: `placa de madeira na areia com o texto "${nome}"`,
   };
   return placas[categoria];
 }

@@ -130,7 +130,9 @@ Entrada crua:
 - url_origem: ${linha.url_origem}
 
 Gere exclusivamente um JSON com os campos definidos no schema da resposta. Regras importantes:
-- categoria: "teatro" | "parque" | "museu" | "atividade-extra" | "evento"
+- categoria: "teatro" | "parque" | "pracinha" | "museu" | "atividade-extra" | "evento" | "praia"
+  Use a categoria_origem como ponto de partida — só reclassifique se houver evidência clara de categoria diferente.
+  Use "pracinha" para praças de bairro com parquinho infantil. Use "praia" para praias. Use "parque" para parques maiores, reservas e espaços verdes extensos. Use "teatro" apenas para espetáculos com sessão marcada e ingresso.
 - idade_min e idade_max: inteiros 0-18
 - duracao_min: inteiro ou null
 - preco_centavos: inteiro ou null. Exemplos: "a partir de R$54,90" -> 5490; "de R$100" -> 10000; vazio -> null

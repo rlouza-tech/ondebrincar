@@ -16,10 +16,12 @@
     "sympla-scrape": "tsx scripts/scraper/sympla-scrape.ts",
     "sympla-enrich": "tsx scripts/scraper/sympla-enrich.ts",
     "sympla-aprovar": "tsx scripts/scraper/sympla-aprovar.ts",
+    "pipeline:manual": "tsx scripts/normalizer/run-manual.ts",
     "import-sanity": "dotenv -e .env.local -- tsx scripts/import-sanity/index.ts",
     "associate-imagens": "tsx scripts/associate-imagens/index.ts",
     "update-drafts-programacao": "tsx scripts/update-drafts-programacao/index.ts",
     "mark-expired": "dotenv -e .env.local -- tsx scripts/mark-expired.ts",
+    "cleanup-proxima-data": "dotenv -e .env.local -- tsx scripts/cleanup-proxima-data.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },

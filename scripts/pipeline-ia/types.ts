@@ -3,9 +3,11 @@ import type { CostSummary } from "./cost-log";
 export const CATEGORIAS_VALIDAS = [
   "teatro",
   "parque",
+  "pracinha",
   "museu",
   "atividade-extra",
   "evento",
+  "praia",
 ] as const;
 
 export const INDOOR_OUTDOOR_VALIDOS = ["indoor", "outdoor", "ambos"] as const;

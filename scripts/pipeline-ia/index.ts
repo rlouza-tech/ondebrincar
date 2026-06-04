@@ -14,6 +14,7 @@ import type {
   PipelineReport,
   RespostaGemini,
 } from "./types";
+import { CATEGORIAS_VALIDAS } from "./types";
 import {
   normalizeClubinho,
   DEFAULT_INPUT_PATH as CLUBINHO_DEFAULT_PATH,
@@ -143,13 +144,18 @@ function buildLinhaEnriquecida(
   return {
     nome: linha.nome,
     slug: buildSlug(linha),
-    categoria: resposta.categoria,
+    // Se categoria_origem já é um valor canônico válido, respeita sem deixar o Gemini sobrescrever.
+    categoria: (CATEGORIAS_VALIDAS as readonly string[]).includes(linha.categoria_origem)
+      ? (linha.categoria_origem as typeof CATEGORIAS_VALIDAS[number])
+      : resposta.categoria,
     idade_min: resposta.idade_min,
     idade_max: resposta.idade_max,
     duracao_min: resposta.duracao_min,
     preco_centavos: resposta.preco_centavos,
-    link_compra: linha.url_origem,
-    partner: inferPartner(linha.url_origem),
+    // url_ingresso é o link de compra/ingresso direto; url_origem é proveniência dos dados.
+    // Para fontes sem ingresso (curadoria manual, parques, museus gratuitos), url_ingresso fica vazio.
+    link_compra: linha.url_ingresso ?? linha.url_origem ?? "",
+    partner: inferPartner(linha.url_ingresso ?? linha.url_origem ?? ""),
     bairro: linha.bairro,
     indoor_outdoor: resposta.indoor_outdoor,
     status: "operando",

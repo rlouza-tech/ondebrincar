@@ -10,7 +10,9 @@ export const FAIXAS_ETARIAS = [
 export const CATEGORIA_OPTIONS = [
   { label: "Teatro", value: "teatro" },
   { label: "Parque", value: "parque" },
+  { label: "Pracinha", value: "pracinha" },
   { label: "Museu", value: "museu" },
+  { label: "Praia", value: "praia" },
   { label: "Atividade extra", value: "atividade-extra" },
   { label: "Evento", value: "evento" },
 ] as const;

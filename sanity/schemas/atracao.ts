@@ -4,8 +4,10 @@ const categoriaOptions = [
   { title: "Teatro infantil", value: "teatro" },
   { title: "Parque", value: "parque" },
   { title: "Museu", value: "museu" },
+  { title: "Pracinha", value: "pracinha" },
   { title: "Atividade extra", value: "atividade-extra" },
   { title: "Evento", value: "evento" },
+  { title: "Praia", value: "praia" },
 ];
 
 const bairroExamples = "Ex.: Tijuca, Leblon, Centro, São Cristóvão";
@@ -88,15 +90,8 @@ export const atracao = defineType({
       name: "link_compra",
       title: "Link de compra",
       type: "url",
-      description: "URL externa para ingresso ou página oficial. Obrigatório se status = operando.",
-      validation: (Rule) =>
-        Rule.uri({ scheme: ["http", "https"] }).custom((link, context) => {
-          const parent = context.parent as { status?: string } | undefined;
-          if (parent?.status === "operando" && !link) {
-            return "Link de compra é obrigatório quando a atração está operando.";
-          }
-          return true;
-        }),
+      description: "Link de ingresso ou site oficial do local. Ex.: sympla.com/evento ou rio.rj.gov.br/parque. Deixar vazio se não houver.",
+      validation: (Rule) => Rule.uri({ scheme: ["http", "https"] }),
     }),
     defineField({
       name: "partner",
