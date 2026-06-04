@@ -152,8 +152,10 @@ function buildLinhaEnriquecida(
     idade_max: resposta.idade_max,
     duracao_min: resposta.duracao_min,
     preco_centavos: resposta.preco_centavos,
-    link_compra: linha.url_origem,
-    partner: inferPartner(linha.url_origem),
+    // url_ingresso é o link de compra/ingresso direto; url_origem é proveniência dos dados.
+    // Para fontes sem ingresso (curadoria manual, parques, museus gratuitos), url_ingresso fica vazio.
+    link_compra: linha.url_ingresso ?? linha.url_origem ?? "",
+    partner: inferPartner(linha.url_ingresso ?? linha.url_origem ?? ""),
     bairro: linha.bairro,
     indoor_outdoor: resposta.indoor_outdoor,
     status: "operando",
