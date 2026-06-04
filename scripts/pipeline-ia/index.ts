@@ -14,6 +14,7 @@ import type {
   PipelineReport,
   RespostaGemini,
 } from "./types";
+import { CATEGORIAS_VALIDAS } from "./types";
 import {
   normalizeClubinho,
   DEFAULT_INPUT_PATH as CLUBINHO_DEFAULT_PATH,
@@ -143,7 +144,10 @@ function buildLinhaEnriquecida(
   return {
     nome: linha.nome,
     slug: buildSlug(linha),
-    categoria: resposta.categoria,
+    // Se categoria_origem já é um valor canônico válido, respeita sem deixar o Gemini sobrescrever.
+    categoria: (CATEGORIAS_VALIDAS as readonly string[]).includes(linha.categoria_origem)
+      ? (linha.categoria_origem as typeof CATEGORIAS_VALIDAS[number])
+      : resposta.categoria,
     idade_min: resposta.idade_min,
     idade_max: resposta.idade_max,
     duracao_min: resposta.duracao_min,
