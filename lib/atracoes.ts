@@ -62,7 +62,7 @@ function mapSanityAtracao(document: SanityAtracaoDocument): Atracao {
       document.programacao_texto ?? "Consulte programação no link oficial",
     descricaoCurta: document.mini_review || document.descricao,
     imagemUrl: document.foto?.asset?.url || "/placeholder-atracao.svg",
-    linkExterno: document.link_compra || "#",
+    linkExterno: document.link_compra || "",
     partner: document.partner,
   };
 
