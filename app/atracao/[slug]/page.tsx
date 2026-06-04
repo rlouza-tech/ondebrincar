@@ -121,18 +121,20 @@ export default async function AtracaoPage({ params }: AtracaoPageProps) {
 
             <AtracaoDetailActions atracao={atracao} />
 
-            <OutboundLink
-              atracao={atracao}
-              href={atracao.linkExterno}
-              ctaLabel="Ver ingresso"
-              className={buttonClassName({
-                variant: "primary",
-                size: "lg",
-                className: "w-full sm:w-auto",
-              })}
-            >
-              Ver ingresso
-            </OutboundLink>
+            {atracao.linkExterno && atracao.linkExterno !== "#" ? (
+              <OutboundLink
+                atracao={atracao}
+                href={atracao.linkExterno}
+                ctaLabel="Ver ingresso"
+                className={buttonClassName({
+                  variant: "primary",
+                  size: "lg",
+                  className: "w-full sm:w-auto",
+                })}
+              >
+                Ver ingresso
+              </OutboundLink>
+            ) : null}
           </div>
         </article>
       </main>
