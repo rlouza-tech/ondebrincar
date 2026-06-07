@@ -19,7 +19,7 @@ interface CliOptions {
   latest: boolean;
   limit?: number;
   dryRun: boolean;
-  source?: "sympla" | "clubinho";
+  source?: "sympla" | "clubinho" | "manual";
   execute: boolean;
 }
 
@@ -39,10 +39,10 @@ function parseArgs(argv: string[]): CliOptions {
     } else if (arg === "--execute") {
       options.execute = true;
     } else if (arg === "--source") {
-      if (next !== "sympla" && next !== "clubinho") {
-        throw new Error(`--source aceita "sympla" ou "clubinho"`);
+      if (next !== "sympla" && next !== "clubinho" && next !== "manual") {
+        throw new Error(`--source aceita "sympla", "clubinho" ou "manual"`);
       }
-      options.source = next as "sympla" | "clubinho";
+      options.source = next as "sympla" | "clubinho" | "manual";
       index += 1;
     } else if (arg === "--limit") {
       const parsed = Number.parseInt(next ?? "", 10);
@@ -62,8 +62,8 @@ function parseArgs(argv: string[]): CliOptions {
     options.csvPath = positional[0];
   }
 
-  if (options.source === "sympla" || options.source === "clubinho") {
-    // Com --source sympla/clubinho, o CSV é resolvido automaticamente via --latest.
+  if (options.source === "sympla" || options.source === "clubinho" || options.source === "manual") {
+    // Com --source sympla/clubinho/manual, o CSV é resolvido automaticamente via --latest.
     // É necessário passar --dry-run (preview) OU --execute (import real).
     if (!options.dryRun && !options.execute) {
       throw new Error(
@@ -72,7 +72,7 @@ function parseArgs(argv: string[]): CliOptions {
         `  Executar: pnpm import-sanity --source ${options.source} --execute`,
       );
     }
-    // --source sympla/clubinho sempre usa o CSV mais recente
+    // --source sympla/clubinho/manual sempre usa o CSV mais recente
     options.latest = true;
   } else {
     if (!options.latest && !options.csvPath) {
@@ -288,6 +288,7 @@ async function main() {
 
   const isSymplaExecute = options.source === "sympla" && options.execute && !options.dryRun;
   const isClubinhoExecute = options.source === "clubinho" && options.execute && !options.dryRun;
+  const isManualExecute = options.source === "manual" && options.execute && !options.dryRun;
   if (!process.env.SANITY_API_TOKEN && !options.dryRun) {
     throw new Error("SANITY_API_TOKEN ausente (obrigatório fora de --dry-run)");
   }
@@ -299,10 +300,10 @@ async function main() {
   const allRows = await readEnrichedCSV(csvPath);
   let rows = options.limit ? allRows.slice(0, options.limit) : allRows;
 
-  // Dedup Sympla: busca slugs existentes no Sanity antes de iterar.
-  // Isso evita recriação de fichas em rodadas semanais repetidas.
+  // Dedup: busca slugs existentes no Sanity antes de iterar.
+  // Evita recriação de fichas em rodadas repetidas (Sympla, Clubinho, Manual).
   let dedupIgnored = 0;
-  if (options.source === "sympla") {
+  if (options.source === "sympla" || options.source === "clubinho" || options.source === "manual") {
     console.log("Buscando slugs existentes no Sanity para dedup...");
     const existingSlugs = await fetchExistingSlugs();
     const result = filterNewRows(rows, existingSlugs);
@@ -319,7 +320,7 @@ async function main() {
   let imagesGenerated = 0;
   let imagesFailed = 0;
 
-  const modeLabel = options.dryRun ? " [DRY-RUN]" : (isSymplaExecute || isClubinhoExecute ? " [EXECUTE]" : "");
+  const modeLabel = options.dryRun ? " [DRY-RUN]" : (isSymplaExecute || isClubinhoExecute || isManualExecute ? " [EXECUTE]" : "");
   console.log(
     `Import Sanity: ${rows.length}/${allRows.length} linhas de ${csvPath}${modeLabel}`,
   );

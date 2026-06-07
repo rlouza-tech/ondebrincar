@@ -42,6 +42,7 @@ export function extractBairro(venue: string): string {
 interface SymplaRawItem {
   nome: string;
   venue: string;
+  bairro?: string;
   data: string;
   link: string;
   descricao_raw: string;
@@ -58,7 +59,7 @@ export async function normalizeSympla(
     nome: item.nome,
     categoria_origem: "Teatro Infantil",
     venue: item.venue,
-    bairro: extractBairro(item.venue),
+    bairro: item.bairro || extractBairro(item.venue),
     dias_apresentacao: item.data,
     desconto_percentual: "",
     preco_bruto: item.preco_raw,       // vazio em todos os eventos atuais
