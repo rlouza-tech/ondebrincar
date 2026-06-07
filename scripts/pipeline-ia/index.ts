@@ -27,8 +27,12 @@ import {
   normalizeWhatsapp,
   DEFAULT_INPUT_PATH as WHATSAPP_DEFAULT_PATH,
 } from "@/scripts/normalizer/whatsapp";
+import {
+  normalizeManual,
+  DEFAULT_INPUT_PATH as MANUAL_DEFAULT_PATH,
+} from "@/scripts/normalizer/manual";
 
-type Source = "clubinho" | "sympla" | "whatsapp";
+type Source = "clubinho" | "sympla" | "whatsapp" | "manual";
 
 interface CliOptions {
   inputPath?: string;
@@ -60,8 +64,8 @@ function parseArgs(argv: string[]): CliOptions {
       options.model = next;
       index += 1;
     } else if (arg === "--source") {
-      if (next !== "clubinho" && next !== "sympla" && next !== "whatsapp") {
-        throw new Error("--source precisa ser 'clubinho', 'sympla' ou 'whatsapp'");
+      if (next !== "clubinho" && next !== "sympla" && next !== "whatsapp" && next !== "manual") {
+        throw new Error("--source precisa ser 'clubinho', 'sympla', 'whatsapp' ou 'manual'");
       }
       options.source = next as Source;
       index += 1;
@@ -79,7 +83,7 @@ function parseArgs(argv: string[]): CliOptions {
   if (!options.source && !options.inputPath) {
     throw new Error(
       "Uso: pnpm pipeline-ia <caminho.csv> [--limit N] [--model gemini-2.5-flash]\n" +
-      "  ou: pnpm pipeline-ia --source clubinho|sympla [--limit N] [--model gemini-2.5-flash]",
+      "  ou: pnpm pipeline-ia --source clubinho|sympla|whatsapp|manual [--limit N] [--model gemini-2.5-flash]",
     );
   }
 
@@ -101,6 +105,11 @@ async function loadInput(options: CliOptions): Promise<{ rows: LinhaInput[]; lab
     const path = options.inputPath ?? WHATSAPP_DEFAULT_PATH;
     const rows = await normalizeWhatsapp(path);
     return { rows, label: `whatsapp:${path}` };
+  }
+  if (options.source === "manual") {
+    const path = options.inputPath ?? MANUAL_DEFAULT_PATH;
+    const rows = await normalizeManual(path);
+    return { rows, label: `manual:${path}` };
   }
   // Retrocompatibilidade: inputPath direto sem --source usa readCSV
   const path = options.inputPath!;
