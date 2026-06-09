@@ -34,8 +34,19 @@ export async function generateMetadata({ params }: AtracaoPageProps): Promise<Me
     };
   }
 
-  const title = `${atracao.titulo} | Onde Brincar`;
-  const description = atracao.descricaoCurta;
+  // US-I9.3: fórmula de title otimizada para SEO local
+  const categoriaDisplay = atracao.categoria
+    .replace(/-/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+  const title = `${atracao.titulo} — ${categoriaDisplay} em ${atracao.bairro} | Onde Brincar`;
+
+  // US-I9.3: meta description com faixa etária e preço
+  const faixa = formatFaixaEtaria(atracao.idadeMin, atracao.idadeMax);
+  const preco = formatPreco(atracao);
+  const descriptionRaw = `${atracao.descricaoCurta} · ${faixa} · ${preco}`;
+  const description =
+    descriptionRaw.length > 155 ? `${descriptionRaw.slice(0, 152)}...` : descriptionRaw;
+
   const hasImage = atracao.imagemUrl && !atracao.imagemUrl.includes("placeholder");
   // Sanity Image API: força 1200×630 cropped e WEBP otimizado (~< 1 MB)
   const ogImageUrl = hasImage
