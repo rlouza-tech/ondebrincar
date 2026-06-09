@@ -180,11 +180,11 @@ export function AtracaoCard({
         <h3 id={titleId} className="text-lg font-semibold text-primary">
           {name}
         </h3>
-        <p className="text-sm text-secondary">{ageRange}</p>
-        {proximaData && (
-          <p className="text-sm text-secondary">{formatProximaData(proximaData)}</p>
-        )}
-        <p className="text-base font-medium text-primary">{price}</p>
+        <p className="truncate text-sm text-secondary">
+          {[ageRange, proximaData ? formatProximaData(proximaData) : null, price]
+            .filter(Boolean)
+            .join(" · ")}
+        </p>
       </div>
     </Card>
   );
