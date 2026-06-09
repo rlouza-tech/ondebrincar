@@ -6,50 +6,64 @@ export const structure = (S: StructureBuilder) =>
   S.list()
     .title("Onde Brincar")
     .items([
-      // ── Fluxo editorial ───────────────────────────────────────────────
+      // ── 🟢 No ar — publicadas e operando (US-O5 + US-O6) ─────────────
       S.listItem()
-        .title("🔴 Revisar agora")
+        .title("🟢 No ar")
+        .child(
+          S.list()
+            .title("🟢 No ar")
+            .items([
+              S.listItem()
+                .title("📋 Todas no ar")
+                .child(
+                  S.documentList()
+                    .title("No ar — publicadas e operando")
+                    .filter(
+                      '_type == "atracao" && !(_id in path("drafts.**")) && status == "operando"',
+                    )
+                    .defaultOrdering([{ field: "nome", direction: "asc" }]),
+                ),
+
+              // US-O6: subseção data vencida (ainda no ar — candidatas a mark-expired)
+              S.listItem()
+                .title("⚠️ Data vencida — verificar (ainda no ar)")
+                .child(
+                  S.documentList()
+                    .title("⚠️ Data vencida — publicadas, operando, data passada")
+                    .filter(
+                      '_type == "atracao" && !(_id in path("drafts.**")) && status == "operando" && defined(proxima_data) && proxima_data < $hoje',
+                    )
+                    .params({ hoje: hoje() })
+                    .defaultOrdering([{ field: "proxima_data", direction: "asc" }]),
+                ),
+            ]),
+        ),
+
+      // ── 📝 A publicar — todos os drafts (US-O5) ───────────────────────
+      S.listItem()
+        .title("📝 A publicar")
         .child(
           S.documentList()
-            .title("Revisar agora — needs_human")
-            .filter('_type == "atracao" && review_status == "needs_human"')
+            .title("A publicar — drafts")
+            .filter('_type == "atracao" && _id in path("drafts.**")')
+            .defaultOrdering([{ field: "_updatedAt", direction: "desc" }]),
+        ),
+
+      // ── ⏸ Fora do ar — publicadas, não operando (US-O5) ──────────────
+      S.listItem()
+        .title("⏸ Fora do ar")
+        .child(
+          S.documentList()
+            .title("Fora do ar — publicadas e não operando")
+            .filter(
+              '_type == "atracao" && !(_id in path("drafts.**")) && status != "operando"',
+            )
             .defaultOrdering([{ field: "nome", direction: "asc" }]),
-        ),
-
-      S.listItem()
-        .title("✅ Prontas pra publicar")
-        .child(
-          S.documentList()
-            .title("Prontas pra publicar — auto_ok")
-            .filter('_type == "atracao" && review_status == "auto_ok" && (!defined(proxima_data) || proxima_data >= $hoje)')
-            .params({ hoje: hoje() })
-            .defaultOrdering([{ field: "nome", direction: "asc" }]),
-        ),
-
-      S.listItem()
-        .title("🟢 Ativas")
-        .child(
-          S.documentList()
-            .title("Ativas — publicadas com data válida")
-            .filter('_type == "atracao" && !(_id in path("drafts.**")) && defined(proxima_data) && proxima_data >= $hoje')
-            .params({ hoje: hoje() })
-            .defaultOrdering([{ field: "proxima_data", direction: "asc" }]),
-        ),
-
-      // ── Expiradas (proxima_data < hoje) ───────────────────────────────
-      S.listItem()
-        .title("⚠️ Expiradas")
-        .child(
-          S.documentList()
-            .title("Expiradas — proxima_data vencida")
-            .filter('_type == "atracao" && defined(proxima_data) && proxima_data < $hoje')
-            .params({ hoje: hoje() })
-            .defaultOrdering([{ field: "proxima_data", direction: "asc" }]),
         ),
 
       S.divider(),
 
-      // ── Todas as atrações ──────────────────────────────────────────────
+      // ── Todas as atrações (utilitário) ────────────────────────────────
       S.listItem()
         .title("Atrações")
         .icon(() => "🎡")
