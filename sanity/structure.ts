@@ -19,7 +19,7 @@ export const structure = (S: StructureBuilder) =>
                   S.documentList()
                     .title("No ar — publicadas, operando, data válida")
                     .filter(
-                      '_type == "atracao" && !(_id in path("drafts.**")) && status == "operando" && (!defined(proxima_data) || proxima_data >= $hoje)',
+                      '_type == "atracao" && !(_originalId in path("drafts.**")) && status == "operando" && (!defined(proxima_data) || proxima_data >= $hoje)',
                     )
                     .params({ hoje: hoje() })
                     .defaultOrdering([{ field: "nome", direction: "asc" }]),
@@ -32,7 +32,7 @@ export const structure = (S: StructureBuilder) =>
                   S.documentList()
                     .title("⚠️ Data vencida — publicadas, operando, data passada")
                     .filter(
-                      '_type == "atracao" && !(_id in path("drafts.**")) && status == "operando" && defined(proxima_data) && proxima_data < $hoje',
+                      '_type == "atracao" && !(_originalId in path("drafts.**")) && status == "operando" && defined(proxima_data) && proxima_data < $hoje',
                     )
                     .params({ hoje: hoje() })
                     .defaultOrdering([{ field: "proxima_data", direction: "asc" }]),
@@ -46,7 +46,7 @@ export const structure = (S: StructureBuilder) =>
         .child(
           S.documentList()
             .title("A publicar — drafts")
-            .filter('_type == "atracao" && _id in path("drafts.**")')
+            .filter('_type == "atracao" && _originalId in path("drafts.**")')
             .defaultOrdering([{ field: "_updatedAt", direction: "desc" }]),
         ),
 
@@ -57,7 +57,7 @@ export const structure = (S: StructureBuilder) =>
           S.documentList()
             .title("Fora do ar — publicadas e não operando")
             .filter(
-              '_type == "atracao" && !(_id in path("drafts.**")) && status != "operando"',
+              '_type == "atracao" && !(_originalId in path("drafts.**")) && status != "operando"',
             )
             .defaultOrdering([{ field: "nome", direction: "asc" }]),
         ),
