@@ -22,34 +22,38 @@ export default function SobrePage() {
 
         <article className="space-y-6 text-base leading-relaxed text-secondary">
           <h1 className="font-display text-3xl font-bold text-primary">
-            Onde Brincar
+            Sobre Onde Brincar
           </h1>
 
           <p>
-            Rio tem atração pra criança que nem cabe na cabeça. Show de mágica,
-            peça de teatro, exposição interativa, parquinho escondido, museu que
-            dá pra tocar em tudo — e ainda uma lista enorme de eventos que
-            aparecem e somem sem aviso.
+            Quem é pai ou mãe certamente já passou por aquela boa e velha
+            pergunta… &quot;E aí, qual boa para o fim de semana?&quot;. E
+            diversas respostas já surgiram. Aquela peça de teatro com os
+            personagens mais amados, aquela pracinha em que os amigos da escola
+            se encontram. Ou aquela ida à exposição com toda cara de ser um
+            encanto pra todo mundo.
           </p>
 
           <p>
-            O problema não é falta de opção. É que descobrir o que está
-            acontecendo, onde fica, quanto custa e se ainda tem ingresso virou
-            tarefa de investigação.
+            Daí nasceu o &quot;Onde Brincar&quot;. Tem muita opção em cidades
+            como o Rio de Janeiro. Gratuitas, pagas, ao ar livre e fechadas. De
+            tudo um pouco. A gente só precisa de um ponto de encontro. Um lugar
+            onde essas diversas atividades podem ser achadas facilmente.
+            Através de um filtro, de um toque no celular.
           </p>
 
           <p>
-            O Onde Brincar existe pra acabar com isso.
+            Pais, mães. Bem-vindo a este espaço e torço para que ele seja
+            realmente útil a vocês. E que vocês se sintam à vontade para
+            indicar lugares enquanto encontram outros tantos onde se divertir
+            com os seus pequenos. Onde… Brincar.
           </p>
 
-          <p>
-            A gente garimpou, testou e organizou as melhores atrações infantis
-            do Rio — e atualiza isso toda semana. Você chega aqui na quinta à
-            noite sem ideia nenhuma e sai com um programa pra curtir no fim de
-            semana.
+          <p className="font-medium text-primary">
+            Um grande abraço,
+            <br />
+            Equipe Onde Brincar
           </p>
-
-          <p>Simples assim.</p>
 
           <hr className="border-primary/10" />
 
