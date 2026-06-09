@@ -26,7 +26,7 @@ const atracaoProjection = groq`
 `;
 
 export const atracoesAtivas = groq`
-  *[_type == "atracao" && !(_id in path("drafts.**")) && status == "operando"]
+  *[_type == "atracao" && !(_id in path("drafts.**")) && status == "operando" && (!defined(proxima_data) || proxima_data >= $hoje)]
   | order(nome asc) {
     ${atracaoProjection}
   }

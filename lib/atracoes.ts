@@ -81,9 +81,10 @@ async function fetchSanityAtracoes(): Promise<Atracao[]> {
   }
 
   try {
+    const hoje = new Date().toISOString().slice(0, 10);
     const documents = await sanityClient.fetch<SanityAtracaoDocument[]>(
       atracoesAtivas,
-      {},
+      { hoje },
       { next: { revalidate: 60 } },
     );
     return documents.map(mapSanityAtracao);
