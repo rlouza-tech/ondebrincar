@@ -2,6 +2,7 @@ import { defineField, defineType } from "sanity";
 
 const categoriaOptions = [
   { title: "Teatro infantil", value: "teatro" },
+  { title: "Show", value: "show" },
   { title: "Parque", value: "parque" },
   { title: "Museu", value: "museu" },
   { title: "Pracinha", value: "pracinha" },

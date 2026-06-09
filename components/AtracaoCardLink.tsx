@@ -58,6 +58,7 @@ export function AtracaoCardLink({ atracao, className }: AtracaoCardLinkProps) {
           imageUrl={atracao.imagemUrl}
           imageAlt={`Foto: ${atracao.titulo}`}
           proximaData={atracao.proximaData}
+          categoria={atracao.categoria}
           favorite={favorite}
           onFavoriteToggle={handleFavoriteToggle}
           onShareClick={handleShareClick}

@@ -84,4 +84,41 @@ describe("AtracaoCard", () => {
     const btn = container.querySelector("button[aria-pressed]");
     expect(btn).toBeNull();
   });
+
+  // US-I5 — CategoriaBadge
+  it("exibe badge com label correto para categoria 'teatro'", () => {
+    render({ categoria: "teatro" });
+    expect(container.textContent).toContain("Teatro");
+  });
+
+  it("exibe badge com label correto para categoria 'show'", () => {
+    render({ categoria: "show" });
+    expect(container.textContent).toContain("Show");
+  });
+
+  it("exibe badge com label 'Atividade' para categoria 'atividade-extra'", () => {
+    render({ categoria: "atividade-extra" });
+    expect(container.textContent).toContain("Atividade");
+  });
+
+  it("não exibe badge quando categoria é null", () => {
+    render({ categoria: null });
+    const spans = Array.from(container.querySelectorAll("span"));
+    const badgeTexts = ["Teatro", "Show", "Atividade", "Museu", "Parque", "Pracinha", "Praia", "Evento"];
+    expect(spans.some((s) => badgeTexts.includes(s.textContent ?? ""))).toBe(false);
+  });
+
+  it("não exibe badge quando categoria é undefined", () => {
+    render();
+    const spans = Array.from(container.querySelectorAll("span"));
+    const badgeTexts = ["Teatro", "Show", "Atividade", "Museu", "Parque", "Pracinha", "Praia", "Evento"];
+    expect(spans.some((s) => badgeTexts.includes(s.textContent ?? ""))).toBe(false);
+  });
+
+  it("não exibe badge para categoria desconhecida", () => {
+    render({ categoria: "categoria-inexistente" });
+    const spans = Array.from(container.querySelectorAll("span"));
+    const badgeTexts = ["Teatro", "Show", "Atividade", "Museu", "Parque", "Pracinha", "Praia", "Evento"];
+    expect(spans.some((s) => badgeTexts.includes(s.textContent ?? ""))).toBe(false);
+  });
 });
