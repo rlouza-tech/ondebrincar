@@ -34,9 +34,37 @@ export async function generateMetadata({ params }: AtracaoPageProps): Promise<Me
     };
   }
 
+  const title = `${atracao.titulo} | Onde Brincar`;
+  const description = atracao.descricaoCurta;
+  const hasImage = atracao.imagemUrl && !atracao.imagemUrl.includes("placeholder");
+
   return {
-    title: `${atracao.titulo} | Onde Brincar`,
-    description: atracao.descricaoCurta,
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      locale: "pt_BR",
+      ...(hasImage
+        ? {
+            images: [
+              {
+                url: atracao.imagemUrl,
+                width: 1200,
+                height: 630,
+                alt: atracao.titulo,
+              },
+            ],
+          }
+        : {}),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      ...(hasImage ? { images: [atracao.imagemUrl] } : {}),
+    },
   };
 }
 

@@ -50,3 +50,10 @@ export const todosSlugs = groq`
     "slug": slug.current
   }
 `;
+
+/** Slugs apenas das atrações publicadas e operando — usado pelo sitemap.xml */
+export const slugsAtivos = groq`
+  *[_type == "atracao" && !(_id in path("drafts.**")) && status == "operando" && defined(slug.current)] {
+    "slug": slug.current
+  }
+`;

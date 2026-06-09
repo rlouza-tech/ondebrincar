@@ -4,6 +4,7 @@ import {
   atracaoBySlug,
   atracoesAtivas,
   atracoesPorBairro,
+  slugsAtivos,
   todosSlugs,
 } from "@/lib/sanity/queries";
 import type { Atracao, IndoorOutdoor, PrecoTipo, SanityAtracaoDocument } from "@/lib/sanity/types";
@@ -124,6 +125,27 @@ export async function getAtracaoSlugs(): Promise<string[]> {
         todosSlugs,
         {},
         { next: { revalidate: 60 } },
+      );
+
+      if (slugs.length > 0) {
+        return slugs.map((item) => item.slug);
+      }
+    } catch {
+      // Fallback abaixo.
+    }
+  }
+
+  return mockAtracoes.map((atracao) => atracao.slug);
+}
+
+/** Slugs apenas das atrações publicadas e com status=operando — usado pelo sitemap.xml */
+export async function getAtracaoSlugsAtivos(): Promise<string[]> {
+  if (hasSanityConfig()) {
+    try {
+      const slugs = await sanityClient.fetch<{ slug: string }[]>(
+        slugsAtivos,
+        {},
+        { next: { revalidate: 3600 } },
       );
 
       if (slugs.length > 0) {
