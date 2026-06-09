@@ -15,7 +15,7 @@ export const sanityClient = createClient({
   projectId: sanityConfig.projectId || "missing-project-id",
   dataset: sanityConfig.dataset,
   apiVersion: sanityConfig.apiVersion,
-  useCdn: process.env.NODE_ENV === "production",
+  useCdn: false,
 });
 
 export const sanityWriteClient = createClient({
