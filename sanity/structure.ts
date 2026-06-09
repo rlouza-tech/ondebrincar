@@ -17,10 +17,11 @@ export const structure = (S: StructureBuilder) =>
                 .title("📋 Todas no ar")
                 .child(
                   S.documentList()
-                    .title("No ar — publicadas e operando")
+                    .title("No ar — publicadas, operando, data válida")
                     .filter(
-                      '_type == "atracao" && !(_id in path("drafts.**")) && status == "operando"',
+                      '_type == "atracao" && !(_id in path("drafts.**")) && status == "operando" && (!defined(proxima_data) || proxima_data >= $hoje)',
                     )
+                    .params({ hoje: hoje() })
                     .defaultOrdering([{ field: "nome", direction: "asc" }]),
                 ),
 
