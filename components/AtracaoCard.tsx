@@ -124,54 +124,54 @@ export function AtracaoCard({
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           className="object-cover"
         />
-        {categoria && (
-          <div className="absolute left-3 top-3">
-            <CategoriaBadge categoria={categoria} />
-          </div>
-        )}
-        {(onFavoriteToggle || onShareClick) && (
-          <div className="absolute right-3 top-3 flex gap-2">
-            {onShareClick ? (
-              <button
-                type="button"
-                onClick={onShareClick}
-                aria-label={`Compartilhar ${name}`}
-                className={cn(
-                  "rounded-full bg-white/90 p-2 text-primary/60 shadow-sm transition-colors hover:text-primary",
-                  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+        {(categoria || onFavoriteToggle || onShareClick) && (
+          <div className="absolute left-3 top-3 flex flex-col gap-2">
+            {categoria && <CategoriaBadge categoria={categoria} />}
+            {(onFavoriteToggle || onShareClick) && (
+              <div className="flex gap-2">
+                {onShareClick ? (
+                  <button
+                    type="button"
+                    onClick={onShareClick}
+                    aria-label={`Compartilhar ${name}`}
+                    className={cn(
+                      "rounded-full bg-white/90 p-2 text-primary/60 shadow-sm transition-colors hover:text-primary",
+                      "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+                    )}
+                  >
+                    <ShareIcon />
+                  </button>
+                ) : null}
+                {onFavoriteToggle ? (
+                  <button
+                    type="button"
+                    onClick={onFavoriteToggle}
+                    aria-pressed={favorite}
+                    aria-label={
+                      favorite
+                        ? `Remover ${name} dos favoritos`
+                        : `Adicionar ${name} aos favoritos`
+                    }
+                    className={cn(
+                      "rounded-full bg-white/90 p-2 shadow-sm transition-colors",
+                      "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+                      favorite ? "text-error" : "text-primary/60 hover:text-error",
+                    )}
+                  >
+                    <HeartIcon filled={favorite} />
+                  </button>
+                ) : (
+                  <span
+                    className={cn(
+                      "rounded-full bg-white/90 p-2 text-primary/40 shadow-sm",
+                      favorite && "text-error",
+                    )}
+                    aria-hidden
+                  >
+                    <HeartIcon filled={favorite} />
+                  </span>
                 )}
-              >
-                <ShareIcon />
-              </button>
-            ) : null}
-            {onFavoriteToggle ? (
-              <button
-                type="button"
-                onClick={onFavoriteToggle}
-                aria-pressed={favorite}
-                aria-label={
-                  favorite
-                    ? `Remover ${name} dos favoritos`
-                    : `Adicionar ${name} aos favoritos`
-                }
-                className={cn(
-                  "rounded-full bg-white/90 p-2 shadow-sm transition-colors",
-                  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
-                  favorite ? "text-error" : "text-primary/60 hover:text-error",
-                )}
-              >
-                <HeartIcon filled={favorite} />
-              </button>
-            ) : (
-              <span
-                className={cn(
-                  "rounded-full bg-white/90 p-2 text-primary/40 shadow-sm",
-                  favorite && "text-error",
-                )}
-                aria-hidden
-              >
-                <HeartIcon filled={favorite} />
-              </span>
+              </div>
             )}
           </div>
         )}
