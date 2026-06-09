@@ -4,6 +4,7 @@ import type { AnchorHTMLAttributes, ReactNode } from "react";
 import {
   detectDestinationType,
   trackEvent,
+  type BuyTicketClickParams,
   type OutboundClickParams,
 } from "@/lib/analytics";
 import type { Atracao } from "@/lib/sanity/types";
@@ -14,6 +15,8 @@ interface OutboundLinkProps
   href: string;
   ctaLabel: string;
   source?: OutboundClickParams["source"];
+  /** Quando true, dispara buy_ticket_click em paralelo ao outbound_click. */
+  isBuyTicket?: boolean;
   children: ReactNode;
 }
 
@@ -22,6 +25,7 @@ export function OutboundLink({
   href,
   ctaLabel,
   source = "detail_page",
+  isBuyTicket = false,
   children,
   ...props
 }: OutboundLinkProps) {
@@ -43,6 +47,19 @@ export function OutboundLink({
         };
 
         trackEvent("outbound_click", params);
+
+        if (isBuyTicket) {
+          const buyParams: BuyTicketClickParams = {
+            attraction_id: params.attraction_id,
+            attraction_name: params.attraction_name,
+            category: params.category,
+            destination_url: params.destination_url,
+            destination_type: params.destination_type,
+            cta_label: params.cta_label,
+            partner: params.partner,
+          };
+          trackEvent("buy_ticket_click", buyParams);
+        }
       }}
       {...props}
     >

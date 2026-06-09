@@ -171,6 +171,7 @@ export default async function AtracaoPage({ params }: AtracaoPageProps) {
                 atracao={atracao}
                 href={atracao.linkExterno}
                 ctaLabel="Ver ingresso"
+                isBuyTicket
                 className={buttonClassName({
                   variant: "primary",
                   size: "lg",
