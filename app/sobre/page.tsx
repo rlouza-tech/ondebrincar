@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteHeader } from "@/components/SiteHeader";
+import { SiteFooter } from "@/components/SiteFooter";
 
 export const metadata: Metadata = {
   title: "Sobre | Onde Brincar",
@@ -70,6 +71,7 @@ export default function SobrePage() {
           </p>
         </article>
       </main>
+      <SiteFooter />
     </>
   );
 }

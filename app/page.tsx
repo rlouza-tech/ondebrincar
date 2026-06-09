@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
+import { SiteFooter } from "@/components/SiteFooter";
 import { HomeContent } from "@/app/home-content";
 import { getAllAtracoes } from "@/lib/atracoes";
 
@@ -51,6 +52,7 @@ export default async function HomePage() {
           <HomeContent atracoes={atracoes} bairros={bairros} />
         </Suspense>
       </main>
+      <SiteFooter />
     </>
   );
 }

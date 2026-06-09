@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteHeader } from "@/components/SiteHeader";
+import { SiteFooter } from "@/components/SiteFooter";
 
 export const metadata: Metadata = {
   title: "Política de Privacidade | Onde Brincar",
@@ -196,6 +197,7 @@ export default function PrivacidadePage() {
           </p>
         </article>
       </main>
+      <SiteFooter />
     </>
   );
 }

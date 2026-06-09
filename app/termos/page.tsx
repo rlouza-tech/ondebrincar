@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteHeader } from "@/components/SiteHeader";
+import { SiteFooter } from "@/components/SiteFooter";
 
 export const metadata: Metadata = {
   title: "Termos de Uso | Onde Brincar",
@@ -132,6 +133,7 @@ export default function TermosPage() {
           </p>
         </article>
       </main>
+      <SiteFooter />
     </>
   );
 }
