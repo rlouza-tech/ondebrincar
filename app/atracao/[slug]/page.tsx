@@ -6,6 +6,7 @@ import { AtracaoDetailActions } from "@/components/AtracaoDetailActions";
 import { AttractionDetailTracker } from "@/components/AttractionDetailTracker";
 import { OutboundLink } from "@/components/OutboundLink";
 import { SiteHeader } from "@/components/SiteHeader";
+import { SiteFooter } from "@/components/SiteFooter";
 import { buttonClassName } from "@/components/Button";
 import {
   formatFaixaEtaria,
@@ -138,6 +139,7 @@ export default async function AtracaoPage({ params }: AtracaoPageProps) {
           </div>
         </article>
       </main>
+      <SiteFooter />
     </>
   );
 }
