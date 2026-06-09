@@ -37,6 +37,10 @@ export async function generateMetadata({ params }: AtracaoPageProps): Promise<Me
   const title = `${atracao.titulo} | Onde Brincar`;
   const description = atracao.descricaoCurta;
   const hasImage = atracao.imagemUrl && !atracao.imagemUrl.includes("placeholder");
+  // Sanity Image API: força 1200×630 cropped e WEBP otimizado (~< 1 MB)
+  const ogImageUrl = hasImage
+    ? `${atracao.imagemUrl}?w=1200&h=630&fit=crop&auto=format`
+    : undefined;
 
   return {
     title,
@@ -46,11 +50,12 @@ export async function generateMetadata({ params }: AtracaoPageProps): Promise<Me
       description,
       type: "website",
       locale: "pt_BR",
-      ...(hasImage
+      siteName: "Onde Brincar",
+      ...(ogImageUrl
         ? {
             images: [
               {
-                url: atracao.imagemUrl,
+                url: ogImageUrl,
                 width: 1200,
                 height: 630,
                 alt: atracao.titulo,
@@ -63,7 +68,7 @@ export async function generateMetadata({ params }: AtracaoPageProps): Promise<Me
       card: "summary_large_image",
       title,
       description,
-      ...(hasImage ? { images: [atracao.imagemUrl] } : {}),
+      ...(ogImageUrl ? { images: [ogImageUrl] } : {}),
     },
   };
 }
