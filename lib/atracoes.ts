@@ -86,7 +86,7 @@ async function fetchSanityAtracoes(): Promise<Atracao[]> {
     const documents = await sanityClient.fetch<SanityAtracaoDocument[]>(
       atracoesAtivas,
       { hoje },
-      { next: { revalidate: 60 } },
+      { cache: "no-store" },
     );
     return documents.map(mapSanityAtracao);
   } catch {
