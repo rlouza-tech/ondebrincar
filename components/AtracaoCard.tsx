@@ -12,9 +12,36 @@ export interface AtracaoCardProps extends HTMLAttributes<HTMLDivElement> {
   imageUrl: string;
   imageAlt: string;
   proximaData?: string | null;
+  categoria?: string | null;
   favorite?: boolean;
   onFavoriteToggle?: (event: MouseEvent<HTMLButtonElement>) => void;
   onShareClick?: (event: MouseEvent<HTMLButtonElement>) => void;
+}
+
+const CATEGORIA_CONFIG: Record<string, { label: string; bgClass: string }> = {
+  teatro:            { label: "Teatro",    bgClass: "bg-brand-primary" },
+  show:              { label: "Show",      bgClass: "bg-brand-secondary" },
+  "atividade-extra": { label: "Atividade", bgClass: "bg-brand-accent" },
+  museu:             { label: "Museu",     bgClass: "bg-brand-accent" },
+  parque:            { label: "Parque",    bgClass: "bg-ink-mid" },
+  pracinha:          { label: "Pracinha",  bgClass: "bg-ink-mid" },
+  praia:             { label: "Praia",     bgClass: "bg-ink-mid" },
+  evento:            { label: "Evento",    bgClass: "bg-ink-mid" },
+};
+
+function CategoriaBadge({ categoria }: { categoria: string }) {
+  const config = CATEGORIA_CONFIG[categoria];
+  if (!config) return null;
+  return (
+    <span
+      className={cn(
+        "rounded-full px-2 py-0.5 text-xs font-semibold text-white",
+        config.bgClass,
+      )}
+    >
+      {config.label}
+    </span>
+  );
 }
 
 function formatProximaData(isoDate: string): string {
@@ -74,6 +101,7 @@ export function AtracaoCard({
   imageUrl,
   imageAlt,
   proximaData,
+  categoria,
   favorite = false,
   onFavoriteToggle,
   onShareClick,
@@ -96,6 +124,11 @@ export function AtracaoCard({
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           className="object-cover"
         />
+        {categoria && (
+          <div className="absolute left-3 top-3">
+            <CategoriaBadge categoria={categoria} />
+          </div>
+        )}
         {(onFavoriteToggle || onShareClick) && (
           <div className="absolute right-3 top-3 flex gap-2">
             {onShareClick ? (
