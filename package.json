@@ -20,6 +20,7 @@
     "import-sanity": "dotenv -e .env.local -- tsx scripts/import-sanity/index.ts",
     "associate-imagens": "tsx scripts/associate-imagens/index.ts",
     "update-drafts-programacao": "tsx scripts/update-drafts-programacao/index.ts",
+    "check-novidades": "dotenv -e .env.local -- tsx scripts/check-novidades/index.ts",
     "mark-expired": "dotenv -e .env.local -- tsx scripts/mark-expired.ts",
     "cleanup-proxima-data": "dotenv -e .env.local -- tsx scripts/cleanup-proxima-data.ts",
     "test": "vitest run",
