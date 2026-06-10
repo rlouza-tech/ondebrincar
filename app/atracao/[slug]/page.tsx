@@ -170,15 +170,15 @@ export default async function AtracaoPage({ params }: AtracaoPageProps) {
               <OutboundLink
                 atracao={atracao}
                 href={atracao.linkExterno}
-                ctaLabel="Ver ingresso"
-                isBuyTicket
+                ctaLabel={atracao.tipoProgramacao === "permanente" ? "Visitar site" : "Ver ingressos"}
+                isBuyTicket={atracao.tipoProgramacao !== "permanente"}
                 className={buttonClassName({
                   variant: "primary",
                   size: "lg",
                   className: "w-full sm:w-auto",
                 })}
               >
-                Ver ingresso
+                {atracao.tipoProgramacao === "permanente" ? "Visitar site" : "Ver ingressos"}
               </OutboundLink>
             ) : null}
           </div>
