@@ -9,6 +9,7 @@ const categoriaOptions = [
   { title: "Atividade extra", value: "atividade-extra" },
   { title: "Evento", value: "evento" },
   { title: "Praia", value: "praia" },
+  { title: "Colônia de Férias", value: "colonia-de-ferias" },
 ];
 
 const bairroExamples = "Ex.: Tijuca, Leblon, Centro, São Cristóvão";
