@@ -10,6 +10,9 @@ const categoriaOptions = [
   { title: "Evento", value: "evento" },
   { title: "Praia", value: "praia" },
   { title: "Colônia de Férias", value: "colonia-de-ferias" },
+  { title: "Futebol", value: "futebol" },
+  { title: "Restaurante", value: "restaurante" },
+  { title: "Festa Junina", value: "festa-junina" },
 ];
 
 const bairroExamples = "Ex.: Tijuca, Leblon, Centro, São Cristóvão";

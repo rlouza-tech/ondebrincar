@@ -16,6 +16,9 @@ export const CATEGORIA_OPTIONS = [
   { label: "Atividade extra", value: "atividade-extra" },
   { label: "Evento", value: "evento" },
   { label: "Colônia de Férias", value: "colonia-de-ferias" },
+  { label: "Futebol", value: "futebol" },
+  { label: "Restaurante", value: "restaurante" },
+  { label: "Festa Junina", value: "festa-junina" },
 ] as const;
 
 export const PRECO_OPTIONS: Array<{ label: string; value: PrecoTipo }> = [
