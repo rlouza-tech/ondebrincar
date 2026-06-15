@@ -34,7 +34,7 @@ import {
   DEFAULT_INPUT_PATH as MANUAL_DEFAULT_PATH,
 } from "@/scripts/normalizer/manual";
 import { fetchExistingSlugs } from "@/scripts/import-sanity/index";
-import { filterGeo } from "./geo-filter";
+import { filterGeo, appendGeoRejections, GEO_REJECTED_LOG_PATH } from "./geo-filter";
 
 type Source = "clubinho" | "sympla" | "whatsapp" | "manual";
 
@@ -254,6 +254,8 @@ async function main() {
       console.log(`  ✗ ${r.slug} | venue: "${r.venue}" | bairro: "${r.bairro}" | motivo: ${r.motivo}`);
     }
     console.log();
+    await appendGeoRejections(geoRejected, options.source ?? label);
+    console.log(`Geo rejected log: ${GEO_REJECTED_LOG_PATH}`);
   }
 
   const rowsToProcess = options.limit ? geoAccepted.slice(0, options.limit) : geoAccepted;
