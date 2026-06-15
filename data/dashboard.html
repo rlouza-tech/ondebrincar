@@ -262,19 +262,23 @@
   const THRESHOLD_APROVACAO = 85;
   // Threshold de custo por rodada para alerta (USD)
   const THRESHOLD_CUSTO_USD = 0.05;
-  // Caminho relativo ao JSON de logs
-  const LOG_PATH = 'logs/pipeline-runs.json';
 </script>
 
 <div class="header">
   <div class="header-left">
     <h1>🎮 Onde Brincar — Pipeline Dashboard</h1>
-    <p id="ultima-atualizacao">Carregando dados...</p>
+    <p id="ultima-atualizacao">Nenhum log carregado.</p>
   </div>
-  <div class="config-box">
-    <label>USD → R$</label>
-    <input type="number" id="usd-brl-input" value="5.70" step="0.01" min="1" oninput="recalcular()">
-    <span>/ USD</span>
+  <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+    <label class="config-box" style="cursor:pointer; background:var(--blue); color:white; border-color:var(--blue);">
+      📂 Carregar log
+      <input type="file" id="file-input" accept=".json" style="display:none" onchange="carregarArquivo(this)">
+    </label>
+    <div class="config-box">
+      <label>USD → R$</label>
+      <input type="number" id="usd-brl-input" value="5.70" step="0.01" min="1" oninput="recalcular()">
+      <span>/ USD</span>
+    </div>
   </div>
 </div>
 
@@ -494,7 +498,7 @@ function renderCards() {
 function renderTabela() {
   const container = document.getElementById('tabela-container');
   if (!rodadas.length) {
-    container.innerHTML = '<div class="empty-state"><strong>Sem dados</strong><p>Nenhuma rodada encontrada em ' + LOG_PATH + '</p></div>';
+    container.innerHTML = '<div class="empty-state"><strong>Sem dados</strong><p>Carregue o arquivo <code>pipeline-runs.json</code> usando o botão acima.</p></div>';
     return;
   }
 
@@ -713,39 +717,41 @@ function recalcular() {
   renderCards();
 }
 
-// ── Carregar dados ─────────────────────────────────────────────────────────
-async function carregar() {
-  try {
-    const resp = await fetch(LOG_PATH);
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    const texto = await resp.text();
-    rodadas = texto.trim().split('\n')
-      .filter(l => l.trim())
-      .map(l => {
-        try { return JSON.parse(l); }
-        catch { return null; }
-      })
-      .filter(Boolean)
-      .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+// ── Carregar dados via File input ──────────────────────────────────────────
+function carregarArquivo(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      rodadas = e.target.result.trim().split('\n')
+        .filter(l => l.trim())
+        .map(l => { try { return JSON.parse(l); } catch { return null; } })
+        .filter(Boolean)
+        .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
-    const ultima = rodadas[rodadas.length - 1];
-    document.getElementById('ultima-atualizacao').textContent =
-      `${rodadas.length} rodada${rodadas.length !== 1 ? 's' : ''} · última em ${ultima ? fmtDate(ultima.timestamp) : '—'}`;
-
-  } catch (e) {
-    rodadas = [];
-    document.getElementById('ultima-atualizacao').textContent =
-      'Erro ao carregar ' + LOG_PATH + ': ' + e.message;
-  }
-
-  renderCards();
-  renderTabela();
-  renderErros();
-  renderSourceAprovacao();
-  renderEvolucao();
+      const ultima = rodadas[rodadas.length - 1];
+      document.getElementById('ultima-atualizacao').textContent =
+        `${file.name} · ${rodadas.length} rodada${rodadas.length !== 1 ? 's' : ''} · última em ${ultima ? fmtDate(ultima.timestamp) : '—'}`;
+    } catch(err) {
+      rodadas = [];
+      document.getElementById('ultima-atualizacao').textContent = 'Erro ao ler arquivo: ' + err.message;
+    }
+    renderCards();
+    renderTabela();
+    renderErros();
+    renderSourceAprovacao();
+    renderEvolucao();
+  };
+  reader.readAsText(file);
 }
 
-carregar();
+// Renderiza painéis vazios ao abrir
+renderCards();
+renderTabela();
+renderErros();
+renderSourceAprovacao();
+renderEvolucao();
 </script>
 </body>
 </html>
