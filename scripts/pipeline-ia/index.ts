@@ -34,6 +34,7 @@ import {
   DEFAULT_INPUT_PATH as MANUAL_DEFAULT_PATH,
 } from "@/scripts/normalizer/manual";
 import { fetchExistingSlugs } from "@/scripts/import-sanity/index";
+import { filterGeo } from "./geo-filter";
 
 type Source = "clubinho" | "sympla" | "whatsapp" | "manual";
 
@@ -246,7 +247,16 @@ async function main() {
   const dedupIgnored = inputRows.length - dedupedRows.length;
   console.log(`Dedup: ${dedupIgnored} ignoradas (já existem no Sanity), ${dedupedRows.length} a processar`);
 
-  const rowsToProcess = options.limit ? dedupedRows.slice(0, options.limit) : dedupedRows;
+  const { accepted: geoAccepted, rejected: geoRejected } = filterGeo(dedupedRows);
+  if (geoRejected.length > 0) {
+    console.log(`\nFiltro geográfico: ${geoRejected.length} ficha(s) rejeitada(s) (fora do município do Rio de Janeiro):`);
+    for (const r of geoRejected) {
+      console.log(`  ✗ ${r.slug} | venue: "${r.venue}" | bairro: "${r.bairro}" | motivo: ${r.motivo}`);
+    }
+    console.log();
+  }
+
+  const rowsToProcess = options.limit ? geoAccepted.slice(0, options.limit) : geoAccepted;
   const enrichedRows: LinhaEnriquecida[] = [];
   const costLogEntries: CostLogEntry[] = [];
   const latenciasMs: number[] = [];
@@ -358,6 +368,7 @@ async function main() {
     fichas_processadas: report.total,
     fichas_novas: report.total,
     dedup_ignored: dedupIgnored,
+    geo_rejected: geoRejected.length,
     custo_estimado_usd: custoUsd,
     latencia_media_ms: latenciaMedia,
     erros,
