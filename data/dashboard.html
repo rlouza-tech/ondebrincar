@@ -796,6 +796,25 @@ function carregarGeoRejected(input) {
   reader.readAsText(file);
 }
 
+const GEO_REVISADAS_KEY = 'geo_revisadas';
+
+function getRevisadas() {
+  try { return new Set(JSON.parse(localStorage.getItem(GEO_REVISADAS_KEY) || '[]')); }
+  catch { return new Set(); }
+}
+
+function marcarRevisada(slug) {
+  const revisadas = getRevisadas();
+  revisadas.add(slug);
+  localStorage.setItem(GEO_REVISADAS_KEY, JSON.stringify([...revisadas]));
+  renderGeoRejected();
+}
+
+function limparRevisadas() {
+  localStorage.removeItem(GEO_REVISADAS_KEY);
+  renderGeoRejected();
+}
+
 function renderGeoRejected() {
   const container = document.getElementById('geo-container');
   const badge = document.getElementById('geo-badge');
@@ -807,8 +826,21 @@ function renderGeoRejected() {
     return;
   }
 
-  badge.className = 'geo-badge pendente';
-  badge.textContent = geoRejections.length + ' pendente' + (geoRejections.length > 1 ? 's' : '');
+  const revisadas = getRevisadas();
+  const pendentes = geoRejections.filter(r => !revisadas.has(r.slug));
+
+  badge.className = pendentes.length ? 'geo-badge pendente' : 'geo-badge vazio';
+  badge.textContent = pendentes.length
+    ? pendentes.length + ' pendente' + (pendentes.length > 1 ? 's' : '')
+    : 'todas revisadas';
+
+  if (!pendentes.length) {
+    container.innerHTML = `<div class="empty-state">
+      ✅ Todas as rejeições foram revisadas.
+      <p><button onclick="limparRevisadas()" style="margin-top:10px;padding:4px 12px;border:1px solid var(--gray-200);border-radius:6px;background:white;cursor:pointer;font-size:12px;color:var(--gray-600);">Limpar revisadas</button></p>
+    </div>`;
+    return;
+  }
 
   let html = `<table>
     <thead><tr>
@@ -818,10 +850,12 @@ function renderGeoRejected() {
       <th>Bairro</th>
       <th>Source</th>
       <th>Data</th>
+      <th></th>
     </tr></thead>
     <tbody>`;
 
-  geoRejections.forEach(r => {
+  pendentes.forEach(r => {
+    const slugEscaped = (r.slug || '').replace(/'/g, "\\'");
     html += `<tr>
       <td style="font-weight:600;">${r.nome || '—'}</td>
       <td><code style="font-size:11px;color:var(--gray-600);">${r.slug || '—'}</code></td>
@@ -829,14 +863,18 @@ function renderGeoRejected() {
       <td style="color:var(--gray-600);font-size:12px;">${r.bairro || '—'}</td>
       <td>${r.source ? '<span class="source-pill">' + r.source + '</span>' : '—'}</td>
       <td style="white-space:nowrap;font-size:12px;color:var(--gray-400);">${r.timestamp ? fmtDate(r.timestamp) : '—'}</td>
+      <td><button onclick="marcarRevisada('${slugEscaped}')" style="padding:3px 10px;border:1px solid var(--gray-200);border-radius:99px;background:white;cursor:pointer;font-size:11px;color:var(--gray-600);white-space:nowrap;">Revisada ✓</button></td>
     </tr>`;
   });
 
   html += '</tbody></table>';
-  html += `<div class="geo-tip">
-    <strong>Para liberar uma ficha:</strong> adicione o slug em <code>GEO_EXCEPTIONS</code> dentro de
-    <code>scripts/pipeline-ia/geo-filter.ts</code> e rode o pipeline novamente.<br>
-    Para descartar permanentemente, ignore — a ficha não entra no Gemini nem no Sanity.
+  html += `<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-top:14px;">
+    <div class="geo-tip" style="flex:1;margin-top:0;">
+      <strong>Para liberar uma ficha:</strong> adicione o slug em <code>GEO_EXCEPTIONS</code> dentro de
+      <code>scripts/pipeline-ia/geo-filter.ts</code> e rode o pipeline novamente.<br>
+      Para descartar permanentemente, ignore — a ficha não entra no Gemini nem no Sanity.
+    </div>
+    <button onclick="limparRevisadas()" style="padding:4px 12px;border:1px solid var(--gray-200);border-radius:6px;background:white;cursor:pointer;font-size:12px;color:var(--gray-400);white-space:nowrap;">Limpar revisadas</button>
   </div>`;
 
   container.innerHTML = html;
