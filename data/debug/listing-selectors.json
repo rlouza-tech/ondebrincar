@@ -1,43 +1,43 @@
 {
   "selectorResults": {
-    "a.product-thumb[href]": 141,
-    "a.product-thumb": 141,
-    "[class*='product-thumb']": 1045,
+    "a.product-thumb[href]": 0,
+    "a.product-thumb": 0,
+    "[class*='product-thumb']": 0,
     "[class*='product-card']": 0,
     "[class*='offer-thumb']": 0,
     "[class*='offer-card']": 0,
-    "a[href*='/rio-de-janeiro/']": 182,
-    ".swiper-slide a[href]": 145,
-    "article a[href]": 141,
+    "a[href*='/rio-de-janeiro/']": 169,
+    ".swiper-slide a[href]": 0,
+    "article a[href]": 137,
     "[data-product]": 0,
     "[data-offer]": 0
   },
   "linkClasses": [
     {
-      "href": "/rio-de-janeiro/o-magico-de-oz-4000",
-      "classes": "search-bar__results__item",
-      "outerHTML": "<a href=\"/rio-de-janeiro/o-magico-de-oz-4000\" class=\"search-bar__results__item\"><div class=\"media\"><div class=\"media-left\"><figure class=\"image\"><img src=\"https://d37poupzmwluxg.cloudfront.net/uploads/11001/conversions/phpCmJX8r-flyer.jpg\" alt=\"\"></figure></div> <div class=\"media-content\"><div class"
+      "href": "https://clubinhodeofertas.com.br/rio-de-janeiro/ingressos/flamengo",
+      "classes": "shop-new-city-hero-link",
+      "outerHTML": "<a aria-label=\"Destaques em Rio de Janeiro\" class=\"shop-new-city-hero-link\" href=\"https://clubinhodeofertas.com.br/rio-de-janeiro/ingressos/flamengo\" target=\"_self\"><picture class=\"block\"><source media=\"(min-width: 768px)\" srcset=\"https://s3.amazonaws.com/storage.cdn.clubinho.com.br/media/banners/d1"
     },
     {
-      "href": "/rio-de-janeiro/lilo-e-stitch-3999",
-      "classes": "search-bar__results__item",
-      "outerHTML": "<a href=\"/rio-de-janeiro/lilo-e-stitch-3999\" class=\"search-bar__results__item\"><div class=\"media\"><div class=\"media-left\"><figure class=\"image\"><img src=\"https://d37poupzmwluxg.cloudfront.net/uploads/10998/conversions/phpvzifEY-flyer.jpg\" alt=\"\"></figure></div> <div class=\"media-content\"><div class="
+      "href": "https://clubinhodeofertas.com.br/rio-de-janeiro/busca?genres=Show",
+      "classes": "shop-new-city-hero-link",
+      "outerHTML": "<a aria-label=\"Destaques em Rio de Janeiro\" class=\"shop-new-city-hero-link\" href=\"https://clubinhodeofertas.com.br/rio-de-janeiro/busca?genres=Show\" rel=\"noreferrer noopener\" target=\"_blank\"><picture class=\"block\"><source media=\"(min-width: 768px)\" srcset=\"https://s3.amazonaws.com/storage.cdn.clubin"
     },
     {
-      "href": "/rio-de-janeiro/sonic-o-show-2686",
-      "classes": "search-bar__results__item",
-      "outerHTML": "<a href=\"/rio-de-janeiro/sonic-o-show-2686\" class=\"search-bar__results__item\"><div class=\"media\"><div class=\"media-left\"><figure class=\"image\"><img src=\"https://d37poupzmwluxg.cloudfront.net/uploads/10997/conversions/phpqm4712-flyer.jpg\" alt=\"\"></figure></div> <div class=\"media-content\"><div class=\""
+      "href": "https://clubinhodeofertas.com.br/rio-de-janeiro/ingressos/cinema?utm_source=homerj&utm_id=home&utm_content=cinema",
+      "classes": "shop-new-city-hero-link",
+      "outerHTML": "<a aria-label=\"Destaques em Rio de Janeiro\" class=\"shop-new-city-hero-link\" href=\"https://clubinhodeofertas.com.br/rio-de-janeiro/ingressos/cinema?utm_source=homerj&amp;utm_id=home&amp;utm_content=cinema\" target=\"_self\"><picture class=\"block\"><source media=\"(min-width: 768px)\" srcset=\"https://s3.ama"
     },
     {
-      "href": "/rio-de-janeiro/hakuna-matata-as-aventuras-de-timao-e-pumba-3998",
-      "classes": "search-bar__results__item",
-      "outerHTML": "<a href=\"/rio-de-janeiro/hakuna-matata-as-aventuras-de-timao-e-pumba-3998\" class=\"search-bar__results__item\"><div class=\"media\"><div class=\"media-left\"><figure class=\"image\"><img src=\"https://d37poupzmwluxg.cloudfront.net/uploads/10996/conversions/phpGl3ri6-flyer.jpg\" alt=\"\"></figure></div> <div cla"
+      "href": "https://clubinhodeofertas.com.br/rio-de-janeiro/ingressos?exhibitions=2026-06-03",
+      "classes": "group block w-[5.5rem] shrink-0 overflow-hidden rounded-[0.5rem] border border-black/20 bg-white transition-transform duration-150 hover:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#ee2375] sm:w-[7.3rem]",
+      "outerHTML": "<a aria-current=\"date\" aria-label=\"Ver ofertas para Hoje, dia 3\" class=\"group block w-[5.5rem] shrink-0 overflow-hidden rounded-[0.5rem] border border-black/20 bg-white transition-transform duration-150 hover:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus"
     },
     {
-      "href": "/rio-de-janeiro/arraia-da-emilia-3997",
-      "classes": "search-bar__results__item",
-      "outerHTML": "<a href=\"/rio-de-janeiro/arraia-da-emilia-3997\" class=\"search-bar__results__item\"><div class=\"media\"><div class=\"media-left\"><figure class=\"image\"><img src=\"https://d37poupzmwluxg.cloudfront.net/uploads/10995/conversions/phpPk6J9w-flyer.jpg\" alt=\"\"></figure></div> <div class=\"media-content\"><div cla"
+      "href": "https://clubinhodeofertas.com.br/rio-de-janeiro/ingressos?exhibitions=2026-06-04",
+      "classes": "group block w-[5.5rem] shrink-0 overflow-hidden rounded-[0.5rem] border border-black/20 bg-white transition-transform duration-150 hover:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#ee2375] sm:w-[7.3rem]",
+      "outerHTML": "<a aria-label=\"Ver ofertas para Amanhã, dia 4\" class=\"group block w-[5.5rem] shrink-0 overflow-hidden rounded-[0.5rem] border border-black/20 bg-white transition-transform duration-150 hover:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-["
     }
   ],
-  "foundAt": 1
+  "foundAt": -1
 }
