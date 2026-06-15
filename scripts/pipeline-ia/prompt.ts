@@ -5,6 +5,9 @@ import {
 import { getReferenceDateIso } from "./reference-date";
 import type { LinhaInput } from "./types";
 
+/** Incrementar manualmente ao mudar o prompt (US-S6). */
+export const PROMPT_VERSION = "v1.0.1";
+
 function buildScraperV2Block(linha: LinhaInput): string {
   const hasV2 =
     linha.sinopse_oficial ||
@@ -117,7 +120,9 @@ Casos comuns do scraper v1:
 - duração não inferível: duracao_min null + marque duracao_min em abstain_fields se relevante.
 - Não omita a ressalva só porque programacao_texto já cabe nos 200 caracteres — priorize transparência.
 
-Bom output: JSON estrito, sem markdown, descrições entre 50 e 600 caracteres, mini_review entre 50 e 400 caracteres. Mau output: usar frases como "não tenho informação", inventar endereço/duração/horário exatos sem pista, ou deixar campos críticos vagos.
+PROIBIDO — padrão "Ressalva:": nunca termine o texto de descricao, mini_review ou qualquer campo com um bloco separado iniciado por "Ressalva:" (ex.: "Ressalva: este evento pode ter sofrido alterações de data ou preço."). Esse padrão não tem valor editorial. Se houver incerteza sobre data, preço ou disponibilidade, integre a informação naturalmente ao corpo do texto (ex.: "Confirme data e preço antes de ir.") ou use notes_for_editor.
+
+Bom output: JSON estrito, sem markdown, descrições entre 50 e 600 caracteres, mini_review entre 50 e 400 caracteres. Mau output: usar frases como "não tenho informação", inventar endereço/duração/horário exatos sem pista, deixar campos críticos vagos, ou adicionar bloco "Ressalva:" ao final de qualquer campo de texto.
 
 Entrada crua:
 - nome: ${linha.nome}
