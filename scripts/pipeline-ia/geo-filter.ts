@@ -11,8 +11,36 @@
  * função base). Para casos ambíguos legítimos, adicione o slug em GEO_EXCEPTIONS.
  */
 
+import { appendFile, mkdir } from "node:fs/promises";
+import { dirname, join } from "node:path";
 import { isLocalizacaoRioDeJaneiro } from "@/scripts/scraper/parse";
 import type { PipelineInput } from "@/lib/pipeline/types";
+
+export const GEO_REJECTED_LOG_PATH = join(
+  process.cwd(),
+  "data",
+  "logs",
+  "geo-rejected.jsonl",
+);
+
+export interface GeoRejectionLogEntry extends GeoRejection {
+  timestamp: string;
+  source: string;
+}
+
+export async function appendGeoRejections(
+  rejections: GeoRejection[],
+  source: string,
+  logPath: string = GEO_REJECTED_LOG_PATH,
+): Promise<void> {
+  if (rejections.length === 0) return;
+  const timestamp = new Date().toISOString();
+  await mkdir(dirname(logPath), { recursive: true });
+  const lines = rejections
+    .map((r) => JSON.stringify({ timestamp, source, ...r }))
+    .join("\n");
+  await appendFile(logPath, lines + "\n", "utf8");
+}
 
 /**
  * Slugs explicitamente permitidos mesmo que não passem no filtro automático.

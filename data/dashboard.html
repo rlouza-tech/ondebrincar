@@ -243,6 +243,14 @@
   .empty-state { text-align: center; padding: 40px 20px; color: var(--gray-400); }
   .empty-state p { margin-top: 8px; font-size: 13px; }
 
+  /* Geo rejected */
+  .geo-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+  .geo-badge { display: inline-block; padding: 2px 10px; border-radius: 99px; font-size: 12px; font-weight: 600; }
+  .geo-badge.pendente { background: var(--yellow-bg); color: var(--yellow); }
+  .geo-badge.vazio { background: var(--green-bg); color: var(--green); }
+  .geo-tip { background: var(--blue-bg); border-left: 3px solid var(--blue); border-radius: 0 6px 6px 0; padding: 10px 14px; font-size: 12px; color: var(--gray-600); margin-top: 14px; line-height: 1.6; }
+  .geo-tip code { background: var(--gray-100); padding: 1px 5px; border-radius: 3px; font-size: 11px; }
+
   /* Footer */
   footer { text-align: center; font-size: 12px; color: var(--gray-400); margin-top: 32px; }
 
@@ -353,6 +361,26 @@
   <h2>Evolução por Source (últimas rodadas)</h2>
   <div id="evolucao-container">
     <div class="empty-state">⏳ Carregando...</div>
+  </div>
+</div>
+
+<!-- US-S9: Rejeições geográficas -->
+<div class="section">
+  <div class="geo-header">
+    <h2 style="margin-bottom:0;">⚠️ Revisar localização</h2>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <span id="geo-badge" class="geo-badge vazio">sem pendências</span>
+      <label style="font-size:12px;color:var(--gray-600);cursor:pointer;display:flex;align-items:center;gap:6px;">
+        📂 Carregar geo-rejected.jsonl
+        <input type="file" id="geo-file-input" accept=".jsonl,.json" style="display:none" onchange="carregarGeoRejected(this)">
+      </label>
+    </div>
+  </div>
+  <div id="geo-container">
+    <div class="empty-state">
+      <strong>Sem dados</strong>
+      <p>Carregue o arquivo <code>data/logs/geo-rejected.jsonl</code> para ver fichas pendentes de revisão.</p>
+    </div>
   </div>
 </div>
 
@@ -746,12 +774,81 @@ function carregarArquivo(input) {
   reader.readAsText(file);
 }
 
+// ── US-S9: Rejeições geográficas ──────────────────────────────────────────
+let geoRejections = [];
+
+function carregarGeoRejected(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      geoRejections = e.target.result.trim().split('\n')
+        .filter(l => l.trim())
+        .map(l => { try { return JSON.parse(l); } catch { return null; } })
+        .filter(Boolean)
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    } catch {
+      geoRejections = [];
+    }
+    renderGeoRejected();
+  };
+  reader.readAsText(file);
+}
+
+function renderGeoRejected() {
+  const container = document.getElementById('geo-container');
+  const badge = document.getElementById('geo-badge');
+
+  if (!geoRejections.length) {
+    badge.className = 'geo-badge vazio';
+    badge.textContent = 'sem pendências';
+    container.innerHTML = '<div class="empty-state">✅ Nenhuma rejeição geográfica registrada.</div>';
+    return;
+  }
+
+  badge.className = 'geo-badge pendente';
+  badge.textContent = geoRejections.length + ' pendente' + (geoRejections.length > 1 ? 's' : '');
+
+  let html = `<table>
+    <thead><tr>
+      <th>Nome</th>
+      <th>Slug</th>
+      <th>Venue</th>
+      <th>Bairro</th>
+      <th>Source</th>
+      <th>Data</th>
+    </tr></thead>
+    <tbody>`;
+
+  geoRejections.forEach(r => {
+    html += `<tr>
+      <td style="font-weight:600;">${r.nome || '—'}</td>
+      <td><code style="font-size:11px;color:var(--gray-600);">${r.slug || '—'}</code></td>
+      <td style="color:var(--gray-600);font-size:12px;">${r.venue || '—'}</td>
+      <td style="color:var(--gray-600);font-size:12px;">${r.bairro || '—'}</td>
+      <td>${r.source ? '<span class="source-pill">' + r.source + '</span>' : '—'}</td>
+      <td style="white-space:nowrap;font-size:12px;color:var(--gray-400);">${r.timestamp ? fmtDate(r.timestamp) : '—'}</td>
+    </tr>`;
+  });
+
+  html += '</tbody></table>';
+  html += `<div class="geo-tip">
+    <strong>Para liberar uma ficha:</strong> adicione o slug em <code>GEO_EXCEPTIONS</code> dentro de
+    <code>scripts/pipeline-ia/geo-filter.ts</code> e rode o pipeline novamente.<br>
+    Para descartar permanentemente, ignore — a ficha não entra no Gemini nem no Sanity.
+  </div>`;
+
+  container.innerHTML = html;
+}
+
 // Renderiza painéis vazios ao abrir
 renderCards();
 renderTabela();
 renderErros();
 renderSourceAprovacao();
 renderEvolucao();
+renderGeoRejected();
 </script>
 </body>
 </html>
