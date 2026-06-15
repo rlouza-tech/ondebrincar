@@ -57,6 +57,7 @@ export interface RespostaGemini {
   proxima_data: string | null;
   confidence: number;
   abstain_fields: string[];
+  aviso_operacional: string | null;
   notes_for_editor?: string;
   error?: string;
 }
@@ -80,6 +81,7 @@ export interface LinhaEnriquecida {
   programacao_texto: string;
   proxima_data: string | null;
   foto_url: string;
+  aviso_operacional: string | null;
   review_status: ReviewStatus;
   abstain_reasons: string[];
   confidence: number;
