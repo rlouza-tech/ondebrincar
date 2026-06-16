@@ -186,6 +186,37 @@ function compararFicha(
   sanity: SanityFicha,
 ): Divergencia[] {
   const divergencias: Divergencia[] = [];
+  const hoje = new Date().toISOString().slice(0, 10);
+
+  // --- proxima_data: expirada no Sanity (prioridade máxima) ---
+  if (sanity.proxima_data) {
+    const dataSanity = sanity.proxima_data.slice(0, 10);
+    if (dataSanity < hoje) {
+      divergencias.push({
+        slug,
+        campo: "⚠️ data_expirada",
+        valor_fonte: input.dias_apresentacao ?? "(sem data na fonte)",
+        valor_sanity: dataSanity,
+      });
+      // Com data expirada, as demais divergências são irrelevantes — ficha já saiu do ar
+      return divergencias;
+    }
+  }
+
+  // --- proxima_data: data ativa mas diferente da fonte ---
+  // ⚠️ Comparação aproximada: a fonte tem texto livre; a data no Sanity é AI-derivada.
+  const dataFonte = extrairDataDaFonte(input.dias_apresentacao ?? "");
+  if (dataFonte && sanity.proxima_data) {
+    const dataSanity = sanity.proxima_data.slice(0, 10);
+    if (dataFonte !== dataSanity) {
+      divergencias.push({
+        slug,
+        campo: "proxima_data [aproximado]",
+        valor_fonte: `${dataFonte} (extraído de: "${input.dias_apresentacao}")`,
+        valor_sanity: dataSanity,
+      });
+    }
+  }
 
   // --- preco ---
   const precoFonte = precoFonteEmCentavos(input);
@@ -196,21 +227,6 @@ function compararFicha(
         campo: "preco",
         valor_fonte: `${precoFonte} centavos (R$${(precoFonte / 100).toFixed(2)})`,
         valor_sanity: `${sanity.preco} centavos (R$${(sanity.preco / 100).toFixed(2)})`,
-      });
-    }
-  }
-
-  // --- proxima_data ---
-  // ⚠️ Comparação aproximada: a fonte tem texto livre; a data no Sanity é AI-derivada.
-  const dataFonte = extrairDataDaFonte(input.dias_apresentacao ?? "");
-  if (dataFonte && sanity.proxima_data) {
-    const dataSanity = sanity.proxima_data.slice(0, 10); // normaliza para YYYY-MM-DD
-    if (dataFonte !== dataSanity) {
-      divergencias.push({
-        slug,
-        campo: "proxima_data [aproximado]",
-        valor_fonte: `${dataFonte} (extraído de: "${input.dias_apresentacao}")`,
-        valor_sanity: dataSanity,
       });
     }
   }
