@@ -59,6 +59,8 @@ export interface ImportReport {
   images_failed: number;
   /** Eventos ignorados pela dedup (slug já existia no Sanity). Só presente com --source sympla. */
   dedup_ignored: number;
+  /** Fichas rejeitadas por proxima_data no passado. */
+  expired_rejected: number;
   items: ImportReportItem[];
   source_csv: string;
   started_at: string;
