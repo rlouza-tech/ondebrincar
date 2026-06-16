@@ -154,14 +154,18 @@ function extrairDataDaFonte(texto: string): string | null {
 
 /**
  * Varre todo o texto e retorna a primeira data futura (>= hoje) encontrada.
- * Tenta padrões DD/MM, DD/MM/YYYY e "DD de mês" em todas as ocorrências.
+ *
+ * Lida com três padrões:
+ *   DD/MM ou DD/MM/YYYY
+ *   "DD de mês"
+ *   "D1, D2 e D3 de mês" → expande todos os dias para o mesmo mês
  */
 function extrairDataFutura(texto: string, hoje: string): string | null {
   if (!texto) return null;
   const ano = new Date().getFullYear();
   const candidatas: string[] = [];
 
-  // Todas as ocorrências de DD/MM ou DD/MM/YYYY
+  // Padrão DD/MM ou DD/MM/YYYY
   const reDiaMes = /\b(\d{1,2})\/(\d{1,2})(?:\/(\d{4}))?\b/g;
   let m: RegExpExecArray | null;
   while ((m = reDiaMes.exec(texto)) !== null) {
@@ -173,18 +177,34 @@ function extrairDataFutura(texto: string, hoje: string): string | null {
     if (d) candidatas.push(d);
   }
 
-  // Todas as ocorrências de "DD de mês" ou "DD mês"
-  const reDiaNome = /\b(\d{1,2})\s+(?:de\s+)?([a-záéíóúâêîôûãõç]{3,})/gi;
-  while ((m = reDiaNome.exec(texto)) !== null) {
+  // Padrão "D1, D2 e D3 de mês" — múltiplos dias compartilhando o mesmo mês
+  // Captura: "13, 20 e 28 de junho", "27 e 28 de julho", "28 de junho"
+  const reMultiDia = /\b((?:\d{1,2}(?:,\s*|\s+e\s+))*\d{1,2})\s+de\s+([a-záéíóúâêîôûãõç]+)/gi;
+  while ((m = reMultiDia.exec(texto)) !== null) {
     const nomeMes = m[2].toLowerCase();
     const mes = MESES[nomeMes.slice(0, 3)] ?? MESES[nomeMes];
-    if (mes) {
-      const d = toISO(parseInt(m[1], 10), mes, ano);
+    if (!mes) continue;
+    const dias = m[1].match(/\d{1,2}/g) ?? [];
+    for (const diaStr of dias) {
+      const d = toISO(parseInt(diaStr, 10), mes, ano);
       if (d) candidatas.push(d);
     }
   }
 
-  // Retorna a primeira candidata que seja >= hoje
+  // Padrão range "de DD a DD de mês" — ex: "de 13 a 28 de junho"
+  // Adiciona o início do range (se ainda não passou) para detectar fichas ativas
+  const reRange = /\bde\s+(\d{1,2})\s+a\s+(\d{1,2})\s+de\s+([a-záéíóúâêîôûãõç]+)/gi;
+  while ((m = reRange.exec(texto)) !== null) {
+    const nomeMes = m[3].toLowerCase();
+    const mes = MESES[nomeMes.slice(0, 3)] ?? MESES[nomeMes];
+    if (!mes) continue;
+    const dInicio = toISO(parseInt(m[1], 10), mes, ano);
+    const dFim    = toISO(parseInt(m[2], 10), mes, ano);
+    if (dInicio) candidatas.push(dInicio);
+    if (dFim)    candidatas.push(dFim);
+  }
+
+  // Retorna a primeira candidata >= hoje (a mais próxima no futuro)
   const futuras = candidatas.filter((d) => d >= hoje).sort();
   return futuras[0] ?? null;
 }
