@@ -11,6 +11,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "pipeline": "dotenv -e .env.local -- tsx scripts/pipeline/index.ts",
     "pipeline-ia": "dotenv -e .env.local -- tsx scripts/pipeline-ia/index.ts",
     "scrape": "tsx scripts/scraper/index.ts",
     "sympla-scrape": "tsx scripts/scraper/sympla-scrape.ts",
