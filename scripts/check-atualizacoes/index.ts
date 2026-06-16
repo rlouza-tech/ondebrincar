@@ -141,12 +141,9 @@ function extrairDataDaFonte(texto: string): string | null {
 // ---------------------------------------------------------------------------
 
 function precoFonteEmCentavos(input: PipelineInput): number | null {
-  // Campo preferencial: preco_inteira_centavos (já em centavos)
-  if (input.preco_inteira_centavos) {
-    const v = parseInt(input.preco_inteira_centavos, 10);
-    if (!isNaN(v)) return v;
-  }
-  // Fallback: preco_bruto (texto como "R$49,90")
+  // Usa preco_bruto — é o preço exibido ao usuário (com desconto quando houver).
+  // preco_inteira_centavos é o preço cheio (sem desconto) e NÃO é o que o pipeline
+  // grava no Sanity, portanto não serve para comparação.
   if (input.preco_bruto) {
     const limpo = input.preco_bruto.replace(/[^\d,]/g, "").replace(",", ".");
     const v = parseFloat(limpo);
