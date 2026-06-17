@@ -101,17 +101,21 @@ function buildJsonLd(atracao: Awaited<ReturnType<typeof getAtracaoBySlug>>) {
   };
 
   if (atracao.proximaData) {
+    const hasImage = atracao.imagemUrl && !atracao.imagemUrl.includes("placeholder");
     const schema: Record<string, unknown> = {
       "@context": "https://schema.org",
       "@type": "Event",
       name: atracao.titulo,
       startDate: atracao.proximaData,
+      eventStatus: "https://schema.org/EventScheduled",
       location: {
         "@type": "Place",
         name: addressLocality,
         address,
       },
       url,
+      ...(atracao.descricaoCurta ? { description: atracao.descricaoCurta } : {}),
+      ...(hasImage ? { image: `${atracao.imagemUrl}?w=1200&h=630&fit=crop&auto=format` } : {}),
     };
 
     if (atracao.precoTipo === "pago" && atracao.precoLabel) {
