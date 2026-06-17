@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AtracaoDetailActions } from "@/components/AtracaoDetailActions";
 import { AttractionDetailTracker } from "@/components/AttractionDetailTracker";
+import { JsonLd } from "@/components/JsonLd";
 import { OutboundLink } from "@/components/OutboundLink";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -84,6 +85,69 @@ export async function generateMetadata({ params }: AtracaoPageProps): Promise<Me
   };
 }
 
+const BASE_URL = "https://ondebrincar.com.br";
+
+function buildJsonLd(atracao: Awaited<ReturnType<typeof getAtracaoBySlug>>) {
+  if (!atracao) return null;
+
+  const url = `${BASE_URL}/atracao/${atracao.slug}`;
+  const addressLocality = atracao.bairro || "Rio de Janeiro";
+
+  const address = {
+    "@type": "PostalAddress",
+    addressLocality,
+    addressRegion: "RJ",
+    addressCountry: "BR",
+  };
+
+  if (atracao.proximaData) {
+    const schema: Record<string, unknown> = {
+      "@context": "https://schema.org",
+      "@type": "Event",
+      name: atracao.titulo,
+      startDate: atracao.proximaData,
+      location: {
+        "@type": "Place",
+        name: addressLocality,
+        address,
+      },
+      url,
+    };
+
+    if (atracao.precoTipo === "pago" && atracao.precoLabel) {
+      const priceMatch = atracao.precoLabel.replace(/[^\d,]/g, "").replace(",", ".");
+      schema.offers = {
+        "@type": "Offer",
+        price: priceMatch,
+        priceCurrency: "BRL",
+        url,
+      };
+    }
+
+    return schema;
+  }
+
+  if (atracao.categoria === "restaurante") {
+    return {
+      "@context": "https://schema.org",
+      "@type": "LocalBusiness",
+      name: atracao.titulo,
+      address,
+      url,
+      ...(atracao.descricaoCurta ? { description: atracao.descricaoCurta } : {}),
+    };
+  }
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "TouristAttraction",
+    name: atracao.titulo,
+    address,
+    url,
+    ...(atracao.descricaoCurta ? { description: atracao.descricaoCurta } : {}),
+  };
+}
+
 export default async function AtracaoPage({ params }: AtracaoPageProps) {
   const atracao = await getAtracaoBySlug(params.slug);
 
@@ -91,8 +155,11 @@ export default async function AtracaoPage({ params }: AtracaoPageProps) {
     notFound();
   }
 
+  const jsonLd = buildJsonLd(atracao);
+
   return (
     <>
+      {jsonLd && <JsonLd data={jsonLd} />}
       <AttractionDetailTracker atracao={atracao} />
       <SiteHeader />
       <main className="mx-auto max-w-screen-lg px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
