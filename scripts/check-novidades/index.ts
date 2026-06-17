@@ -142,7 +142,8 @@ async function main() {
 
   if (novas.length === 0) {
     console.log("Nenhuma ficha nova — pipeline-ia não é necessário.");
-    process.exit(0);
+    // exit 2 = parada limpa por ausência de novidades (exit 0 = fichas encontradas, exit 1 = erro)
+    process.exit(2);
   }
 
   console.log(`${novas.length} ficha(s) nova(s) encontrada(s):`);

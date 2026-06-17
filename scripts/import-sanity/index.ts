@@ -312,6 +312,24 @@ async function main() {
     console.log(`Dedup: ${dedupIgnored} ignoradas (já existem no Sanity), ${rows.length} a processar`);
   }
 
+  // Filtro de expiração: rejeita fichas com proxima_data no passado antes de criar draft.
+  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  const expired: Array<{ slug: string; proxima_data: string }> = [];
+  rows = rows.filter((r) => {
+    if (r.proxima_data && r.proxima_data < today) {
+      expired.push({ slug: r.slug, proxima_data: r.proxima_data });
+      return false;
+    }
+    return true;
+  });
+  if (expired.length > 0) {
+    console.log(`\nFichas rejeitadas por data expirada (${expired.length}):`);
+    for (const e of expired) {
+      console.log(`  ✗ EXPIRADA slug=${e.slug} proxima_data=${e.proxima_data} motivo=proxima_data_passada`);
+    }
+    console.log();
+  }
+
   const items: ImportReportItem[] = [];
   let created = 0;
   let updated = 0;
@@ -433,6 +451,7 @@ async function main() {
     images_generated: imagesGenerated,
     images_failed: imagesFailed,
     dedup_ignored: dedupIgnored,
+    expired_rejected: expired.length,
     items,
     source_csv: csvPath,
     started_at: startedAt,
@@ -450,6 +469,7 @@ async function main() {
   console.log("\nResumo");
   console.log(`Total (após dedup): ${report.total}`);
   if (dedupIgnored > 0) console.log(`Ignoradas (já existem no Sanity): ${dedupIgnored}`);
+  if (expired.length > 0) console.log(`Rejeitadas (data expirada): ${expired.length}`);
   console.log(`Criados: ${report.created}`);
   console.log(`Atualizados: ${report.updated}`);
   console.log(`Skipped (publicados): ${report.skipped}`);

@@ -1,11 +1,46 @@
-<!DOCTYPE html><html lang="pt-BR"><head><script async="" src="/bn2o/"></script><script>(function(w,i,g){w[g]=w[g]||[];if(typeof w[g].push=='function')w[g].push(i)})
+<!DOCTYPE html><html lang="pt-BR"><head><script type="text/javascript" async="" src="https://www.google-analytics.com/gtm/js?id=GTM-T39J96R&amp;t=gtag_UA_21097715_1&amp;cid=1109447346.1780500458"></script><script type="text/javascript" async="" src="https://www.google-analytics.com/analytics.js"></script><script type="text/javascript" async="" src="https://www.googletagmanager.com/gtag/js?id=G-PENW89C5YZ&amp;cx=c&amp;gtm=4e6611"></script><script async="" src="https://www.googletagmanager.com/gtm.js?id=GTM-P5DXQN3"></script><script type="text/javascript" async="" src="/bn2o/prAIIEd5Mim2CqfBlR-eOJtwDTicFWcS9z3iHQ3FloQ3M6Cy"></script><script type="text/javascript" async="" src="/bn2o/prAIIEd5Jj-2AKfBnx6QPZ1rGn2HUDlXti77TQSUxYQwMwagsg"></script><script src="https://connect.facebook.net/signals/config/619192001752864?v=2.9.331&amp;r=stable&amp;domain=clubinhodeofertas.com.br&amp;hme=e74ef087f6fde11ad272cfacc345e71ff5f13bae4406879254c760ecb88febfc&amp;ex_m=105%2C208%2C156%2C22%2C73%2C74%2C147%2C69%2C68%2C11%2C165%2C91%2C16%2C139%2C128%2C39%2C76%2C79%2C135%2C161%2C167%2C8%2C4%2C5%2C7%2C6%2C3%2C92%2C102%2C168%2C173%2C222%2C62%2C189%2C190%2C55%2C280%2C30%2C75%2C234%2C233%2C232%2C23%2C33%2C104%2C61%2C10%2C64%2C98%2C99%2C100%2C106%2C131%2C31%2C29%2C133%2C134%2C130%2C129%2C157%2C77%2C160%2C158%2C159%2C50%2C60%2C124%2C15%2C164%2C45%2C267%2C268%2C266%2C26%2C27%2C28%2C48%2C148%2C78%2C113%2C18%2C20%2C44%2C40%2C42%2C41%2C84%2C93%2C97%2C111%2C146%2C149%2C46%2C112%2C24%2C21%2C120%2C70%2C36%2C151%2C150%2C152%2C143%2C141%2C25%2C35%2C59%2C110%2C163%2C71%2C17%2C154%2C115%2C82%2C67%2C19%2C86%2C87%2C117%2C85%2C137%2C136%2C140%2C162%2C34%2C282%2C298%2C215%2C204%2C205%2C203%2C301%2C292%2C52%2C216%2C108%2C132%2C81%2C122%2C54%2C47%2C49%2C114%2C121%2C127%2C126%2C58%2C65%2C63%2C153%2C116%2C37%2C32%2C53%2C56%2C101%2C166%2C1%2C125%2C14%2C123%2C12%2C2%2C57%2C94%2C66%2C119%2C90%2C89%2C169%2C170%2C95%2C96%2C9%2C103%2C51%2C144%2C88%2C80%2C72%2C118%2C107%2C43%2C145%2C0%2C83%2C138%2C142%2C155%2C38%2C109%2C13%2C171" async=""></script><script type="text/javascript" async="" src="https://connect.facebook.net/en_US/fbevents.js"></script><script type="text/javascript" async="" src="/bn2o/prAIIEd5NFOoZqPC7hCWNfFzDTicFWcS9z3iHQ3FloQ3M6Cy"></script><script type="text/javascript" async="" src="https://www.googletagmanager.com/gtm.js?id=GTM-P5DXQN3&amp;gtg_health=1"></script><script async="" src="/bn2o/"></script><script>(function(w,i,g){w[g]=w[g]||[];if(typeof w[g].push=='function')w[g].push(i)})
 (window,'GTM-P5DXQN3','google_tags_first_party');</script><script>(function(w,d,s,l){w[l]=w[l]||[];(function(){w[l].push(arguments);})('set', 'developer_id.dY2E1Nz', true);
 		var f=d.getElementsByTagName(s)[0],
 		j=d.createElement(s);j.async=true;j.src='/bn2o/';
 		f.parentNode.insertBefore(j,f);
 		})(window,document,'script','dataLayer');</script>
-    <!--<script async="" src="https://www.googletagmanager.com/gtag/js?id=UA-21097715-1" type="text/javascript"></script>-->
-    <!--<script type="text/javascript">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <link href="/static/manifest.json" rel="manifest">
+    <meta name="theme-color" content="#FFF">
+    <meta name="msapplication-navbutton-color" content="#FFF">
+    <meta name="apple-mobile-web-app-status-bar-style" content="#FFF">
+    <meta name="apple-touch-fullscreen" content="yes">
+    <link rel="apple-touch-icon" href="https://clubinhodeofertas.com.br/assets/img/icons/icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="https://clubinhodeofertas.com.br/assets/img/icons/icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="128x128" href="https://clubinhodeofertas.com.br/assets/img/icons/icon-128x128.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="https://clubinhodeofertas.com.br/assets/img/icons/icon-152x152.png">
+
+    <link rel="icon" type="image/x-icon" href="https://clubinhodeofertas.com.br/assets/img/favicon.ico">
+    <link rel="icon" type="image/png" href="https://clubinhodeofertas.com.br/assets/img/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="https://clubinhodeofertas.com.br/assets/img/favicon-16x16.png" sizes="16x16">
+
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://maxcdn.bootstrapcdn.com">
+    <link rel="dns-prefetch" href="https://s3.amazonaws.com">
+    <link rel="dns-prefetch" href="https://omnize.com">
+    <link rel="dns-prefetch" href="https://widget.omnize.com">
+    <link rel="dns-prefetch" href="https://static.hotjar.com">
+    <link rel="dns-prefetch" href="https://hotjar.com">
+    <link rel="dns-prefetch" href="https://socialminer.com">
+    <link rel="dns-prefetch" href="https://static.socialminer.com">
+    <link rel="dns-prefetch" href="https://cloudfront.net">
+    <link rel="dns-prefetch" href="https://d335luupugsy2.cloudfront.net">
+    <link rel="dns-prefetch" href="https://d37poupzmwluxg.cloudfront.net">
+    <link rel="dns-prefetch" href="https://d29e5zzv3q13y8.cloudfront.net">
+
+    <meta property="fb:app_id" content="1070297850347657">
+    <meta name="csrf-token" content="UMO8rcuPNi9HMwRgAK7UaQzr4UXs4HnpSqA7T7Sc">
+
+    <script async="" src="https://www.googletagmanager.com/gtag/js?id=UA-21097715-1" type="text/javascript"></script>
+    <script type="text/javascript">
       window.dataLayer = window.dataLayer || [];
 
       function gtag() {
@@ -29,16 +64,16 @@
       };
 
         
-    </script>-->
+    </script>
 <!-- Google Tag Manager -->
-<!--<script type="text/javascript">(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+<script type="text/javascript">(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
     j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-  })(window,document,'script','dataLayer','GTM-P5DXQN3');</script>-->
+  })(window,document,'script','dataLayer','GTM-P5DXQN3');</script>
 <!-- End Google Tag Manager -->
 
-<!--<script async="" type="text/javascript">
+<script async="" type="text/javascript">
       (function(h, o, t, j, a, r) {
         h.hj = h.hj || function() {
           (h.hj.q = h.hj.q || []).push(arguments)
@@ -50,156 +85,15 @@
         r.src = t + h._hjSettings.hjid + j + h._hjSettings.hjsv;
         a.appendChild(r);
       })(window, document, '//static.hotjar.com/c/hotjar-', '.js?sv=');
-    </script>-->
+    </script>
 
-<meta charset="UTF-8">
-<link href="/static/manifest.json" rel="manifest">
-<meta name="theme-color" content="#FFF">
-<meta name="msapplication-navbutton-color" content="#FFF">
-<meta name="apple-mobile-web-app-status-bar-style" content="#FFF">
-<meta name="apple-touch-fullscreen" content="yes">
-<link rel="apple-touch-icon" href="https://clubinhodeofertas.com.br/assets/img/icons/icon-72x72.png">
-<link rel="apple-touch-icon" sizes="72x72" href="https://clubinhodeofertas.com.br/assets/img/icons/icon-72x72.png">
-<link rel="apple-touch-icon" sizes="128x128" href="https://clubinhodeofertas.com.br/assets/img/icons/icon-128x128.png">
-<link rel="apple-touch-icon" sizes="152x152" href="https://clubinhodeofertas.com.br/assets/img/icons/icon-152x152.png">
-
-
-
-<title>Teatro e programação infantil no Rio de Janeiro |  Clubinho de Ofertas</title>
-<meta name="description" content="Ofertas com desconto para Teatro Infantil, programação infantil, shows e muito mais para crianças no Clubinho de Ofertas. Venha conferir, se encantar e aproveitar muita diversão!">
-<meta name="keywords" content="Clubinho de Ofertas, desconto, teatro infantil, peça infantil, passeio com crianças, ingressos com desconto, promoção, infantil">
-<link rel="canonical" href="https://clubinhodeofertas.com.br/rio-de-janeiro">
-<meta property="og:title" content="Teatro e programação infantil no Rio de Janeiro | ">
-<meta property="og:description" content="Ofertas com desconto para Teatro Infantil, programação infantil, shows e muito mais para crianças no Clubinho de Ofertas. Venha conferir, se encantar e aproveitar muita diversão!">
-<meta property="og:url" content="https://clubinhodeofertas.com.br/rio-de-janeiro">
-<meta property="og:type" content="website">
-<meta property="og:image" content="https://s3.amazonaws.com/assets.cdn.clubinho.com.br/public/assets/img/og_image.jpg">
-
-<meta name="twitter:title" content="Teatro e programação infantil no Rio de Janeiro | ">
-<meta name="twitter:description" content="Ofertas com desconto para Teatro Infantil, programação infantil, shows e muito mais para crianças no Clubinho de Ofertas. Venha conferir, se encantar e aproveitar muita diversão!">
-<script type="application/ld+json">{"@context":"https://schema.org","name":"Teatro e programação infantil no Rio de Janeiro | ","description":"Ofertas com desconto para Teatro Infantil, programação infantil, shows e muito mais para crianças no Clubinho de Ofertas. Venha conferir, se encantar e aproveitar muita diversão!"}</script>
-
-
-<meta property="fb:app_id" content="1070297850347657">
-
-
-
-<meta name="csrf-token" content="ii3fhjg1AjArlM7Ose0nb8RZxNwlmLI64YCyxVOf">
-
-
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<link rel="icon" type="image/x-icon" href="https://clubinhodeofertas.com.br/assets/img/favicon.ico">
-<link rel="icon" type="image/png" href="https://clubinhodeofertas.com.br/assets/img/favicon-32x32.png" sizes="32x32">
-<link rel="icon" type="image/png" href="https://clubinhodeofertas.com.br/assets/img/favicon-16x16.png" sizes="16x16">
-
-
-<link rel="dns-prefetch" href="https://fonts.googleapis.com">
-<link rel="dns-prefetch" href="https://maxcdn.bootstrapcdn.com">
-<link rel="dns-prefetch" href="https://s3.amazonaws.com">
-<link rel="dns-prefetch" href="https://omnize.com">
-<link rel="dns-prefetch" href="https://widget.omnize.com">
-<link rel="dns-prefetch" href="https://static.hotjar.com">
-<link rel="dns-prefetch" href="https://hotjar.com">
-<link rel="dns-prefetch" href="https://socialminer.com">
-<link rel="dns-prefetch" href="https://static.socialminer.com">
-<link rel="dns-prefetch" href="https://cloudfront.net">
-<link rel="dns-prefetch" href="https://d335luupugsy2.cloudfront.net">
-<link rel="dns-prefetch" href="https://d37poupzmwluxg.cloudfront.net">
-<link rel="dns-prefetch" href="https://d29e5zzv3q13y8.cloudfront.net">
-<link rel="dns-prefetch" href="https://i.btg360.com.br">
-
-
-
-
-<link rel="stylesheet" href="/assets/css/shop.558891396ef39d27f43a.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@8/swiper-bundle.min.css">
-<link rel="stylesheet" href="/assets/css/new.41e4e7113669fd032b3a.css">
-
-<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.3.1/lazysizes.min.js" integrity="sha512-bYhVDhvd1S5L7xVr2ADJcUeue6MKoOsNCzGBUlChGdjF0WWnd7eqGVu3DfLy3MFZIE9qPkfvcdJNeGHvWBcc+A==" crossorigin="anonymous" referrerpolicy="no-referrer" type="text/javascript"></script>-->
-
-<!--<script src="https://www.google.com/recaptcha/api.js" type="text/javascript"></script>-->
-
-<style>
-    .text-rose-500 {
-        color: #ee2474;
-    }
-
-    .bg-blue-500:hover {
-        background-color: #2c5282;
-        color: white;
-    }
-
-    .bg-blue-500 {
-        background-color: #4299e1;
-    }
-
-    .border-blue-400 {
-        border-width: 0;
-        border-style: solid;
-        border-color: #63b3ed;
-    }
-
-    .bg-white {
-        background-color: #fff;
-    }
-
-    .rounded {
-        border-radius: 0.25rem;
-    }
-
-    .border {
-        border-width: 1px;
-    }
-
-    .border-b-2 {
-        border-bottom-width: 2px;
-    }
-
-    .cursor-pointer {
-        cursor: pointer;
-    }
-
-    .block {
-        display: block;
-    }
-
-    .flex {
-        display: -webkit-box;
-        display: flex;
-    }
-
-    .flex-row {
-        -webkit-box-orient: horizontal;
-        -webkit-box-direction: normal;
-        flex-direction: row;
-    }
-
-    .justify-center {
-        -webkit-box-pack: center;
-        justify-content: center;
-    }
-
-    .font-medium {
-        font-weight: 500;
-    }
-
-    .mx-1 {
-        margin-left: 0.25rem;
-        margin-right: 0.25rem;
-    }
-
-    .overflow-hidden {
-        overflow: hidden;
-    }
-
-    .mb-1 {
-        margin-bottom: 0.25rem;
-    }
-
-    .mb-2 {
-        margin-bottom: 0.5rem;
-    }
-
-   
+    <meta name="description" content="Ingressos com superdescontos em Rio de Janeiro: teatros infantis, passeios, eventos e hospedagens com curadoria para famílias com crianças." inertia="">
+    <link rel="stylesheet" href="https://clubinhodeofertas.com.br/assets/shop-new/build/assets/app.bc338d5d.css">
+<script type="module" src="https://clubinhodeofertas.com.br/assets/shop-new/build/assets/app.763b1b23.js"></script>
+    <meta name="robots" content="index,follow" inertia="">
+<meta name="keywords" content="Clubinho de Ofertas, desconto, teatro infantil, peça infantil, passeio com crianças, ingressos com desconto, promoção, infantil, ingressos em rio de janeiro, passeios com crianças em rio de janeiro, teatro infantil rio de janeiro" inertia="">
+<meta property="og:title" content="O que fazer em Rio de Janeiro com crianças: ingressos com desconto para teatros, passeios e eventos" inertia="">
+<meta property="og:description" content="Ingressos com superdescontos em Rio de Janeiro: teatros infantis, passeios, eventos e hospedagens com curadoria para famílias com crianças." inertia="">
+<meta property="og:type" content="website" inertia="">
+<meta property="og:locale" content="pt_BR" inertia="">
+<meta property="og:url" content="http

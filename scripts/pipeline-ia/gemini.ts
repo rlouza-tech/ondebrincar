@@ -95,6 +95,7 @@ const responseSchema = {
       type: "array",
       items: { type: "string" },
     },
+    aviso_operacional: { type: "string", nullable: true },
     notes_for_editor: { type: "string", nullable: true },
   },
   required: [
@@ -136,6 +137,7 @@ function errorResponse(message: string): RespostaGemini {
       "preco_centavos",
       "indoor_outdoor",
     ],
+    aviso_operacional: null,
     notes_for_editor: message,
     error: message,
   };

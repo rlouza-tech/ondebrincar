@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { ReadonlyURLSearchParams } from "next/navigation";
-import { trackEvent, type ShareClickParams } from "@/lib/analytics";
+import { buildShareUrl, trackEvent, type ShareClickParams } from "@/lib/analytics";
 import { countActiveFilters } from "@/lib/atracoes";
 
 interface ShareSearchButtonProps {
@@ -37,7 +37,8 @@ export function ShareSearchButton({ searchParams }: ShareSearchButtonProps) {
   }
 
   async function compartilharBusca() {
-    await navigator.clipboard.writeText(window.location.href);
+    const shareUrl = buildShareUrl(window.location.href);
+    await navigator.clipboard.writeText(shareUrl);
 
     trackEvent("share_click", {
       attraction_id: "home-filtrada",

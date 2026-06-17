@@ -4,8 +4,10 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { basename, join } from "node:path";
 import { readCSV, writeCSV } from "./csv";
 import type { CostLogEntry, CostSummary } from "./cost-log";
-import { buildCostSummary } from "./cost-log";
+import { buildCostSummary, estimateCostUsd } from "./cost-log";
 import { enrichLinha, waitForRateLimit, QuotaExhaustedError } from "./gemini";
+import { appendPipelineRun, PIPELINE_RUNS_LOG_PATH } from "./pipeline-run-log";
+import { PROMPT_VERSION } from "./prompt";
 import { evaluate } from "./quality-gate";
 import type {
   LinhaEnriquecida,
@@ -31,6 +33,8 @@ import {
   normalizeManual,
   DEFAULT_INPUT_PATH as MANUAL_DEFAULT_PATH,
 } from "@/scripts/normalizer/manual";
+import { fetchExistingSlugs } from "@/scripts/import-sanity/index";
+import { filterGeo, appendGeoRejections, GEO_REJECTED_LOG_PATH } from "./geo-filter";
 
 type Source = "clubinho" | "sympla" | "whatsapp" | "manual";
 
@@ -174,6 +178,7 @@ function buildLinhaEnriquecida(
     programacao_texto: resposta.programacao_texto,
     proxima_data: resposta.proxima_data,
     foto_url: "",
+    aviso_operacional: resposta.aviso_operacional ?? null,
     review_status: status,
     abstain_reasons: Array.from(
       new Set([...reasons, ...resposta.abstain_fields]),
@@ -236,15 +241,34 @@ async function main() {
   const options = parseArgs(process.argv);
   const startedAt = new Date().toISOString();
   const { rows: inputRows, label } = await loadInput(options);
-  const rowsToProcess = options.limit ? inputRows.slice(0, options.limit) : inputRows;
+
+  const existingSlugs = await fetchExistingSlugs();
+  const dedupedRows = inputRows.filter((r) => !existingSlugs.has(buildSlug(r)));
+  const dedupIgnored = inputRows.length - dedupedRows.length;
+  console.log(`Dedup: ${dedupIgnored} ignoradas (já existem no Sanity), ${dedupedRows.length} a processar`);
+
+  const { accepted: geoAccepted, rejected: geoRejected } = filterGeo(dedupedRows);
+  if (geoRejected.length > 0) {
+    console.log(`\nFiltro geográfico: ${geoRejected.length} ficha(s) rejeitada(s) (fora do município do Rio de Janeiro):`);
+    for (const r of geoRejected) {
+      console.log(`  ✗ ${r.slug} | venue: "${r.venue}" | bairro: "${r.bairro}" | motivo: ${r.motivo}`);
+    }
+    console.log();
+    await appendGeoRejections(geoRejected, options.source ?? label);
+    console.log(`Geo rejected log: ${GEO_REJECTED_LOG_PATH}`);
+  }
+
+  const rowsToProcess = options.limit ? geoAccepted.slice(0, options.limit) : geoAccepted;
   const enrichedRows: LinhaEnriquecida[] = [];
   const costLogEntries: CostLogEntry[] = [];
+  const latenciasMs: number[] = [];
+  const erros: string[] = [];
   const outputDir = join(process.cwd(), "data", "output");
   const costLogPath = join(outputDir, "pipeline-cost-log.jsonl");
   let stoppedReason: string | undefined;
 
   console.log(
-    `Pipeline IA: ${rowsToProcess.length}/${inputRows.length} linhas de ${basename(label)} usando ${options.model}`,
+    `Pipeline IA: ${rowsToProcess.length}/${dedupedRows.length} linhas de ${basename(label)} usando ${options.model}`,
   );
 
   for (let index = 0; index < rowsToProcess.length; index += 1) {
@@ -252,6 +276,7 @@ async function main() {
     const slug = buildSlug(linha);
 
     let enrich: Awaited<ReturnType<typeof enrichLinha>>;
+    const fichaStart = Date.now();
     try {
       enrich = await enrichLinha(linha, options.model, { costLogPath, slug });
     } catch (error) {
@@ -266,6 +291,7 @@ async function main() {
       }
       throw error;
     }
+    latenciasMs.push(Date.now() - fichaStart);
 
     const gate = evaluate(linha, enrich.resposta);
     const processedAt = new Date().toISOString();
@@ -282,6 +308,10 @@ async function main() {
       },
     );
     enrichedRows.push(enriched);
+
+    if (enrich.pipeline_failed) {
+      erros.push(`${slug}: ${enrich.resposta.error ?? "pipeline_failed"}`);
+    }
 
     costLogEntries.push({
       timestamp: processedAt,
@@ -325,6 +355,28 @@ async function main() {
   await writeCSV(csvPath, enrichedRows);
   await writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
 
+  const latenciaMedia =
+    latenciasMs.length === 0
+      ? 0
+      : Math.round(latenciasMs.reduce((a, b) => a + b, 0) / latenciasMs.length);
+  const custoUsd = estimateCostUsd({
+    input_tokens: costSummary.total_input_tokens,
+    output_tokens: costSummary.total_output_tokens,
+  });
+
+  await appendPipelineRun({
+    timestamp: startedAt,
+    source: options.source ?? label,
+    fichas_processadas: report.total,
+    fichas_novas: report.total,
+    dedup_ignored: dedupIgnored,
+    geo_rejected: geoRejected.length,
+    custo_estimado_usd: custoUsd,
+    latencia_media_ms: latenciaMedia,
+    erros,
+    prompt_version: PROMPT_VERSION,
+  });
+
   const autoOkPercent = report.total === 0 ? 0 : Math.round((report.auto_ok / report.total) * 100);
   console.log("\nResumo");
   if (stoppedReason) {
@@ -340,6 +392,7 @@ async function main() {
   console.log(`Cost log: ${costLogPath}`);
   console.log(`CSV: ${csvPath}`);
   console.log(`Report: ${reportPath}`);
+  console.log(`Run log: ${PIPELINE_RUNS_LOG_PATH}`);
 }
 
 main().catch((error) => {

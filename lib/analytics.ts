@@ -103,6 +103,19 @@ export function detectDestinationType(
   return "official_site";
 }
 
+/**
+ * Appenda UTM params de compartilhamento a uma URL.
+ * Visitas via link compartilhado aparecem em GA4 > Aquisição > Campanhas
+ * como utm_source=ondebrincar / utm_medium=share / utm_campaign=share_button.
+ */
+export function buildShareUrl(baseUrl: string): string {
+  const url = new URL(baseUrl);
+  url.searchParams.set("utm_source", "ondebrincar");
+  url.searchParams.set("utm_medium", "share");
+  url.searchParams.set("utm_campaign", "share_button");
+  return url.toString();
+}
+
 export async function trackShareClick(
   atracao: Pick<Atracao, "slug" | "titulo" | "categoria">,
   shareUrl: string,

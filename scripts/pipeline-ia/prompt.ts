@@ -5,6 +5,9 @@ import {
 import { getReferenceDateIso } from "./reference-date";
 import type { LinhaInput } from "./types";
 
+/** Incrementar manualmente ao mudar o prompt (US-S6). */
+export const PROMPT_VERSION = "v1.0.3";
+
 function buildScraperV2Block(linha: LinhaInput): string {
   const hasV2 =
     linha.sinopse_oficial ||
@@ -117,7 +120,11 @@ Casos comuns do scraper v1:
 - duração não inferível: duracao_min null + marque duracao_min em abstain_fields se relevante.
 - Não omita a ressalva só porque programacao_texto já cabe nos 200 caracteres — priorize transparência.
 
-Bom output: JSON estrito, sem markdown, descrições entre 50 e 600 caracteres, mini_review entre 50 e 400 caracteres. Mau output: usar frases como "não tenho informação", inventar endereço/duração/horário exatos sem pista, ou deixar campos críticos vagos.
+CAMPO aviso_operacional: use este campo para qualquer aviso prático sobre compra, acesso ou disponibilidade — prazo de venda de ingressos, lotação limitada, retirada de ingresso físico, evento já encerrado, etc. Exemplos: "Vendas encerram 1h antes de cada sessão.", "Apresentação já ocorreu — verifique novas datas.", "Vagas limitadas; compre com antecedência."
+- descricao e mini_review devem ser limpos, sem avisos operacionais.
+- NUNCA use a palavra "Ressalva:" em nenhum campo de texto. O campo aviso_operacional já é o lugar correto para esse conteúdo.
+
+Bom output: JSON estrito, sem markdown, descrições entre 50 e 600 caracteres, mini_review entre 50 e 400 caracteres. Mau output: usar frases como "não tenho informação", inventar endereço/duração/horário exatos sem pista, deixar campos críticos vagos, ou adicionar bloco "Ressalva:" ao final de qualquer campo de texto.
 
 Entrada crua:
 - nome: ${linha.nome}

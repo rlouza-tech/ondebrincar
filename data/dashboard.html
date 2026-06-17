@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Onde Brincar — Dashboard Pipeline</title>
+<style>
+  /* ── Configuração ── */
+  :root {
+    --green: #16a34a;
+    --yellow: #ca8a04;
+    --red: #dc2626;
+    --green-bg: #dcfce7;
+    --yellow-bg: #fef9c3;
+    --red-bg: #fee2e2;
+    --blue: #2563eb;
+    --blue-bg: #dbeafe;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-400: #9ca3af;
+    --gray-600: #4b5563;
+    --gray-800: #1f2937;
+    --border: 1px solid var(--gray-200);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 14px;
+    background: var(--gray-50);
+    color: var(--gray-800);
+    padding: 24px;
+    line-height: 1.5;
+  }
+
+  h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  h2 { font-size: 15px; font-weight: 600; margin-bottom: 12px; color: var(--gray-600); text-transform: uppercase; letter-spacing: .05em; }
+  h3 { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+
+  .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+  .header-left p { color: var(--gray-600); font-size: 13px; margin-top: 2px; }
+
+  .config-box {
+    background: white;
+    border: var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .config-box label { color: var(--gray-600); }
+  .config-box input { width: 64px; border: var(--border); border-radius: 4px; padding: 3px 6px; font-size: 13px; }
+
+  /* Alerta global */
+  #alerta-global {
+    display: none;
+    background: var(--red-bg);
+    border: 1px solid var(--red);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    color: var(--red);
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  /* Cards */
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 24px; }
+
+  .card {
+    background: white;
+    border: var(--border);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .card .label { font-size: 12px; color: var(--gray-600); margin-bottom: 4px; text-transform: uppercase; letter-spacing: .05em; }
+  .card .value { font-size: 26px; font-weight: 700; }
+  .card .sub { font-size: 12px; color: var(--gray-400); margin-top: 2px; }
+
+  .card.green { border-left: 4px solid var(--green); }
+  .card.yellow { border-left: 4px solid var(--yellow); }
+  .card.red { border-left: 4px solid var(--red); }
+  .card.blue { border-left: 4px solid var(--blue); }
+
+  /* Indicador de latência */
+  .latencia-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 99px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: 6px;
+  }
+  .latencia-badge.green { background: var(--green-bg); color: var(--green); }
+  .latencia-badge.yellow { background: var(--yellow-bg); color: var(--yellow); }
+  .latencia-badge.red { background: var(--red-bg); color: var(--red); }
+
+  /* Seções */
+  .section {
+    background: white;
+    border: var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    overflow-x: auto;
+  }
+
+  /* Tabela */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th {
+    background: var(--gray-50);
+    padding: 8px 10px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--gray-600);
+    border-bottom: 2px solid var(--gray-200);
+    white-space: nowrap;
+  }
+  td {
+    padding: 8px 10px;
+    border-bottom: var(--border);
+    vertical-align: middle;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--gray-50); }
+
+  /* Status badges */
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .badge.ok { background: var(--green-bg); color: var(--green); }
+  .badge.lento { background: var(--yellow-bg); color: var(--yellow); }
+  .badge.erro { background: var(--red-bg); color: var(--red); }
+
+  /* Source pill */
+  .source-pill {
+    display: inline-block;
+    padding: 1px 7px;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--blue-bg);
+    color: var(--blue);
+  }
+
+  /* Inputs de revisão */
+  .revisao-group { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .revisao-group input[type="number"] {
+    width: 48px;
+    border: var(--border);
+    border-radius: 4px;
+    padding: 3px 5px;
+    font-size: 12px;
+    text-align: center;
+  }
+  .revisao-group select {
+    border: var(--border);
+    border-radius: 4px;
+    padding: 3px 5px;
+    font-size: 12px;
+  }
+  .revisao-group .slash { color: var(--gray-400); font-size: 12px; }
+
+  /* Taxa em tempo real */
+  .taxa-realtime {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 99px;
+  }
+  .taxa-realtime.ok { background: var(--green-bg); color: var(--green); }
+  .taxa-realtime.baixa { background: var(--red-bg); color: var(--red); }
+  .taxa-realtime.vazia { background: var(--gray-100); color: var(--gray-400); }
+
+  /* Erros */
+  .erros-list { display: flex; flex-direction: column; gap: 8px; }
+  .erro-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: var(--red-bg);
+    border-radius: 6px;
+    font-size: 13px;
+  }
+  .erro-item .erro-cat { font-weight: 600; color: var(--red); }
+  .erro-item .erro-count {
+    background: var(--red);
+    color: white;
+    padding: 1px 8px;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  /* Barras de progresso — US-S8 */
+  .source-row { margin-bottom: 14px; }
+  .source-row-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+  .source-row-header .source-name { font-weight: 600; font-size: 13px; }
+  .source-row-header .source-taxa { font-size: 13px; font-weight: 700; }
+  .progress-bar-bg {
+    height: 10px;
+    background: var(--gray-200);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width .3s;
+  }
+  .progress-bar-fill.green { background: var(--green); }
+  .progress-bar-fill.yellow { background: var(--yellow); }
+  .progress-bar-fill.red { background: var(--red); }
+
+  .source-alerta {
+    display: none;
+    font-size: 12px;
+    color: var(--red);
+    font-weight: 600;
+    margin-top: 3px;
+  }
+
+  /* Evolução por source */
+  .evolucao-table td, .evolucao-table th { padding: 6px 10px; font-size: 12px; }
+
+  /* Vazio */
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--gray-400); }
+  .empty-state p { margin-top: 8px; font-size: 13px; }
+
+  /* Geo rejected */
+  .geo-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+  .geo-badge { display: inline-block; padding: 2px 10px; border-radius: 99px; font-size: 12px; font-weight: 600; }
+  .geo-badge.pendente { background: var(--yellow-bg); color: var(--yellow); }
+  .geo-badge.vazio { background: var(--green-bg); color: var(--green); }
+  .geo-tip { background: var(--blue-bg); border-left: 3px solid var(--blue); border-radius: 0 6px 6px 0; padding: 10px 14px; font-size: 12px; color: var(--gray-600); margin-top: 14px; line-height: 1.6; }
+  .geo-tip code { background: var(--gray-100); padding: 1px 5px; border-radius: 3px; font-size: 11px; }
+
+  /* Footer */
+  footer { text-align: center; font-size: 12px; color: var(--gray-400); margin-top: 32px; }
+
+  @media (max-width: 600px) {
+    body { padding: 12px; }
+    .cards { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── Configuração ── -->
+<script>
+  // Taxa de câmbio configurável
+  const USD_BRL = 5.70;
+  // Threshold de aprovação (%)
+  const THRESHOLD_APROVACAO = 85;
+  // Threshold de custo por rodada para alerta (USD)
+  const THRESHOLD_CUSTO_USD = 0.05;
+</script>
+
+<div class="header">
+  <div class="header-left">
+    <h1>🎮 Onde Brincar — Pipeline Dashboard</h1>
+    <p id="ultima-atualizacao">Nenhum log carregado.</p>
+  </div>
+  <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+    <label class="config-box" style="cursor:pointer; background:var(--blue); color:white; border-color:var(--blue);">
+      📂 Carregar log
+      <input type="file" id="file-input" accept=".json" style="display:none" onchange="carregarArquivo(this)">
+    </label>
+    <div class="config-box">
+      <label>USD → R$</label>
+      <input type="number" id="usd-brl-input" value="5.70" step="0.01" min="1" oninput="recalcular()">
+      <span>/ USD</span>
+    </div>
+  </div>
+</div>
+
+<!-- Alerta global de aprovação -->
+<div id="alerta-global">
+  ⚠️ Taxa de aprovação geral abaixo de <span id="alerta-threshold">85</span>% — revisão editorial necessária.
+</div>
+
+<!-- Cards de resumo -->
+<div class="cards">
+  <div class="card blue">
+    <div class="label">Custo Acumulado</div>
+    <div class="value" id="card-custo">—</div>
+    <div class="sub" id="card-custo-usd">—</div>
+  </div>
+  <div class="card blue">
+    <div class="label">Total de Rodadas</div>
+    <div class="value" id="card-rodadas">—</div>
+    <div class="sub" id="card-rodadas-sub">—</div>
+  </div>
+  <div class="card" id="card-aprovacao-wrapper">
+    <div class="label">Taxa de Aprovação</div>
+    <div class="value" id="card-aprovacao">—</div>
+    <div class="sub">rodadas revisadas</div>
+  </div>
+  <div class="card blue">
+    <div class="label">Fichas Novas</div>
+    <div class="value" id="card-fichas">—</div>
+    <div class="sub">total pós-dedup</div>
+  </div>
+</div>
+
+<!-- Indicador de latência -->
+<div class="section" style="padding: 16px 20px; margin-bottom: 20px;">
+  <h2>Latência Média</h2>
+  <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+    <div>
+      <span style="font-size:24px; font-weight:700;" id="latencia-valor">—</span>
+      <span style="color:var(--gray-400); font-size:13px;">ms (média global)</span>
+    </div>
+    <span class="latencia-badge" id="latencia-badge">—</span>
+    <span style="color:var(--gray-400); font-size:12px;">🟢 &lt;2s · 🟡 2–5s · 🔴 &gt;5s</span>
+  </div>
+</div>
+
+<!-- Tabela de histórico -->
+<div class="section">
+  <h2>Histórico de Rodadas</h2>
+  <div id="tabela-container">
+    <div class="empty-state">⏳ Carregando...</div>
+  </div>
+</div>
+
+<!-- Painel de erros -->
+<div class="section">
+  <h2>Erros por Categoria</h2>
+  <div id="erros-container">
+    <div class="empty-state">⏳ Carregando...</div>
+  </div>
+</div>
+
+<!-- US-S8: Taxa de aprovação por source -->
+<div class="section">
+  <h2>Taxa de Aprovação por Source</h2>
+  <div id="source-aprovacao-container">
+    <div class="empty-state">⏳ Carregando...</div>
+  </div>
+</div>
+
+<!-- US-S8: Evolução por source -->
+<div class="section">
+  <h2>Evolução por Source (últimas rodadas)</h2>
+  <div id="evolucao-container">
+    <div class="empty-state">⏳ Carregando...</div>
+  </div>
+</div>
+
+<!-- US-S9: Rejeições geográficas -->
+<div class="section">
+  <div class="geo-header">
+    <h2 style="margin-bottom:0;">⚠️ Revisar localização</h2>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <span id="geo-badge" class="geo-badge vazio">sem pendências</span>
+      <label style="font-size:12px;color:var(--gray-600);cursor:pointer;display:flex;align-items:center;gap:6px;">
+        📂 Carregar geo-rejected.jsonl
+        <input type="file" id="geo-file-input" accept=".jsonl,.json" style="display:none" onchange="carregarGeoRejected(this)">
+      </label>
+    </div>
+  </div>
+  <div id="geo-container">
+    <div class="empty-state">
+      <strong>Sem dados</strong>
+      <p>Carregue o arquivo <code>data/logs/geo-rejected.jsonl</code> para ver fichas pendentes de revisão.</p>
+    </div>
+  </div>
+</div>
+
+<footer>
+  Onde Brincar Pipeline Dashboard · gerado localmente · dados em <code>data/logs/pipeline-runs.json</code>
+</footer>
+
+<script>
+// ── Estado global ──────────────────────────────────────────────────────────
+let rodadas = [];
+// revisao[i] = { aprovadas: number|null, ajustadas: number|null, tipo: string }
+const revisao = {};
+
+// ── Utilitários ────────────────────────────────────────────────────────────
+function fmtDate(ts) {
+  const d = new Date(ts);
+  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' })
+    + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+}
+
+function fmtBRL(usd) {
+  const rate = parseFloat(document.getElementById('usd-brl-input').value) || USD_BRL;
+  return 'R$ ' + (usd * rate).toFixed(2).replace('.', ',');
+}
+
+function fmtUSD(usd) {
+  return 'US$ ' + usd.toFixed(4);
+}
+
+function fmtMs(ms) {
+  return ms >= 1000 ? (ms / 1000).toFixed(1) + 's' : ms + 'ms';
+}
+
+function latenciaCor(ms) {
+  if (ms < 2000) return 'green';
+  if (ms <= 5000) return 'yellow';
+  return 'red';
+}
+
+function statusRodada(r) {
+  if (r.erros && r.erros.length > 0) return 'erro';
+  if (r.latencia_media_ms > 5000) return 'lento';
+  return 'ok';
+}
+
+function statusLabel(s) {
+  if (s === 'ok') return '<span class="badge ok">OK</span>';
+  if (s === 'lento') return '<span class="badge lento">⚠ lento</span>';
+  return '<span class="badge erro">erro</span>';
+}
+
+function sourceLabel(s) {
+  return '<span class="source-pill">' + (s || '—') + '</span>';
+}
+
+// ── Cálculo de taxa por rodada ─────────────────────────────────────────────
+function calcTaxaRodada(i) {
+  const r = revisao[i] || {};
+  const rodada = rodadas[i];
+  const aprovadas = r.aprovadas !== undefined && r.aprovadas !== '' ? parseInt(r.aprovadas) : null;
+  const total = rodada.fichas_processadas || 0;
+  if (aprovadas === null || isNaN(aprovadas) || total === 0) return null;
+  return Math.round((aprovadas / total) * 100);
+}
+
+// ── Cálculo de taxa geral ──────────────────────────────────────────────────
+function calcTaxaGeral() {
+  let totalAprovadas = 0, totalRevisadas = 0;
+  rodadas.forEach((r, i) => {
+    const rev = revisao[i] || {};
+    const aprovadas = rev.aprovadas !== undefined && rev.aprovadas !== '' ? parseInt(rev.aprovadas) : null;
+    if (aprovadas !== null && !isNaN(aprovadas)) {
+      totalAprovadas += aprovadas;
+      totalRevisadas += r.fichas_processadas || 0;
+    }
+  });
+  if (totalRevisadas === 0) return null;
+  return Math.round((totalAprovadas / totalRevisadas) * 100);
+}
+
+// ── Taxa por source ────────────────────────────────────────────────────────
+function calcTaxaPorSource() {
+  const sources = {};
+  rodadas.forEach((r, i) => {
+    const s = r.source || 'manual';
+    if (!sources[s]) sources[s] = { aprovadas: 0, total: 0, rodadas: [] };
+    const rev = revisao[i] || {};
+    const aprovadas = rev.aprovadas !== undefined && rev.aprovadas !== '' ? parseInt(rev.aprovadas) : null;
+    if (aprovadas !== null && !isNaN(aprovadas)) {
+      sources[s].aprovadas += aprovadas;
+      sources[s].total += r.fichas_processadas || 0;
+    }
+    sources[s].rodadas.push({ ts: r.timestamp, aprovadas, total: r.fichas_processadas || 0 });
+  });
+  return sources;
+}
+
+// ── Renderizar cards ───────────────────────────────────────────────────────
+function renderCards() {
+  const rate = parseFloat(document.getElementById('usd-brl-input').value) || USD_BRL;
+  const totalCustoUSD = rodadas.reduce((s, r) => s + (r.custo_estimado_usd || 0), 0);
+  const totalFichas = rodadas.reduce((s, r) => s + (r.fichas_novas || 0), 0);
+  const latenciaMedia = rodadas.length
+    ? Math.round(rodadas.reduce((s, r) => s + (r.latencia_media_ms || 0), 0) / rodadas.length)
+    : 0;
+
+  document.getElementById('card-custo').textContent = 'R$ ' + (totalCustoUSD * rate).toFixed(2).replace('.', ',');
+  document.getElementById('card-custo-usd').textContent = fmtUSD(totalCustoUSD) + ' total';
+  document.getElementById('card-rodadas').textContent = rodadas.length;
+  document.getElementById('card-rodadas-sub').textContent = rodadas.length === 1 ? '1 rodada' : rodadas.length + ' rodadas';
+  document.getElementById('card-fichas').textContent = totalFichas;
+
+  // Latência
+  document.getElementById('latencia-valor').textContent = fmtMs(latenciaMedia);
+  const cor = latenciaCor(latenciaMedia);
+  const badge = document.getElementById('latencia-badge');
+  badge.className = 'latencia-badge ' + cor;
+  const labels = { green: '🟢 Rápido', yellow: '🟡 Atenção', red: '🔴 Lento' };
+  badge.textContent = labels[cor];
+
+  // Taxa de aprovação
+  const taxa = calcTaxaGeral();
+  const cardTaxa = document.getElementById('card-aprovacao');
+  const cardWrapper = document.getElementById('card-aprovacao-wrapper');
+  if (taxa === null) {
+    cardTaxa.textContent = '—';
+    cardWrapper.className = 'card blue';
+    document.getElementById('alerta-global').style.display = 'none';
+  } else {
+    cardTaxa.textContent = taxa + '%';
+    if (taxa < THRESHOLD_APROVACAO) {
+      cardWrapper.className = 'card red';
+      document.getElementById('alerta-global').style.display = 'block';
+    } else {
+      cardWrapper.className = 'card green';
+      document.getElementById('alerta-global').style.display = 'none';
+    }
+  }
+  document.getElementById('alerta-threshold').textContent = THRESHOLD_APROVACAO;
+}
+
+// ── Renderizar tabela ──────────────────────────────────────────────────────
+function renderTabela() {
+  const container = document.getElementById('tabela-container');
+  if (!rodadas.length) {
+    container.innerHTML = '<div class="empty-state"><strong>Sem dados</strong><p>Carregue o arquivo <code>pipeline-runs.json</code> usando o botão acima.</p></div>';
+    return;
+  }
+
+  const tipos = ['Data', 'Idade', 'Info', 'Outro', 'Preço', 'Tom'];
+
+  let html = `<table>
+    <thead><tr>
+      <th>Data</th>
+      <th>Source</th>
+      <th>Processadas</th>
+      <th>Duplic.</th>
+      <th>Custo (USD)</th>
+      <th>Latência</th>
+      <th>Prompt</th>
+      <th>Status</th>
+      <th>Revisão editorial</th>
+    </tr></thead>
+    <tbody id="tabela-body">`;
+
+  rodadas.forEach((r, i) => {
+    const rev = revisao[i] || {};
+    const dedup = r.dedup_ignored ?? 0;
+    const st = statusRodada(r);
+    const latCor = latenciaCor(r.latencia_media_ms || 0);
+    const taxa = calcTaxaRodada(i);
+    const taxaClass = taxa === null ? 'vazia' : (taxa >= THRESHOLD_APROVACAO ? 'ok' : 'baixa');
+    const taxaLabel = taxa === null ? '—' : taxa + '%';
+
+    html += `<tr>
+      <td style="white-space:nowrap;">${fmtDate(r.timestamp)}</td>
+      <td>${sourceLabel(r.source)}</td>
+      <td style="text-align:center;">${r.fichas_processadas || 0}</td>
+      <td style="text-align:center;">${dedup}</td>
+      <td>${fmtUSD(r.custo_estimado_usd || 0)}</td>
+      <td>
+        <span style="font-weight:600;color:var(--${latCor});">${fmtMs(r.latencia_media_ms || 0)}</span>
+      </td>
+      <td><code style="font-size:11px;">${r.prompt_version || '—'}</code></td>
+      <td>${statusLabel(st)}</td>
+      <td>
+        <div class="revisao-group">
+          <input type="number" min="0" max="${r.fichas_processadas || 999}"
+            placeholder="✓" value="${rev.aprovadas ?? ''}"
+            oninput="onRevisaoChange(${i}, 'aprovadas', this.value)"
+            title="Fichas aprovadas direto">
+          <span class="slash">/ ${r.fichas_processadas || 0} aprovadas</span>
+        </div>
+        <div class="revisao-group" style="margin-top:4px;">
+          <input type="number" min="0" max="${r.fichas_processadas || 999}"
+            placeholder="✏" value="${rev.ajustadas ?? ''}"
+            oninput="onRevisaoChange(${i}, 'ajustadas', this.value)"
+            title="Fichas ajustadas">
+          <select oninput="onRevisaoChange(${i}, 'tipo', this.value)">
+            <option value="">Tipo…</option>
+            ${tipos.map(t => `<option value="${t}" ${rev.tipo === t ? 'selected' : ''}>${t}</option>`).join('')}
+          </select>
+          <span class="slash">ajustadas</span>
+        </div>
+        <div style="margin-top:5px;">
+          <span class="taxa-realtime ${taxaClass}">${taxaLabel}</span>
+        </div>
+      </td>
+    </tr>`;
+  });
+
+  html += '</tbody></table>';
+  container.innerHTML = html;
+}
+
+// ── Renderizar erros ───────────────────────────────────────────────────────
+function renderErros() {
+  const container = document.getElementById('erros-container');
+  const cats = {};
+
+  rodadas.forEach(r => {
+    (r.erros || []).forEach(e => {
+      // Categorizar por prefixo heurístico
+      let cat = 'Geral';
+      if (/geo|cidade|rio|sp|fora/i.test(e)) cat = 'Geográfico';
+      else if (/timeout|rate limit|retry|lento/i.test(e)) cat = 'Performance';
+      else if (/campo|sem campo|ignorad/i.test(e)) cat = 'Dados incompletos';
+      else if (/rejeit/i.test(e)) cat = 'Rejeição';
+      cats[cat] = (cats[cat] || 0) + 1;
+    });
+  });
+
+  const entries = Object.entries(cats).sort((a, b) => b[1] - a[1]);
+
+  if (!entries.length) {
+    container.innerHTML = '<div class="empty-state">✅ Nenhum erro registrado nas rodadas.</div>';
+    return;
+  }
+
+  container.innerHTML = '<div class="erros-list">' +
+    entries.map(([cat, count]) =>
+      `<div class="erro-item">
+        <span class="erro-cat">🔴 ${cat}</span>
+        <span class="erro-count">${count} ocorrência${count > 1 ? 's' : ''}</span>
+      </div>`
+    ).join('') +
+    '</div>';
+}
+
+// ── US-S8: Taxa por source ─────────────────────────────────────────────────
+function renderSourceAprovacao() {
+  const container = document.getElementById('source-aprovacao-container');
+  const sources = calcTaxaPorSource();
+  const entries = Object.entries(sources);
+
+  if (!entries.length) {
+    container.innerHTML = '<div class="empty-state">Sem dados de revisão preenchidos.</div>';
+    return;
+  }
+
+  let html = '';
+  entries.forEach(([source, data]) => {
+    const taxa = data.total > 0 ? Math.round((data.aprovadas / data.total) * 100) : null;
+    const cor = taxa === null ? 'green' : (taxa >= THRESHOLD_APROVACAO ? 'green' : taxa >= 60 ? 'yellow' : 'red');
+    const taxaLabel = taxa === null ? 'sem dados' : taxa + '%';
+    const width = taxa === null ? 0 : taxa;
+    const alertaVisible = taxa !== null && taxa < THRESHOLD_APROVACAO ? 'block' : 'none';
+
+    html += `<div class="source-row" id="source-row-${source}">
+      <div class="source-row-header">
+        <span class="source-name">${source}</span>
+        <span class="source-taxa" style="color:var(--${cor});">${taxaLabel}</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill ${cor}" style="width:${width}%;"></div>
+      </div>
+      <div class="source-alerta" id="alerta-source-${source}" style="display:${alertaVisible};">
+        ⚠️ Taxa abaixo de ${THRESHOLD_APROVACAO}% — revisar fichas de ${source}
+      </div>
+    </div>`;
+  });
+
+  container.innerHTML = html;
+}
+
+// ── US-S8: Evolução por source ─────────────────────────────────────────────
+function renderEvolucao() {
+  const container = document.getElementById('evolucao-container');
+
+  // Pega as últimas 8 rodadas com revisão preenchida por source
+  const sourceMap = {};
+  rodadas.forEach((r, i) => {
+    const s = r.source || 'manual';
+    if (!sourceMap[s]) sourceMap[s] = [];
+    const rev = revisao[i] || {};
+    const aprovadas = rev.aprovadas !== undefined && rev.aprovadas !== '' ? parseInt(rev.aprovadas) : null;
+    const total = r.fichas_processadas || 0;
+    const taxa = (aprovadas !== null && !isNaN(aprovadas) && total > 0)
+      ? Math.round((aprovadas / total) * 100) : null;
+    sourceMap[s].push({ ts: r.timestamp, taxa });
+  });
+
+  const sources = Object.keys(sourceMap);
+  if (!sources.length) {
+    container.innerHTML = '<div class="empty-state">Sem histórico de rodadas.</div>';
+    return;
+  }
+
+  let html = `<table class="evolucao-table">
+    <thead><tr>
+      <th>Data</th>
+      ${sources.map(s => `<th>${s}</th>`).join('')}
+    </tr></thead>
+    <tbody>`;
+
+  // Todas as datas únicas, ordenadas
+  const datas = [...new Set(rodadas.map(r => r.timestamp))].sort();
+
+  datas.slice(-8).forEach(ts => {
+    html += `<tr><td style="white-space:nowrap;">${fmtDate(ts)}</td>`;
+    sources.forEach(s => {
+      const entry = (sourceMap[s] || []).find(e => e.ts === ts);
+      if (!entry) { html += '<td style="color:var(--gray-400);">—</td>'; return; }
+      if (entry.taxa === null) { html += '<td style="color:var(--gray-400);">sem dados</td>'; return; }
+      const cor = entry.taxa >= THRESHOLD_APROVACAO ? 'var(--green)' : 'var(--red)';
+      html += `<td><span style="font-weight:700; color:${cor};">${entry.taxa}%</span></td>`;
+    });
+    html += '</tr>';
+  });
+
+  html += '</tbody></table>';
+  container.innerHTML = html;
+}
+
+// ── Callbacks ──────────────────────────────────────────────────────────────
+function onRevisaoChange(i, field, value) {
+  if (!revisao[i]) revisao[i] = {};
+  revisao[i][field] = value;
+  // Atualiza taxa na linha em tempo real
+  const taxa = calcTaxaRodada(i);
+  const taxaClass = taxa === null ? 'vazia' : (taxa >= THRESHOLD_APROVACAO ? 'ok' : 'baixa');
+  const taxaLabel = taxa === null ? '—' : taxa + '%';
+  // Encontra o span da linha
+  const tbody = document.getElementById('tabela-body');
+  if (tbody) {
+    const rows = tbody.querySelectorAll('tr');
+    if (rows[i]) {
+      const span = rows[i].querySelector('.taxa-realtime');
+      if (span) {
+        span.className = 'taxa-realtime ' + taxaClass;
+        span.textContent = taxaLabel;
+      }
+    }
+  }
+  // Atualiza cards e painéis de source
+  renderCards();
+  renderSourceAprovacao();
+  renderEvolucao();
+}
+
+function recalcular() {
+  renderCards();
+}
+
+// ── Carregar dados via File input ──────────────────────────────────────────
+function carregarArquivo(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      rodadas = e.target.result.trim().split('\n')
+        .filter(l => l.trim())
+        .map(l => { try { return JSON.parse(l); } catch { return null; } })
+        .filter(Boolean)
+        .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+      const ultima = rodadas[rodadas.length - 1];
+      document.getElementById('ultima-atualizacao').textContent =
+        `${file.name} · ${rodadas.length} rodada${rodadas.length !== 1 ? 's' : ''} · última em ${ultima ? fmtDate(ultima.timestamp) : '—'}`;
+    } catch(err) {
+      rodadas = [];
+      document.getElementById('ultima-atualizacao').textContent = 'Erro ao ler arquivo: ' + err.message;
+    }
+    renderCards();
+    renderTabela();
+    renderErros();
+    renderSourceAprovacao();
+    renderEvolucao();
+  };
+  reader.readAsText(file);
+}
+
+// ── US-S9: Rejeições geográficas ──────────────────────────────────────────
+let geoRejections = [];
+
+function carregarGeoRejected(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      geoRejections = e.target.result.trim().split('\n')
+        .filter(l => l.trim())
+        .map(l => { try { return JSON.parse(l); } catch { return null; } })
+        .filter(Boolean)
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    } catch {
+      geoRejections = [];
+    }
+    renderGeoRejected();
+  };
+  reader.readAsText(file);
+}
+
+const GEO_REVISADAS_KEY = 'geo_revisadas';
+
+function getRevisadas() {
+  try { return new Set(JSON.parse(localStorage.getItem(GEO_REVISADAS_KEY) || '[]')); }
+  catch { return new Set(); }
+}
+
+function marcarRevisada(slug) {
+  const revisadas = getRevisadas();
+  revisadas.add(slug);
+  localStorage.setItem(GEO_REVISADAS_KEY, JSON.stringify([...revisadas]));
+  renderGeoRejected();
+}
+
+function limparRevisadas() {
+  localStorage.removeItem(GEO_REVISADAS_KEY);
+  renderGeoRejected();
+}
+
+function renderGeoRejected() {
+  const container = document.getElementById('geo-container');
+  const badge = document.getElementById('geo-badge');
+
+  if (!geoRejections.length) {
+    badge.className = 'geo-badge vazio';
+    badge.textContent = 'sem pendências';
+    container.innerHTML = '<div class="empty-state">✅ Nenhuma rejeição geográfica registrada.</div>';
+    return;
+  }
+
+  const revisadas = getRevisadas();
+  const pendentes = geoRejections.filter(r => !revisadas.has(r.slug));
+
+  badge.className = pendentes.length ? 'geo-badge pendente' : 'geo-badge vazio';
+  badge.textContent = pendentes.length
+    ? pendentes.length + ' pendente' + (pendentes.length > 1 ? 's' : '')
+    : 'todas revisadas';
+
+  if (!pendentes.length) {
+    container.innerHTML = `<div class="empty-state">
+      ✅ Todas as rejeições foram revisadas.
+      <p><button onclick="limparRevisadas()" style="margin-top:10px;padding:4px 12px;border:1px solid var(--gray-200);border-radius:6px;background:white;cursor:pointer;font-size:12px;color:var(--gray-600);">Limpar revisadas</button></p>
+    </div>`;
+    return;
+  }
+
+  let html = `<table>
+    <thead><tr>
+      <th>Nome</th>
+      <th>Slug</th>
+      <th>Venue</th>
+      <th>Bairro</th>
+      <th>Source</th>
+      <th>Data</th>
+      <th></th>
+    </tr></thead>
+    <tbody>`;
+
+  pendentes.forEach(r => {
+    const slugEscaped = (r.slug || '').replace(/'/g, "\\'");
+    html += `<tr>
+      <td style="font-weight:600;">${r.nome || '—'}</td>
+      <td><code style="font-size:11px;color:var(--gray-600);">${r.slug || '—'}</code></td>
+      <td style="color:var(--gray-600);font-size:12px;">${r.venue || '—'}</td>
+      <td style="color:var(--gray-600);font-size:12px;">${r.bairro || '—'}</td>
+      <td>${r.source ? '<span class="source-pill">' + r.source + '</span>' : '—'}</td>
+      <td style="white-space:nowrap;font-size:12px;color:var(--gray-400);">${r.timestamp ? fmtDate(r.timestamp) : '—'}</td>
+      <td><button onclick="marcarRevisada('${slugEscaped}')" style="padding:3px 10px;border:1px solid var(--gray-200);border-radius:99px;background:white;cursor:pointer;font-size:11px;color:var(--gray-600);white-space:nowrap;">Revisada ✓</button></td>
+    </tr>`;
+  });
+
+  html += '</tbody></table>';
+  html += `<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-top:14px;">
+    <div class="geo-tip" style="flex:1;margin-top:0;">
+      <strong>Para liberar uma ficha:</strong> adicione o slug em <code>GEO_EXCEPTIONS</code> dentro de
+      <code>scripts/pipeline-ia/geo-filter.ts</code> e rode o pipeline novamente.<br>
+      Para descartar permanentemente, ignore — a ficha não entra no Gemini nem no Sanity.
+    </div>
+    <button onclick="limparRevisadas()" style="padding:4px 12px;border:1px solid var(--gray-200);border-radius:6px;background:white;cursor:pointer;font-size:12px;color:var(--gray-400);white-space:nowrap;">Limpar revisadas</button>
+  </div>`;
+
+  container.innerHTML = html;
+}
+
+// Renderiza painéis vazios ao abrir
+renderCards();
+renderTabela();
+renderErros();
+renderSourceAprovacao();
+renderEvolucao();
+renderGeoRejected();
+</script>
+</body>
+</html>
