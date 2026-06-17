@@ -41,7 +41,7 @@ export function AtracaoCardLink({ atracao, className }: AtracaoCardLinkProps) {
     event.preventDefault();
     event.stopPropagation();
 
-    const shareUrl = buildShareUrl(`${window.location.origin}/atracao/${atracao.slug}`);
+    const shareUrl = buildShareUrl(`${window.location.origin}/atracao/${atracao.slug}`, "ob_card");
     await trackShareClick(atracao, shareUrl, "listing_card");
   };
 

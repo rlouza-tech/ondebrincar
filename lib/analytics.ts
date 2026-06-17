@@ -105,12 +105,16 @@ export function detectDestinationType(
 
 /**
  * Appenda UTM params de compartilhamento a uma URL.
- * Visitas via link compartilhado aparecem em GA4 > Aquisição > Campanhas
- * como utm_source=ondebrincar / utm_medium=share / utm_campaign=share_button.
+ * utm_source distingue o ponto de origem no GA4 > Aquisição > Campanhas:
+ *   ob_card  — botão no card da listagem
+ *   ob_ficha — botão na ficha individual
+ *   ob_busca — botão de compartilhar busca filtrada
  */
-export function buildShareUrl(baseUrl: string): string {
+export type ShareSource = "ob_card" | "ob_ficha" | "ob_busca";
+
+export function buildShareUrl(baseUrl: string, shareSource: ShareSource): string {
   const url = new URL(baseUrl);
-  url.searchParams.set("utm_source", "ondebrincar");
+  url.searchParams.set("utm_source", shareSource);
   url.searchParams.set("utm_medium", "share");
   url.searchParams.set("utm_campaign", "share_button");
   return url.toString();
