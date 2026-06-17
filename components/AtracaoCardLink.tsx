@@ -7,7 +7,7 @@ import {
   formatFaixaEtaria,
   formatPreco,
 } from "@/lib/atracoes";
-import { trackEvent, trackShareClick, type SaveClickParams } from "@/lib/analytics";
+import { buildShareUrl, trackEvent, trackShareClick, type SaveClickParams } from "@/lib/analytics";
 import { useAttractionView } from "@/hooks/useAttractionView";
 import type { Atracao } from "@/lib/sanity/types";
 import { cn } from "@/lib/cn";
@@ -41,7 +41,7 @@ export function AtracaoCardLink({ atracao, className }: AtracaoCardLinkProps) {
     event.preventDefault();
     event.stopPropagation();
 
-    const shareUrl = `${window.location.origin}/atracao/${atracao.slug}`;
+    const shareUrl = buildShareUrl(`${window.location.origin}/atracao/${atracao.slug}`);
     await trackShareClick(atracao, shareUrl, "listing_card");
   };
 
