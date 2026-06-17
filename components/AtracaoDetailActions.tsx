@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Clock } from "lucide-react";
 import { buttonClassName } from "@/components/Button";
 import { buildShareUrl, trackEvent, trackShareClick, type SaveClickParams } from "@/lib/analytics";
+
 import type { Atracao } from "@/lib/sanity/types";
 
 const TOAST_DURATION_MS = 2500;
@@ -80,7 +81,7 @@ export function AtracaoDetailActions({ atracao }: AtracaoDetailActionsProps) {
       typeof window !== "undefined"
         ? window.location.href
         : `https://ondebrincar.com.br/atracao/${atracao.slug}`;
-    await trackShareClick(atracao, buildShareUrl(baseUrl), "detail_page");
+    await trackShareClick(atracao, buildShareUrl(baseUrl, "ob_ficha"), "detail_page");
   };
 
   return (
