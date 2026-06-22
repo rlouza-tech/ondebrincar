@@ -79,8 +79,10 @@ function mapToLinha(
     idade_minima: extractIdadeMinima(textForParse),
     idade_maxima: extractIdadeMaxima(textForParse),
     preco_inteira_centavos:
-      fullPrice !== null && fullPrice > 0
-        ? String(fullPrice)
+      salePrice !== null && salePrice > 0
+        ? String(salePrice)          // preço que o usuário paga (com desconto Clubinho)
+        : fullPrice !== null && fullPrice > 0
+        ? String(fullPrice)          // fallback: sem desconto, fullPrice == salePrice
         : ld.offer_price_centavos,
     url_ingresso: productUrl,
   };
