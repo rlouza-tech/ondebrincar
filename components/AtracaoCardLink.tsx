@@ -15,9 +15,10 @@ import { cn } from "@/lib/cn";
 export interface AtracaoCardLinkProps {
   atracao: Atracao;
   className?: string;
+  filterRef?: string;
 }
 
-export function AtracaoCardLink({ atracao, className }: AtracaoCardLinkProps) {
+export function AtracaoCardLink({ atracao, className, filterRef }: AtracaoCardLinkProps) {
   const [favorite, setFavorite] = useState(false);
   const cardRef = useAttractionView(atracao, "listing");
 
@@ -48,7 +49,7 @@ export function AtracaoCardLink({ atracao, className }: AtracaoCardLinkProps) {
   return (
     <div ref={cardRef} className={cn("relative", className)}>
       <Link
-        href={`/atracao/${atracao.slug}`}
+        href={filterRef ? `/atracao/${atracao.slug}?ref=${encodeURIComponent(filterRef)}` : `/atracao/${atracao.slug}`}
         className="block rounded-xl transition-shadow hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
       >
         <AtracaoCard
