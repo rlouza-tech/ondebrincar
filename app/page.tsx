@@ -7,7 +7,7 @@ import { getAllAtracoes } from "@/lib/atracoes";
 
 interface HomePageProps {
   searchParams?: {
-    bairro?: string;
+    bairro?: string | string[];
     idade?: string;
     categoria?: string;
     preco?: string;
@@ -16,7 +16,10 @@ interface HomePageProps {
 }
 
 export function generateMetadata({ searchParams }: HomePageProps): Metadata {
-  const bairro = searchParams?.bairro?.trim();
+  const bairroRaw = searchParams?.bairro;
+  // Com múltiplos bairros, bairroRaw é array — só usa título específico para 1 bairro
+  const bairro =
+    typeof bairroRaw === "string" ? bairroRaw.trim() : undefined;
 
   if (bairro) {
     return {

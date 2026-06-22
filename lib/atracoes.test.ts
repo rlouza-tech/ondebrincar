@@ -11,9 +11,26 @@ import type { SanityAtracaoDocument } from "./sanity/types";
 
 describe("filtrarAtracoes", () => {
   it("filtra por bairro Tijuca", () => {
-    const resultados = filtrarAtracoes(mockAtracoes, { bairro: "Tijuca" });
+    const resultados = filtrarAtracoes(mockAtracoes, { bairros: ["Tijuca"] });
     expect(resultados.length).toBe(2);
     expect(resultados.every((a) => a.bairro === "Tijuca")).toBe(true);
+  });
+
+  it("filtra por múltiplos bairros", () => {
+    const tijuca = filtrarAtracoes(mockAtracoes, { bairros: ["Tijuca"] });
+    const bairroExtra = mockAtracoes.find((a) => a.bairro !== "Tijuca")?.bairro;
+    if (!bairroExtra) {
+      return;
+    }
+    const resultados = filtrarAtracoes(mockAtracoes, {
+      bairros: ["Tijuca", bairroExtra],
+    });
+    expect(resultados.length).toBeGreaterThan(tijuca.length);
+    expect(
+      resultados.every(
+        (a) => a.bairro === "Tijuca" || a.bairro === bairroExtra,
+      ),
+    ).toBe(true);
   });
 
   it("filtra por idade dentro da faixa", () => {

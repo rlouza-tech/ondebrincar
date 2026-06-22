@@ -177,7 +177,7 @@ export async function getAtracoesPorBairro(bairro: string): Promise<Atracao[]> {
     }
   }
 
-  return filtrarAtracoes(mockAtracoes, { bairro });
+  return filtrarAtracoes(mockAtracoes, { bairros: [bairro] });
 }
 
 export function formatFaixaEtaria(idadeMin: number, idadeMax: number): string {
@@ -198,7 +198,7 @@ export function formatPreco(atracao: Atracao): string {
 }
 
 export interface FiltroBusca {
-  bairro?: string;
+  bairros?: string[];
   idade?: number;
   categoria?: string;
   preco?: PrecoTipo;
@@ -231,7 +231,7 @@ function parseAmbienteFromParam(value: string | null): IndoorOutdoor | undefined
 
 export function filtrosFromSearchParams(params: URLSearchParams): FiltroBusca {
   return {
-    bairro: params.get("bairro") ?? undefined,
+    bairros: params.getAll("bairro").filter(Boolean),
     idade: parseIdadeFromParam(params.get("idade")),
     categoria: params.get("categoria") ?? undefined,
     preco: parsePrecoFromParam(params.get("preco")),
@@ -248,9 +248,12 @@ export function filtrarAtracoes(
   filtros: FiltroBusca,
 ): Atracao[] {
   return atracoes.filter((atracao) => {
-    if (filtros.bairro) {
-      const bairroFiltro = filtros.bairro.trim().toLowerCase();
-      if (atracao.bairro.toLowerCase() !== bairroFiltro) {
+    if (filtros.bairros && filtros.bairros.length > 0) {
+      const bairroNorm = atracao.bairro.toLowerCase();
+      const match = filtros.bairros.some(
+        (b) => b.trim().toLowerCase() === bairroNorm,
+      );
+      if (!match) {
         return false;
       }
     }
