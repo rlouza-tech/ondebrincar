@@ -34,8 +34,10 @@ DADOS SCRAPER V2 (priorize sobre inferência — vêm da página oficial do Club
 Se sinopse_oficial, horarios_sessao, idade_minima, idade_maxima ou preco_inteira_centavos estiverem preenchidos, priorize-os sobre qualquer inferência do texto livre.
 
 Exceção — classificação etária:
-- Se sinopse_oficial contiver "Classificação: Livre" (ou variação como "classificação livre"), use idade_min: 0, independente do valor de idade_minima. O campo idade_minima do scraper reflete a regra de meia-entrada (preço), não a classificação do espetáculo.
-- Exemplo: idade_minima: 2 + sinopse "Classificação: Livre" → idade_min: 0 (a peça é livre, o 2 é só a faixa de meia-entrada).
+- Se sinopse_oficial contiver "Classificação: Livre" (ou variação como "classificação livre"):
+  - use idade_min: 0, independente do valor de idade_minima (que reflete regra de meia-entrada, não classificação do espetáculo)
+  - use idade_max: 18, independente do valor de idade_maxima quando este vier de meia-entrada; se idade_maxima já chegar como 18, mantenha
+- Exemplo: idade_minima: 2 + idade_maxima: 18 + sinopse "Classificação: Livre" → idade_min: 0, idade_max: 18 (o 2 é faixa de meia-entrada; 18 é o teto editorial para Classificação Livre).
 
 Exceção — duração suspeita:
 - Se duracao_minutos for ≤ 5, descarte esse valor (provavelmente veio de "X minutos de caminhada" ou outro contexto errado). Trate duracao_min como null, marque em abstain_fields e adicione note_for_editor: "duracao_minutos no input (Xmin) parece dado de distância/caminhada, não duração do espetáculo."`;
@@ -67,11 +69,11 @@ INPUT:
 - horarios_sessao: 06/06 às 15:00
 - duracao_minutos: 60
 - idade_minima: 2
-- idade_maxima: 12
+- idade_maxima: 18
 - preco_inteira_centavos: 8000
 OUTPUT:
-{"categoria":"teatro","idade_min":0,"idade_max":12,"duracao_min":60,"preco_centavos":8000,"indoor_outdoor":"indoor","descricao":"Show musical com a Galinha Pintadinha no Teatro Bangu Shopping. As músicas mais amadas da Popó — Pintinho Amarelinho, Mariana, A Baratinha — ganham vida em espetáculo de cores, dança e interatividade. Sessão única.","mini_review":"Clássico certeiro para crianças até 4-5 anos que cresceram com a Pintadinha. Sessão única em Bangu; reserve com antecedência.","tipo_programacao":"evento_pontual","programacao_texto":"Apenas no dia 6 de junho às 15h.","proxima_data":"2026-06-06","confidence":5,"abstain_fields":[],"notes_for_editor":null}
-NOTA: idade_min=0 porque sinopse diz "Classificação: Livre" — o campo idade_minima=2 é regra de meia-entrada, não classificação etária.
+{"categoria":"teatro","idade_min":0,"idade_max":18,"duracao_min":60,"preco_centavos":8000,"indoor_outdoor":"indoor","descricao":"Show musical com a Galinha Pintadinha no Teatro Bangu Shopping. As músicas mais amadas da Popó — Pintinho Amarelinho, Mariana, A Baratinha — ganham vida em espetáculo de cores, dança e interatividade. Sessão única.","mini_review":"Clássico certeiro para crianças até 4-5 anos que cresceram com a Pintadinha. Sessão única em Bangu; reserve com antecedência.","tipo_programacao":"evento_pontual","programacao_texto":"Apenas no dia 6 de junho às 15h.","proxima_data":"2026-06-06","confidence":5,"abstain_fields":[],"notes_for_editor":null}
+NOTA: idade_min=0 e idade_max=18 porque sinopse diz "Classificação: Livre" — o campo idade_minima=2 era regra de meia-entrada; o scraper já converteu idade_maxima para 18 (teto editorial para Classificação Livre).
 
 === EXEMPLO 2 — CASO MÉDIO (Sympla, texto livre, dois turnos, preço ausente) ===
 INPUT:
@@ -151,6 +153,7 @@ REGRAS DE EXTRAÇÃO (revisão editorial — siga à risca):
 - idade_max: extraia o número exato mencionado no texto de entrada (nome, dias_apresentacao, categoria_origem, preco_bruto, url_origem) ou use idade_maxima do scraper v2 quando preenchido. Nunca infira nem arredonde.
   Se o texto diz "até 12 anos" ou "12+", retorne idade_max: 12 — nunca 8 ou outro valor por suposição de faixa etária.
   Se não houver menção clara de idade máxima, marque idade_max em abstain_fields e use o menor valor plausível só se idade_min exigir coerência.
+  REGRA ANTI-MEIA-ENTRADA: se a única menção de faixa etária no texto for em contexto de meia-entrada ou desconto (ex: "meia-entrada: crianças de 0 a 12 anos", "paga meia de 3 a 12 anos"), NÃO infira idade_max a partir desse número — marque em abstain_fields com nota "faixa etária inferida de regra de meia-entrada, não de classificação indicativa".
 - tipo_programacao: classifique assim:
   * "permanente": atração sem data de encerramento definida, aberta regularmente por tempo indeterminado (ex.: parques, museus, aquários com funcionamento contínuo).
   * "evento_pontual": datas de apresentação específicas listadas, temporada com fim previsto, espetáculo com sessões marcadas ou exposição temporária (ex.: peças de teatro, shows, Patrulha Canina com dias fixos).

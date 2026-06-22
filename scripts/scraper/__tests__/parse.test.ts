@@ -32,6 +32,48 @@ describe("scraper parse", () => {
     expect(extractFaixaEtaria(text).idade_minima).toBe("");
   });
 
+  describe("guard meia-entrada (bug 0–12)", () => {
+    it("ignora 'Crianças de X a Y anos' em contexto de meia-entrada — extractFaixaEtaria", () => {
+      const text = "Meia-entrada: Crianças de 0 a 12 anos.";
+      expect(extractFaixaEtaria(text)).toEqual({ idade_minima: "", idade_maxima: "" });
+    });
+
+    it("ignora 'X a Y anos' em contexto de meia-entrada — extractIdadeMaxima", () => {
+      const text = "Meia-entrada: Crianças de 0 a 12 anos. Espetáculo para toda a família.";
+      expect(extractIdadeMaxima(text)).toBe("");
+    });
+
+    it("ignora 'X a Y anos' em contexto de meia-entrada — extractIdadeMinima", () => {
+      const text = "Meia-entrada: Crianças de 3 a 12 anos.";
+      expect(extractIdadeMinima(text)).toBe("");
+    });
+
+    it("ignora 'paga meia' com faixa etária", () => {
+      const text = "Crianças que pagam meia de 2 a 12 anos.";
+      expect(extractIdadeMaxima(text)).toBe("");
+    });
+
+    it("não ignora faixa etária legítima sem contexto de meia-entrada", () => {
+      const text = "Indicado para crianças de 3 a 8 anos. Duração: 50 minutos.";
+      expect(extractIdadeMinima(text)).toBe("3");
+      expect(extractIdadeMaxima(text)).toBe("8");
+    });
+  });
+
+  describe("Classificação: Livre → idade_max 18", () => {
+    it("retorna 18 para extractIdadeMaxima quando texto diz Classificação: Livre", () => {
+      const text = "Classificação: Livre. Indicado para toda a família.";
+      expect(extractIdadeMaxima(text)).toBe("18");
+    });
+
+    it("retorna 0 e 18 quando meia-entrada + Classificação: Livre presentes", () => {
+      const text =
+        "Meia-entrada: Crianças de 0 a 12 anos. Classificação: Livre.";
+      expect(extractIdadeMinima(text)).toBe("0");
+      expect(extractIdadeMaxima(text)).toBe("18");
+    });
+  });
+
   it("extrai sinopse da seção Sobre o espetáculo no texto renderizado", () => {
     const fullText = `Outras seções
 Sobre o espetáculo:

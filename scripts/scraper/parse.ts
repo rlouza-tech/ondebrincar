@@ -9,19 +9,38 @@ export function stripHtml(html: string): string {
     .trim();
 }
 
+/**
+ * Retorna true se o trecho de texto em torno do matchIndex contiver linguagem
+ * de meia-entrada ou desconto — indicando que a faixa etária menciona um
+ * critério de preço, não a classificação indicativa do espetáculo.
+ *
+ * Exemplos de contexto que disparam o guard:
+ *   "Meia-entrada: Crianças de 0 a 12 anos"
+ *   "Paga meia de 3 a 12 anos"
+ *   "Ingresso meia para crianças de 2 a 12 anos"
+ */
+function hasMeiaEntradaContext(text: string, matchIndex: number): boolean {
+  const start = Math.max(0, matchIndex - 120);
+  const context = text.slice(start, matchIndex + 60).toLowerCase();
+  return /meia[- ]?entrada|paga[m]?\s+meia|ingresso\s+meia|meia\s+ingresso|meia[- ]?valor/.test(context);
+}
+
 export interface FaixaEtaria {
   idade_minima: string;
   idade_maxima: string;
 }
 
-/** "Crianças de X a Y anos" — ignora linhas de gratuidade ("crianças até X ano"). */
+/**
+ * "Crianças de X a Y anos" — ignora linhas de gratuidade ("crianças até X ano").
+ * Também ignora o padrão quando o contexto indicar meia-entrada/desconto.
+ */
 export function extractFaixaEtaria(text: string): FaixaEtaria {
   const normalized = text.replace(/\s+/g, " ");
 
   const deAte = normalized.match(
     /crian[cç]as?\s+de\s+(\d{1,2})\s+a\s+(\d{1,2})\s+anos?/i,
   );
-  if (deAte) {
+  if (deAte && !hasMeiaEntradaContext(normalized, deAte.index ?? 0)) {
     return { idade_minima: deAte[1], idade_maxima: deAte[2] };
   }
 
@@ -84,7 +103,7 @@ export function extractIdadeMinima(text: string): string {
   }
   if (!isGratuidadeCriancaAte(text)) {
     const entre = normalized.match(/(\d{1,2})\s*a\s*(\d{1,2})\s*anos/);
-    if (entre) {
+    if (entre && !hasMeiaEntradaContext(normalized, entre.index ?? 0)) {
       return entre[1];
     }
   }
@@ -102,19 +121,26 @@ export function extractIdadeMaxima(text: string): string {
   }
 
   const normalized = text.toLowerCase();
+
+  // "Classificação: Livre" → teto editorial do Onde Brincar (18 anos).
+  // Valor deliberadamente distinto de 12 para distinguir fixture de meia-entrada
+  // de classificação indicativa real nos smoke tests.
+  if (/classifica[cç][aã]o:\s*livre/.test(normalized)) {
+    return "18";
+  }
+
   const ateIndicacao = normalized.match(
     /(?:indicad[oa]s?|recomendad[oa]s?)\s+(?:para\s+)?(?:at[eé]|a)\s*(\d{1,2})\s*anos/,
   );
   if (ateIndicacao) {
     return ateIndicacao[1];
   }
+
   const entre = normalized.match(/(\d{1,2})\s*a\s*(\d{1,2})\s*anos/);
-  if (entre) {
+  if (entre && !hasMeiaEntradaContext(normalized, entre.index ?? 0)) {
     return entre[2];
   }
-  if (/classifica[cç][aã]o:\s*livre/.test(normalized)) {
-    return "";
-  }
+
   return "";
 }
 
@@ -294,7 +320,7 @@ export const BAIRROS_RIO: readonly string[] = [
   "ilha do governador", "inhaúma", "inhoaíba", "ipanema", "irajá", "itanhangá",
   "jabour", "jacaré", "jacarepaguá", "jacarezinho",
   "jardim américa", "jardim botânico", "jardim carioca", "jardim guanabara", "jardim sulacap",
-  "joá", "lagoa", "laranjeiras", "leme", "lins de vasconcelos",
+  "joá", "lagoa", "laranjeiras", "leblon", "leme", "lins de vasconcelos",
   "madureira", "mangueira", "manguinhos", "maracanã", "marechal hermes", "maré",
   "méier", "moneró", "monjolos", "olaria", "oswaldo cruz", "padre miguel",
   "paciência", "paquetá", "parque anchieta", "parque colúmbia", "pavuna",
