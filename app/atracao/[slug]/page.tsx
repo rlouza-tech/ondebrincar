@@ -19,6 +19,7 @@ import { formatadorDeData } from "@/lib/format-date";
 
 interface AtracaoPageProps {
   params: { slug: string };
+  searchParams?: { ref?: string };
 }
 
 export async function generateStaticParams() {
@@ -152,7 +153,7 @@ function buildJsonLd(atracao: Awaited<ReturnType<typeof getAtracaoBySlug>>) {
   };
 }
 
-export default async function AtracaoPage({ params }: AtracaoPageProps) {
+export default async function AtracaoPage({ params, searchParams }: AtracaoPageProps) {
   const atracao = await getAtracaoBySlug(params.slug);
 
   if (!atracao) {
@@ -160,6 +161,7 @@ export default async function AtracaoPage({ params }: AtracaoPageProps) {
   }
 
   const jsonLd = buildJsonLd(atracao);
+  const backHref = searchParams?.ref ? `/?${decodeURIComponent(searchParams.ref)}` : "/";
 
   return (
     <>
@@ -168,7 +170,7 @@ export default async function AtracaoPage({ params }: AtracaoPageProps) {
       <SiteHeader />
       <main className="mx-auto max-w-screen-lg px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
         <Link
-          href="/"
+          href={backHref}
           className="mb-6 inline-block text-sm font-medium text-secondary hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
           ← Voltar para a lista
