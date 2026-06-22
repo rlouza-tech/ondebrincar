@@ -45,11 +45,16 @@ export function HomeFilters({ bairros, atracoes }: HomeFiltersProps) {
   );
   const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
 
-  const bairroAtivo = searchParams.get("bairro") ?? "";
+  const bairrosAtivos = searchParams.getAll("bairro");
   const idadeAtiva = searchParams.get("idade") ?? "";
   const categoriaAtiva = searchParams.get("categoria") ?? "";
   const precoAtivo = searchParams.get("preco") ?? "";
   const ambienteAtivo = searchParams.get("ambiente") ?? "";
+
+  const bairroDisplayLabel =
+    bairrosAtivos.length === 1
+      ? bairrosAtivos[0]
+      : `Bairro (${bairrosAtivos.length})`;
 
   const secondaryActiveCount =
     (precoAtivo ? 1 : 0) + (ambienteAtivo ? 1 : 0);
@@ -58,6 +63,31 @@ export function HomeFilters({ bairros, atracoes }: HomeFiltersProps) {
     label: bairro,
     value: bairro,
   }));
+
+  const toggleBairro = (value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    const current = params.getAll("bairro");
+    params.delete("bairro");
+
+    const next = current.includes(value)
+      ? current.filter((b) => b !== value)
+      : [...current, value];
+
+    for (const b of next) {
+      params.append("bairro", b);
+    }
+
+    trackEvent("filter_used", {
+      filter_type: "neighborhood",
+      filter_value: value,
+      active_filters_count: countActiveFilters(params),
+      results_count: filtrarAtracoes(atracoes, filtrosFromSearchParams(params))
+        .length,
+    } satisfies FilterUsedParams);
+
+    const query = params.toString();
+    router.replace(query ? `/?${query}` : "/", { scroll: false });
+  };
 
   const toggleParam = (key: string, value: string, ativo: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -129,13 +159,15 @@ export function HomeFilters({ bairros, atracoes }: HomeFiltersProps) {
 
         <FilterDropdown
           pillLabel="Bairro"
-          activeValue={bairroAtivo}
-          activeDisplayLabel={bairroAtivo}
+          activeValue={bairrosAtivos[0] ?? ""}
+          activeValues={bairrosAtivos}
+          activeDisplayLabel={bairroDisplayLabel}
           options={bairroOptions}
           isOpen={openDropdown === "bairro"}
           onOpenChange={(open) => handleDropdownOpen("bairro", open)}
-          onSelect={(value) => toggleParam("bairro", value, bairroAtivo)}
+          onSelect={toggleBairro}
           onClear={() => clearParam("bairro")}
+          multiSelect
         />
 
         <FilterDropdown

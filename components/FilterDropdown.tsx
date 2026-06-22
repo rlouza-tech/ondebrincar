@@ -18,12 +18,14 @@ export interface FilterDropdownOption {
 interface FilterDropdownProps {
   pillLabel: string;
   activeValue: string;
+  activeValues?: string[];
   activeDisplayLabel: string;
   options: readonly FilterDropdownOption[];
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   onSelect: (value: string) => void;
   onClear: () => void;
+  multiSelect?: boolean;
 }
 
 function ChevronDownIcon() {
@@ -61,12 +63,14 @@ function CloseIcon() {
 export function FilterDropdown({
   pillLabel,
   activeValue,
+  activeValues,
   activeDisplayLabel,
   options,
   isOpen,
   onOpenChange,
   onSelect,
   onClear,
+  multiSelect = false,
 }: FilterDropdownProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -75,7 +79,10 @@ export function FilterDropdown({
     left: number;
     minWidth: number;
   } | null>(null);
-  const isActive = activeValue.length > 0;
+  const isActive =
+    activeValues !== undefined
+      ? activeValues.length > 0
+      : activeValue.length > 0;
 
   useLayoutEffect(() => {
     if (!isOpen || !containerRef.current) {
@@ -197,7 +204,10 @@ export function FilterDropdown({
               className="z-50 overflow-hidden rounded-xl border border-primary/10 bg-white py-1 shadow-md"
             >
               {options.map((option) => {
-                const selected = activeValue === option.value;
+                const selected =
+                  activeValues !== undefined
+                    ? activeValues.includes(option.value)
+                    : activeValue === option.value;
                 return (
                   <button
                     key={option.value}
@@ -207,7 +217,9 @@ export function FilterDropdown({
                     onMouseDown={(event) => event.stopPropagation()}
                     onClick={() => {
                       onSelect(option.value);
-                      onOpenChange(false);
+                      if (!multiSelect) {
+                        onOpenChange(false);
+                      }
                     }}
                     className={cn(
                       "flex w-full px-4 py-2.5 text-left text-sm transition-colors",

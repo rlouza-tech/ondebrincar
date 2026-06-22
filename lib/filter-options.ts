@@ -91,6 +91,22 @@ export function getActiveFiltersFromParams(
   const items: ActiveFilterItem[] = [];
 
   for (const key of FILTER_PARAM_KEYS) {
+    if (key === "bairro") {
+      const bairros = params.getAll("bairro").filter(Boolean);
+      if (bairros.length === 0) {
+        continue;
+      }
+      const label =
+        bairros.length === 1 ? bairros[0] : `Bairro (${bairros.length})`;
+      items.push({
+        key: "bairro",
+        value: bairros[0],
+        label,
+        srLabel: `Remover filtro Bairro`,
+      });
+      continue;
+    }
+
     const value = params.get(key);
     if (!value) {
       continue;
