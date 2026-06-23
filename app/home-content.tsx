@@ -66,7 +66,11 @@ export function HomeContent({ atracoes, bairros }: HomeContentProps) {
         <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {resultados.map((atracao) => (
             <li key={atracao.slug}>
-              <AtracaoCardLink atracao={atracao} filterRef={searchParams.toString()} />
+              <AtracaoCardLink
+                atracao={atracao}
+                filterRef={searchParams.toString()}
+                sempreDisponivel={filtros.data !== undefined && !atracao.proximaData}
+              />
             </li>
           ))}
         </ul>

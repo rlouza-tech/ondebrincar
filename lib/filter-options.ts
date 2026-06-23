@@ -32,12 +32,18 @@ export const AMBIENTE_OPTIONS: Array<{ label: string; value: IndoorOutdoor }> = 
   { label: "Ambos", value: "ambos" },
 ];
 
+export const DATA_OPTIONS = [
+  { label: "Este fim de semana", value: "fim-de-semana" },
+  { label: "Próximo fim de semana", value: "proximo-fim-de-semana" },
+] as const;
+
 export const FILTER_PARAM_KEYS = [
   "bairro",
   "idade",
   "categoria",
   "preco",
   "ambiente",
+  "data",
 ] as const;
 
 export type FilterParamKey = (typeof FILTER_PARAM_KEYS)[number];
@@ -48,6 +54,7 @@ export const FILTER_PARAM_LABELS: Record<FilterParamKey, string> = {
   categoria: "Categoria",
   preco: "Preço",
   ambiente: "Ambiente",
+  data: "Data",
 };
 
 export interface ActiveFilterItem {
@@ -79,6 +86,10 @@ export function getFilterDisplayLabel(paramKey: FilterParamKey, value: string): 
       }
       const ambiente = AMBIENTE_OPTIONS.find((item) => item.value === value);
       return ambiente?.label ?? value;
+    }
+    case "data": {
+      const data = DATA_OPTIONS.find((item) => item.value === value);
+      return data?.label ?? value;
     }
     default:
       return value;

@@ -34,7 +34,7 @@ export interface AttractionViewParams {
 }
 
 export interface FilterUsedParams {
-  filter_type: "neighborhood" | "age" | "category" | "price" | "environment";
+  filter_type: "neighborhood" | "age" | "category" | "price" | "environment" | "date";
   filter_value: string;
   active_filters_count: number;
   results_count?: number;

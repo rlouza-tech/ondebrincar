@@ -203,6 +203,20 @@ export interface FiltroBusca {
   categoria?: string;
   preco?: PrecoTipo;
   indoorOutdoor?: IndoorOutdoor;
+  data?: string;
+}
+
+export function getProximoFimDeSemana(offset = 0): { inicio: Date; fim: Date } {
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  const diaSemana = hoje.getDay(); // 0=dom, 6=sáb
+  const diasAteSabado = (6 - diaSemana + 7) % 7 || 7;
+  const sabado = new Date(hoje);
+  sabado.setDate(hoje.getDate() + diasAteSabado + offset * 7);
+  const domingo = new Date(sabado);
+  domingo.setDate(sabado.getDate() + 1);
+  domingo.setHours(23, 59, 59, 999);
+  return { inicio: sabado, fim: domingo };
 }
 
 import { FILTER_PARAM_KEYS } from "@/lib/filter-options";
@@ -236,6 +250,7 @@ export function filtrosFromSearchParams(params: URLSearchParams): FiltroBusca {
     categoria: params.get("categoria") ?? undefined,
     preco: parsePrecoFromParam(params.get("preco")),
     indoorOutdoor: parseAmbienteFromParam(params.get("ambiente")),
+    data: params.get("data") ?? undefined,
   };
 }
 
@@ -277,6 +292,18 @@ export function filtrarAtracoes(
 
     if (filtros.indoorOutdoor && atracao.indoorOutdoor !== filtros.indoorOutdoor) {
       return false;
+    }
+
+    if (filtros.data) {
+      const offset = filtros.data === "proximo-fim-de-semana" ? 1 : 0;
+      const { inicio, fim } = getProximoFimDeSemana(offset);
+      if (atracao.proximaData) {
+        const dataAtracao = new Date(`${atracao.proximaData}T12:00:00`);
+        if (dataAtracao < inicio || dataAtracao > fim) {
+          return false;
+        }
+      }
+      // sem proximaData → permanente, sempre inclui
     }
 
     return true;
