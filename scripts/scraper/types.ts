@@ -15,6 +15,8 @@ export interface LinhaEnriquecida {
   idade_maxima: string;
   preco_inteira_centavos: string;
   url_ingresso: string;
+  /** true quando há múltiplas faixas de preço (ex: lotes, early bird, dias avulsos vs semana). */
+  preco_a_partir?: boolean;
 }
 
 export interface ListingPreview {

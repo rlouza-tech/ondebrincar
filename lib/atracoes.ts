@@ -57,6 +57,7 @@ function mapSanityAtracao(document: SanityAtracaoDocument): Atracao {
     bairro: document.bairro,
     precoTipo: document.preco === 0 ? "gratuito" : "pago",
     precoLabel: precoLabelFromCents(document.preco),
+    precoAPartir: document.preco_a_partir ?? false,
     indoorOutdoor: document.indoor_outdoor,
     tipoProgramacao: document.tipo_programacao ?? "permanente",
     programacaoTexto:
@@ -194,7 +195,10 @@ export function formatPreco(atracao: Atracao): string {
   if (atracao.precoTipo === "gratuito") {
     return "Gratuito";
   }
-  return atracao.precoLabel ?? "Pago";
+  if (!atracao.precoLabel) {
+    return "Pago";
+  }
+  return atracao.precoAPartir ? `A partir de ${atracao.precoLabel}` : atracao.precoLabel;
 }
 
 export interface FiltroBusca {

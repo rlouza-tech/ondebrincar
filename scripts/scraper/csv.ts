@@ -19,6 +19,7 @@ export const CSV_COLUMNS: Array<keyof LinhaEnriquecida> = [
   "idade_maxima",
   "preco_inteira_centavos",
   "url_ingresso",
+  "preco_a_partir",
 ];
 
 export async function writeScrapedCsv(

@@ -189,6 +189,7 @@ function buildLinhaEnriquecida(
     ai_generated: meta.ai_generated,
     ai_model: meta.ai_model,
     pipeline_failed: meta.pipeline_failed,
+    preco_a_partir: linha.preco_a_partir ?? false,
   };
 }
 
