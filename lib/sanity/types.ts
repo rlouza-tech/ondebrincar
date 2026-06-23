@@ -12,6 +12,8 @@ export interface Atracao {
   bairro: string;
   precoTipo: PrecoTipo;
   precoLabel?: string;
+  /** true quando há múltiplas faixas de preço — exibe "A partir de R$X" no site. */
+  precoAPartir?: boolean;
   indoorOutdoor: IndoorOutdoor;
   tipoProgramacao: TipoProgramacao;
   programacaoTexto: string;
@@ -32,6 +34,7 @@ export interface SanityAtracaoDocument {
   idade_max: number;
   duracao_min?: number;
   preco?: number | null;
+  preco_a_partir?: boolean;
   link_compra?: string;
   partner?: "sympla" | "eventim" | "outro";
   bairro: string;

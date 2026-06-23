@@ -26,6 +26,15 @@ const OPTIONAL_V2_COLUMNS: Array<keyof LinhaInput> = [
   "url_ingresso",
 ];
 
+/**
+ * Colunas booleanas opcionais do scraper v2.
+ * CSV serializa como "true"/"false" — precisam de parsing explícito
+ * para evitar que a string "false" seja tratada como truthy.
+ */
+const BOOLEAN_V2_COLUMNS: Array<keyof LinhaInput> = [
+  "preco_a_partir",
+];
+
 export async function readCSV(path: string): Promise<LinhaInput[]> {
   return new Promise((resolve, reject) => {
     const rows: LinhaInput[] = [];
@@ -48,6 +57,10 @@ export async function readCSV(path: string): Promise<LinhaInput[]> {
           if (value) {
             row[column] = value;
           }
+        }
+        for (const column of BOOLEAN_V2_COLUMNS) {
+          // "true" → true; qualquer outra coisa (inclusive "false" ou vazio) → false
+          (row as Record<string, unknown>)[column] = record[column]?.trim() === "true";
         }
         rows.push(row as unknown as LinhaInput);
       })

@@ -130,6 +130,61 @@ export function parseDescricao(raw: string | null | undefined): string | null {
 }
 
 // ---------------------------------------------------------------------------
+// Extração de preços via Playwright (roda no browser)
+// ---------------------------------------------------------------------------
+
+/**
+ * Extrai preços de uma página de evento Sympla já carregada.
+ * Busca padrões "R$ X,XX" no container de tickets.
+ * Retorna o menor preço em centavos e se há múltiplas faixas.
+ */
+export async function extrairPrecos(
+  page: import("playwright").Page
+): Promise<{ minPriceCents: number | null; multiplasFaixas: boolean }> {
+  return page.evaluate(() => {
+    function parsePriceCents(text: string): number | null {
+      const match = text.match(/R\$\s*([\d.]+(?:,\d{2})?)/);
+      if (!match) return null;
+      const normalized = match[1].replace(/\./g, "").replace(",", ".");
+      const value = Number.parseFloat(normalized);
+      if (Number.isNaN(value) || value <= 0 || value > 100000) return null;
+      return Math.round(value * 100);
+    }
+
+    // Tenta escopar a busca à seção de tickets (mais preciso)
+    const ticketSelectors = [
+      "[data-testid*='ticket']",
+      "[data-testid*='lot']",
+      "[class*='TicketList']",
+      "[class*='ticket-list']",
+      "[class*='LotList']",
+      // "Escolha uma opção" é o título da seção de tickets no Sympla
+      "section:has(h2)",
+    ];
+
+    let searchEl: Element = document.body;
+    for (const sel of ticketSelectors) {
+      try {
+        const el = document.querySelector(sel);
+        if (el) { searchEl = el; break; }
+      } catch { /* seletor inválido neste browser */ }
+    }
+
+    const text = (searchEl as HTMLElement).innerText ?? "";
+    const matches = [...text.matchAll(/R\$\s*([\d.]+(?:,\d{2})?)/g)];
+    const prices: number[] = [];
+    for (const m of matches) {
+      const cents = parsePriceCents(`R$ ${m[1]}`);
+      if (cents !== null) prices.push(cents);
+    }
+
+    if (prices.length === 0) return { minPriceCents: null, multiplasFaixas: false };
+    const unique = [...new Set(prices)];
+    return { minPriceCents: Math.min(...unique), multiplasFaixas: unique.length > 1 };
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Extração via Playwright (roda no browser)
 // ---------------------------------------------------------------------------
 
@@ -187,6 +242,10 @@ export interface SymplarRawEvent {
   descricao_raw: string;
   preco_raw: string;
   revisao_manual?: boolean;
+  /** Menor preço disponível na página do evento (em centavos). Vazio se não detectado. */
+  preco_inteira_centavos?: string;
+  /** true quando há múltiplas faixas de preço (lotes, meia/inteira, etc.). */
+  preco_a_partir?: boolean;
 }
 
 async function main() {
@@ -248,11 +307,18 @@ async function main() {
 
         const { texto, seletor } = await extrairDescricao(page);
         const descricaoLimpa = parseDescricao(texto);
+        const { minPriceCents, multiplasFaixas } = await extrairPrecos(page);
+
+        // Campos de preço extraídos da página do evento
+        const precoExtra: Pick<SymplarRawEvent, "preco_inteira_centavos" | "preco_a_partir"> = {
+          ...(minPriceCents !== null ? { preco_inteira_centavos: String(minPriceCents) } : {}),
+          preco_a_partir: multiplasFaixas,
+        };
 
         if (descricaoLimpa) {
           const evEnriquecido = descricaoLimpa.length > ev.descricao_raw.length
-            ? { ...ev, descricao_raw: descricaoLimpa }
-            : ev;
+            ? { ...ev, descricao_raw: descricaoLimpa, ...precoExtra }
+            : { ...ev, ...precoExtra };
 
           if (!isConteudoInfantil(evEnriquecido.nome, evEnriquecido.descricao_raw)) {
             process.stdout.write(`🚫 descartado (não infantil)\n`);
@@ -261,7 +327,8 @@ async function main() {
             const revisao = precisaRevisaoManual(evEnriquecido.nome);
             const evFinal = revisao ? { ...evEnriquecido, revisao_manual: true } : evEnriquecido;
             if (descricaoLimpa.length > ev.descricao_raw.length) {
-              process.stdout.write(`✅ (${seletor}, ${descricaoLimpa.length} chars)${revisao ? " 🔍 revisão manual" : ""}\n`);
+              const precoLog = minPriceCents ? ` R$${(minPriceCents/100).toFixed(0)}${multiplasFaixas ? "+" : ""}` : "";
+              process.stdout.write(`✅ (${seletor}, ${descricaoLimpa.length} chars${precoLog})${revisao ? " 🔍 revisão manual" : ""}\n`);
               nEnriquecidos++;
             } else {
               process.stdout.write(`→ sem melhora${revisao ? " 🔍 revisão manual" : ""}\n`);
@@ -277,7 +344,7 @@ async function main() {
             nDescartados++;
           } else {
             const revisao = precisaRevisaoManual(ev.nome);
-            const evFinal = revisao ? { ...ev, revisao_manual: true } : ev;
+            const evFinal = revisao ? { ...ev, ...precoExtra, revisao_manual: true } : { ...ev, ...precoExtra };
             process.stdout.write(`⚠ nenhum seletor retornou ≥${MIN_DESCRICAO_CHARS} chars${revisao ? " 🔍 revisão manual" : ""}\n`);
             resultados.push(evFinal);
             nFalhas++;

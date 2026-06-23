@@ -85,6 +85,8 @@ function mapToLinha(
         ? String(fullPrice)          // fallback: sem desconto, fullPrice == salePrice
         : ld.offer_price_centavos,
     url_ingresso: productUrl,
+    // max_discount > 0 indica desconto estrutural de lote — há múltiplas faixas de preço.
+    preco_a_partir: (maxDiscount ?? 0) > 0,
   };
 }
 

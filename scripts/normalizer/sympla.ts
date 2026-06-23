@@ -47,6 +47,8 @@ interface SymplaRawItem {
   link: string;
   descricao_raw: string;
   preco_raw: string;
+  preco_inteira_centavos?: string;
+  preco_a_partir?: boolean;
 }
 
 export async function normalizeSympla(
@@ -69,7 +71,8 @@ export async function normalizeSympla(
     duracao_minutos: "",
     idade_minima: "",
     idade_maxima: "",
-    preco_inteira_centavos: "",
+    preco_inteira_centavos: item.preco_inteira_centavos ?? "",
     url_ingresso: item.link,
+    preco_a_partir: item.preco_a_partir ?? false,
   }));
 }

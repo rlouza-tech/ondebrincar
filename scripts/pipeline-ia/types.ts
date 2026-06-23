@@ -41,6 +41,8 @@ export interface LinhaInput {
   idade_maxima?: string;
   preco_inteira_centavos?: string;
   url_ingresso?: string;
+  /** true quando há múltiplas faixas de preço na fonte (lotes, early bird, meia/inteira). */
+  preco_a_partir?: boolean;
 }
 
 export interface RespostaGemini {
@@ -90,6 +92,8 @@ export interface LinhaEnriquecida {
   ai_generated: boolean;
   ai_model: string | null;
   pipeline_failed: boolean;
+  /** true quando há múltiplas faixas de preço na fonte. Propagado sem envolver Gemini. */
+  preco_a_partir: boolean;
 }
 
 export interface EnrichResult {

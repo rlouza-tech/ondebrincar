@@ -37,6 +37,7 @@ export interface SanityAtracaoDocInput {
   ai_generated: boolean;
   ai_model?: string;
   pipeline_failed: boolean;
+  preco_a_partir?: boolean;
 }
 
 export type ImportItemStatus = "created" | "updated" | "skipped" | "error";

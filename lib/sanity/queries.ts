@@ -9,6 +9,7 @@ const atracaoProjection = groq`
   idade_max,
   duracao_min,
   preco,
+  preco_a_partir,
   link_compra,
   partner,
   bairro,

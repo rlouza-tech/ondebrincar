@@ -92,6 +92,14 @@ export const atracao = defineType({
       validation: (Rule) => Rule.integer().min(0),
     }),
     defineField({
+      name: "preco_a_partir",
+      title: "Preço 'A partir de'",
+      type: "boolean",
+      description:
+        "Marcar quando há múltiplas faixas de preço (lotes, early bird, meia/inteira). Exibe 'A partir de R$X' no site.",
+      initialValue: false,
+    }),
+    defineField({
       name: "link_compra",
       title: "Link de compra",
       type: "url",
