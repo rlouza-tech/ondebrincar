@@ -10,6 +10,7 @@ import {
 import { trackEvent, type FilterUsedParams } from "@/lib/analytics";
 import {
   CATEGORIA_OPTIONS,
+  DATA_OPTIONS,
   FAIXAS_ETARIAS,
   getFilterDisplayLabel,
 } from "@/lib/filter-options";
@@ -26,7 +27,7 @@ interface HomeFiltersProps {
   atracoes: Atracao[];
 }
 
-type PrimaryFilterKey = "idade" | "bairro" | "categoria";
+type PrimaryFilterKey = "idade" | "bairro" | "categoria" | "data";
 
 const FILTER_TYPE_BY_PARAM: Record<string, FilterUsedParams["filter_type"]> = {
   bairro: "neighborhood",
@@ -34,6 +35,7 @@ const FILTER_TYPE_BY_PARAM: Record<string, FilterUsedParams["filter_type"]> = {
   categoria: "category",
   preco: "price",
   ambiente: "environment",
+  data: "date",
 };
 
 export function HomeFilters({ bairros, atracoes }: HomeFiltersProps) {
@@ -50,6 +52,7 @@ export function HomeFilters({ bairros, atracoes }: HomeFiltersProps) {
   const categoriaAtiva = searchParams.get("categoria") ?? "";
   const precoAtivo = searchParams.get("preco") ?? "";
   const ambienteAtivo = searchParams.get("ambiente") ?? "";
+  const dataAtiva = searchParams.get("data") ?? "";
 
   const bairroDisplayLabel =
     bairrosAtivos.length === 1
@@ -183,6 +186,19 @@ export function HomeFilters({ bairros, atracoes }: HomeFiltersProps) {
           onOpenChange={(open) => handleDropdownOpen("categoria", open)}
           onSelect={(value) => toggleParam("categoria", value, categoriaAtiva)}
           onClear={() => clearParam("categoria")}
+        />
+
+        <FilterDropdown
+          pillLabel="Data"
+          activeValue={dataAtiva}
+          activeDisplayLabel={
+            dataAtiva ? getFilterDisplayLabel("data", dataAtiva) : ""
+          }
+          options={DATA_OPTIONS}
+          isOpen={openDropdown === "data"}
+          onOpenChange={(open) => handleDropdownOpen("data", open)}
+          onSelect={(value) => toggleParam("data", value, dataAtiva)}
+          onClear={() => clearParam("data")}
         />
 
         <button

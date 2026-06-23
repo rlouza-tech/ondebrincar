@@ -16,9 +16,10 @@ export interface AtracaoCardLinkProps {
   atracao: Atracao;
   className?: string;
   filterRef?: string;
+  sempreDisponivel?: boolean;
 }
 
-export function AtracaoCardLink({ atracao, className, filterRef }: AtracaoCardLinkProps) {
+export function AtracaoCardLink({ atracao, className, filterRef, sempreDisponivel }: AtracaoCardLinkProps) {
   const [favorite, setFavorite] = useState(false);
   const cardRef = useAttractionView(atracao, "listing");
 
@@ -60,6 +61,7 @@ export function AtracaoCardLink({ atracao, className, filterRef }: AtracaoCardLi
           imageAlt={`Foto: ${atracao.titulo}`}
           proximaData={atracao.proximaData}
           categoria={atracao.categoria}
+          sempreDisponivel={sempreDisponivel}
           favorite={favorite}
           onFavoriteToggle={handleFavoriteToggle}
           onShareClick={handleShareClick}

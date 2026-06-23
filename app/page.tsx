@@ -12,6 +12,7 @@ interface HomePageProps {
     categoria?: string;
     preco?: string;
     ambiente?: string;
+    data?: string;
   };
 }
 

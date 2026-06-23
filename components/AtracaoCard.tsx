@@ -13,6 +13,7 @@ export interface AtracaoCardProps extends HTMLAttributes<HTMLDivElement> {
   imageAlt: string;
   proximaData?: string | null;
   categoria?: string | null;
+  sempreDisponivel?: boolean;
   favorite?: boolean;
   onFavoriteToggle?: (event: MouseEvent<HTMLButtonElement>) => void;
   onShareClick?: (event: MouseEvent<HTMLButtonElement>) => void;
@@ -102,6 +103,7 @@ export function AtracaoCard({
   imageAlt,
   proximaData,
   categoria,
+  sempreDisponivel = false,
   favorite = false,
   onFavoriteToggle,
   onShareClick,
@@ -181,10 +183,24 @@ export function AtracaoCard({
           {name}
         </h3>
         <p className="truncate text-sm text-secondary">
-          {[ageRange, proximaData ? formatProximaData(proximaData) : null, price]
-            .filter(Boolean)
-            .join(" · ")}
+          {[ageRange, price].filter(Boolean).join(" · ")}
         </p>
+        {sempreDisponivel ? (
+          <span
+            className="inline-block rounded-full border px-2 py-0.5 text-xs font-medium"
+            style={{ background: "#F0FBD9", borderColor: "#BEF264", color: "#3F6212" }}
+          >
+            Sempre disponível
+          </span>
+        ) : proximaData ? (
+          <span
+            className="inline-block rounded-full border px-2 py-0.5 text-xs font-medium"
+            style={{ background: "#E0F2FE", borderColor: "#BAE6FD", color: "#0369A1" }}
+            title="data aproximada — pode mudar"
+          >
+            {formatProximaData(proximaData)}
+          </span>
+        ) : null}
       </div>
     </Card>
   );
