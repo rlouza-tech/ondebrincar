@@ -5,7 +5,7 @@ import { mkdir, readdir, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { parse } from "csv-parse";
 import { hasSanityConfig, sanityClient, sanityWriteClient } from "@/lib/sanity/client";
-import { buildImagePrompt } from "@/lib/prompts/image-adapter";
+import { buildImagePrompt, buildImagePromptAnonymous } from "@/lib/prompts/image-adapter";
 import { generateImage } from "@/scripts/pipeline-ia/imagen";
 import { toSanityDoc } from "./mapper";
 import type {
@@ -237,28 +237,43 @@ function timestampForFilename(iso: string): string {
 /**
  * Gera imagem via Gemini e faz upload como asset no Sanity.
  * Idempotente: pula se o draft já tiver campo foto definido.
- * Em caso de falha, loga image_gen_failed: true e mantém placeholder SVG.
+ *
+ * Fluxo de fallback:
+ *   1. Tenta gerar com prompt completo (inclui nome da atração via buildPlaca).
+ *   2. Se falhar (ex: recusa por IP protegido), tenta com prompt anônimo
+ *      via buildImagePromptAnonymous — sem referência ao nome.
+ *   3. Se ambos falharem, loga image_gen_failed: true e mantém placeholder.
+ *
+ * Exportada para permitir testes unitários.
  */
-async function generateAndAttachImage(
+export async function generateAndAttachImage(
   linha: LinhaEnriquecida,
   draftId: string,
-): Promise<{ failed: boolean; error?: string }> {
+): Promise<{ failed: boolean; fallback: boolean; error?: string }> {
   // Verifica idempotência: pula se foto já existe no draft
   // Drafts exigem cliente autenticado — usa sanityWriteClient
   const existingDoc = await sanityWriteClient.getDocument(draftId);
   if (existingDoc?.foto) {
     console.log(`  ↩ imagem já existe, pulando geração (${linha.slug})`);
-    return { failed: false };
+    return { failed: false, fallback: false };
   }
 
-  const prompt = buildImagePrompt(linha.nome, linha.categoria, linha.descricao);
+  const primaryPrompt = buildImagePrompt(linha.nome, linha.categoria, linha.descricao);
 
   console.log(`  🎨 gerando imagem para ${linha.slug}...`);
-  const result = await generateImage(prompt);
+  let result = await generateImage(primaryPrompt);
+  let usedFallback = false;
 
   if (result.failed || !result.imageBuffer) {
-    console.log(`  ✗ image_gen_failed: ${result.error}`);
-    return { failed: true, error: result.error };
+    console.log(`  ⚠ image_gen_primary_failed: ${result.error} — tentando fallback anônimo...`);
+    const anonymousPrompt = buildImagePromptAnonymous(linha.categoria, linha.descricao);
+    result = await generateImage(anonymousPrompt);
+    usedFallback = true;
+  }
+
+  if (result.failed || !result.imageBuffer) {
+    console.log(`  ✗ image_gen_failed (primary + fallback): ${result.error}`);
+    return { failed: true, fallback: usedFallback, error: result.error };
   }
 
   try {
@@ -284,12 +299,16 @@ async function generateAndAttachImage(
       })
       .commit();
 
-    console.log(`  ✓ imagem anexada ao draft (${asset._id})`);
-    return { failed: false };
+    if (usedFallback) {
+      console.log(`  ✓ imagem (fallback anônimo) anexada ao draft (${asset._id})`);
+    } else {
+      console.log(`  ✓ imagem anexada ao draft (${asset._id})`);
+    }
+    return { failed: false, fallback: usedFallback };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Erro desconhecido";
     console.log(`  ✗ falha no upload/patch: ${message}`);
-    return { failed: true, error: message };
+    return { failed: true, fallback: usedFallback, error: message };
   }
 }
 
@@ -453,6 +472,7 @@ async function main() {
         status: existingDraft ? "updated" : "created",
         image_gen_failed: imageResult.failed,
         image_gen_error: imageResult.error,
+        image_gen_fallback: imageResult.fallback || undefined,
       };
 
       if (imageResult.failed) {

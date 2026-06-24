@@ -18,7 +18,7 @@ const STYLE_SUFFIX =
  */
 const CENA_BASE: Record<Categoria, string> = {
   teatro:
-    "palco de teatro com cortinas de veludo vermelho abertas, luzes de ribalta amarelas na beira do palco, cenário pintado ao fundo, atores fantasiados ao centro, plateia de crianças aplaudindo nas primeiras fileiras",
+    "palco de teatro vazio iluminado com cortinas de veludo vermelho abertas, luzes de ribalta douradas na beira do palco, cenário pintado com castelo e floresta ao fundo, props cênicos coloridos espalhados, holofotes apontados para o centro, cadeiras vazias da plateia em primeiro plano",
   parque:
     "parque ao ar livre em dia ensolarado, escorregador colorido e trepa-trepa à esquerda, gramado verde com flores, céu azul com nuvens fofas, balanços ao fundo, borboletas voando, palmeiras e árvores frondosas, silhueta de prédios do Rio ao horizonte",
   museu:
@@ -31,6 +31,14 @@ const CENA_BASE: Record<Categoria, string> = {
     "palco festivo coberto de balões coloridos flutuando, confetes caindo do teto, bandeirolas e faixas de festa espalhadas, luzes cintilantes, clima de celebração e alegria, plateia animada ao fundo",
   praia:
     "praia carioca em dia de sol, areia branca e mar azul calmo, crianças brincando na beira d'água, coqueiros inclinados, pipa voando ao longe, quiosque colorido ao fundo",
+  "colonia-de-ferias":
+    "espaço de colônia de férias ao ar livre com crianças em atividades diversas, monitores com coletes coloridos, bandeiras e faixas decorativas, gramado verde e sol brilhante, barracas e estações de atividade ao fundo",
+  futebol:
+    "campo de futebol infantil com gramado verde bem cuidado, goleiras coloridas, crianças uniformizadas disputando a bola no centro do campo, sol brilhante, torcida de pais nas arquibancadas ao fundo",
+  restaurante:
+    "restaurante familiar acolhedor com mesas redondas coloridas, cadeiras alegres, decoração com ilustrações infantis nas paredes, balcão iluminado ao fundo, ambiente festivo e convidativo",
+  "festa-junina":
+    "festa junina ao ar livre com bandeirolas coloridas triangulares cruzando o espaço, fogueira decorativa ao centro, barracas de comida típica, crianças com roupas xadrez e chapéu de palha dançando quadrilha",
 };
 
 /**
@@ -46,6 +54,10 @@ function buildPlaca(nome: string, categoria: Categoria): string {
     "atividade-extra": `lousa verde ao fundo com o texto "${nome}" escrito em letras coloridas`,
     evento: `faixa festiva no topo com o texto "${nome}"`,
     praia: `placa de madeira na areia com o texto "${nome}"`,
+    "colonia-de-ferias": `faixa de lona colorida suspensa na entrada com o texto "${nome}"`,
+    futebol: `placa de madeira na lateral do campo com o texto "${nome}"`,
+    restaurante: `quadro negro em cavalete na entrada com o texto "${nome}" escrito em letras estilizadas`,
+    "festa-junina": `faixa de bandeirolas com o texto "${nome}" no centro`,
   };
   return placas[categoria];
 }
@@ -77,4 +89,22 @@ export function buildImagePrompt(
   const contexto = extrairContexto(descricao);
 
   return `Crie uma ilustração com a seguinte cena: ${cena}, com ${placa}.${contexto} ${STYLE_SUFFIX}`;
+}
+
+/**
+ * Constrói o prompt visual sem nenhuma referência ao nome da atração.
+ * Usado como fallback quando a geração com nome falha (ex: recusa por IP protegido).
+ * A cena é genérica por categoria — sem letreiro, sem placa.
+ *
+ * @param categoria - Categoria editorial (define a cena base)
+ * @param descricao - Descrição da atração (opcional, enriquece o contexto)
+ */
+export function buildImagePromptAnonymous(
+  categoria: Categoria,
+  descricao?: string,
+): string {
+  const cena = CENA_BASE[categoria] ?? CENA_BASE["evento"];
+  const contexto = extrairContexto(descricao);
+
+  return `Crie uma ilustração com a seguinte cena: ${cena}.${contexto} ${STYLE_SUFFIX}`;
 }

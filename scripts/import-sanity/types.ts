@@ -48,6 +48,8 @@ export interface ImportReportItem {
   reason?: string;
   image_gen_failed?: boolean;
   image_gen_error?: string;
+  /** true quando a imagem foi gerada via fallback anônimo (sem nome da atração) */
+  image_gen_fallback?: boolean;
 }
 
 export interface ImportReport {
