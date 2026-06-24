@@ -39,11 +39,15 @@ export interface CostSummary {
   custo_estimado_mensal_60_fichas_reais: number;
 }
 
-export function estimateCostBrl(usage: TokenUsage): number {
+export function estimateCostUsd(usage: TokenUsage): number {
   const usd =
     usage.input_tokens * INPUT_USD_PER_TOKEN +
     usage.output_tokens * OUTPUT_USD_PER_TOKEN;
-  return Number((usd * USD_TO_BRL).toFixed(6));
+  return Number(usd.toFixed(8));
+}
+
+export function estimateCostBrl(usage: TokenUsage): number {
+  return Number((estimateCostUsd(usage) * USD_TO_BRL).toFixed(6));
 }
 
 /** Extrai usageMetadata da resposta @google/genai (shape pode variar). */

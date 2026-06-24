@@ -118,6 +118,23 @@ async function fetchExistingSlugs(): Promise<Set<string>> {
 }
 
 // ---------------------------------------------------------------------------
+// Buscar slugs da lista negra (status = rejeitado)
+// Fichas rejeitadas são ignoradas silenciosamente — sem log de erro.
+// ---------------------------------------------------------------------------
+
+async function fetchRejectedSlugs(): Promise<Set<string>> {
+  const docs = await sanityWriteClient.fetch<Array<{ slug?: { current?: string } }>>(
+    `*[_type == "atracao" && status == "rejeitado"]{slug}`,
+  );
+  const slugs = new Set<string>();
+  for (const doc of docs) {
+    const s = doc.slug?.current;
+    if (s) slugs.add(s);
+  }
+  return slugs;
+}
+
+// ---------------------------------------------------------------------------
 // main
 // ---------------------------------------------------------------------------
 
@@ -133,10 +150,16 @@ async function main() {
   const candidates = await loadCandidates(source);
 
   console.log("Buscando slugs existentes no Sanity...");
-  const existingSlugs = await fetchExistingSlugs();
-  console.log(`Slugs no Sanity: ${existingSlugs.size}`);
+  const [existingSlugs, rejectedSlugs] = await Promise.all([
+    fetchExistingSlugs(),
+    fetchRejectedSlugs(),
+  ]);
+  console.log(`Slugs no Sanity: ${existingSlugs.size} (${rejectedSlugs.size} rejeitadas na lista negra)`);
 
-  const novas = candidates.filter((c) => !existingSlugs.has(c.slug));
+  // Filtra candidatos: exclui slugs já existentes E slugs rejeitados (silencioso).
+  const novas = candidates.filter(
+    (c) => !existingSlugs.has(c.slug) && !rejectedSlugs.has(c.slug),
+  );
 
   console.log("");
 

@@ -153,6 +153,59 @@ function extrairDataDaFonte(texto: string): string | null {
 }
 
 /**
+ * Remove dias passados de sequências de datas no texto de programação.
+ *
+ * Exemplo (hoje = 16/06):
+ *   "Datas: 13, 14, 20, 21, 27 e 28 de junho."
+ *   → "Datas: 20, 21, 27 e 28 de junho."
+ *
+ * Ranges ("de 13 a 28 de junho"): mantidos enquanto a data-fim >= hoje.
+ * Sequências em que todos os dias já passaram: removidas inteiramente.
+ */
+function limparProgramacaoTexto(texto: string, hoje: string): string {
+  const ano = new Date().getFullYear();
+
+  // Ranges "de DD a DD de mês": remove se fim já passou; mantém caso contrário
+  let resultado = texto.replace(
+    /\bde\s+(\d{1,2})\s+a\s+(\d{1,2})\s+de\s+([a-záéíóúâêîôûãõç]+)/gi,
+    (match, _d1, d2, nomeMes) => {
+      const mes = MESES[nomeMes.toLowerCase().slice(0, 3)] ?? MESES[nomeMes.toLowerCase()];
+      if (!mes) return match;
+      const dFim = toISO(parseInt(d2, 10), mes, ano);
+      return dFim && dFim >= hoje ? match : "";
+    },
+  );
+
+  // Sequências "D1, D2 e D3 de mês": filtra dias passados, reconstrói
+  resultado = resultado.replace(
+    /\b((?:\d{1,2}(?:,\s*|\s+e\s+))*\d{1,2})\s+de\s+([a-záéíóúâêîôûãõç]+)/gi,
+    (match, diasStr: string, nomeMes: string) => {
+      const mes = MESES[nomeMes.toLowerCase().slice(0, 3)] ?? MESES[nomeMes.toLowerCase()];
+      if (!mes) return match;
+      const todos = (diasStr.match(/\d{1,2}/g) ?? []).map(Number);
+      const futuros = todos.filter((d) => {
+        const iso = toISO(d, mes, ano);
+        return iso !== null && iso >= hoje;
+      });
+      if (futuros.length === 0) return "";
+      if (futuros.length === todos.length) return match;
+      const partes =
+        futuros.length === 1
+          ? `${futuros[0]} de ${nomeMes}`
+          : futuros.slice(0, -1).join(", ") + " e " + futuros[futuros.length - 1] + " de " + nomeMes;
+      return partes;
+    },
+  );
+
+  // Limpa artefatos: espaços duplos, vírgulas antes de ponto, pontos duplos
+  return resultado
+    .replace(/[,;]\s*\./g, ".")
+    .replace(/\.\s*\./g, ".")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
+/**
  * Varre todo o texto e retorna a primeira data futura (>= hoje) encontrada.
  *
  * Lida com três padrões:
@@ -307,6 +360,29 @@ function compararFicha(
 }
 
 // ---------------------------------------------------------------------------
+// Buscar fichas expiradas no Sanity que não estão na fonte atual
+// ---------------------------------------------------------------------------
+
+async function fetchFichasExpiradasSemFonte(
+  excluirSlugs: string[],
+  hoje: string,
+): Promise<SanityFicha[]> {
+  const docs = await sanityWriteClient.fetch<SanityFicha[]>(
+    `*[_type == "atracao" && !(_id in path("drafts.**")) && defined(proxima_data) && proxima_data < $hoje]{
+      _id,
+      "slug": slug.current,
+      preco,
+      proxima_data,
+      descricao,
+      programacao_texto,
+      link_compra
+    }`,
+    { hoje },
+  );
+  return docs.filter((d) => !excluirSlugs.includes(d.slug));
+}
+
+// ---------------------------------------------------------------------------
 // Carregar candidatos
 // ---------------------------------------------------------------------------
 
@@ -340,6 +416,8 @@ async function main() {
     slug: buildSlugFromParts(r.nome, r.venue, r.bairro),
   }));
 
+  const hoje = new Date().toISOString().slice(0, 10);
+
   console.log("Buscando fichas publicadas no Sanity...");
   const fichasSanity = await fetchFichasSanity(fichasComSlug.map((f) => f.slug));
   console.log(`Fichas encontradas no Sanity (publicadas): ${fichasSanity.size}`);
@@ -347,12 +425,17 @@ async function main() {
   const emComum = fichasComSlug.filter((f) => fichasSanity.has(f.slug));
   console.log(`Fichas em comum (fonte ∩ Sanity): ${emComum.length}`);
 
-  if (emComum.length === 0) {
-    console.log("\nNenhuma ficha da fonte encontrada no Sanity para comparar.");
+  // Fichas com data expirada no Sanity que não estão na fonte atual (ex: removidas do CSV)
+  const slugsEmComum = emComum.map((f) => f.slug);
+  console.log("Buscando fichas expiradas no Sanity fora da fonte atual...");
+  const fichasExpiradasSemFonte = await fetchFichasExpiradasSemFonte(slugsEmComum, hoje);
+  console.log(`Fichas expiradas fora da fonte: ${fichasExpiradasSemFonte.length}`);
+
+  if (emComum.length === 0 && fichasExpiradasSemFonte.length === 0) {
+    console.log("\nNenhuma ficha para comparar.");
     process.exit(0);
   }
 
-  const hoje = new Date().toISOString().slice(0, 10);
   const expiradas: FichaExpirada[] = [];
   const divergencias: Divergencia[] = [];
 
@@ -360,7 +443,6 @@ async function main() {
     const sanity = fichasSanity.get(slug)!;
 
     if (sanity.proxima_data && sanity.proxima_data.slice(0, 10) < hoje) {
-      // Ficha expirada — extrair sugestão do programacao_texto
       const prog = sanity.programacao_texto ?? "";
       const sugestao = extrairDataFutura(prog, hoje);
       expiradas.push({
@@ -376,6 +458,21 @@ async function main() {
       const divs = compararFicha(slug, input, sanity, hoje);
       divergencias.push(...divs);
     }
+  }
+
+  // Fichas expiradas sem fonte — sem link_fonte (não estão no CSV atual)
+  for (const sanity of fichasExpiradasSemFonte) {
+    const prog = sanity.programacao_texto ?? "";
+    const sugestao = extrairDataFutura(prog, hoje);
+    expiradas.push({
+      slug: sanity.slug,
+      _id: sanity._id,
+      link_fonte: "",
+      link_compra: sanity.link_compra ?? "",
+      data_sanity: (sanity.proxima_data ?? "").slice(0, 10),
+      programacao_texto: prog || "(vazio)",
+      sugestao,
+    });
   }
 
   // ── Seção 1: Fichas expiradas ──────────────────────────────────────────────
@@ -413,8 +510,22 @@ async function main() {
       let falhas = 0;
       for (const f of comSugestao) {
         try {
-          await sanityWriteClient.patch(f._id).set({ proxima_data: f.sugestao }).commit();
-          console.log(`  ✅ ${f.slug} → ${f.sugestao}`);
+          const progOriginal = f.programacao_texto === "(vazio)" ? "" : f.programacao_texto;
+          const progLimpo = progOriginal ? limparProgramacaoTexto(progOriginal, hoje) : "";
+          const textoMudou = progLimpo && progLimpo !== progOriginal;
+
+          const patch = sanityWriteClient.patch(f._id).set({ proxima_data: f.sugestao });
+          if (textoMudou) patch.set({ programacao_texto: progLimpo });
+          await patch.commit();
+
+          const detalhe = textoMudou
+            ? `→ ${f.sugestao}  +  programacao_texto atualizado`
+            : `→ ${f.sugestao}`;
+          console.log(`  ✅ ${f.slug}  ${detalhe}`);
+          if (textoMudou) {
+            console.log(`     antes: "${progOriginal}"`);
+            console.log(`     depois: "${progLimpo}"`);
+          }
           corrigidas++;
         } catch (err) {
           console.log(`  ❌ ${f.slug} — erro: ${err instanceof Error ? err.message : err}`);

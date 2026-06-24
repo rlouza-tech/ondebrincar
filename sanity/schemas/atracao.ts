@@ -161,6 +161,7 @@ export const atracao = defineType({
           { title: "Encerrada", value: "encerrada" },
           { title: "Em obras", value: "em_obras" },
           { title: "Esgotada", value: "esgotada" },
+          { title: "⛔ Rejeitada (fora de escopo)", value: "rejeitado" },
         ],
         layout: "radio",
       },

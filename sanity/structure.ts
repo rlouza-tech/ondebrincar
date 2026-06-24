@@ -50,14 +50,26 @@ export const structure = (S: StructureBuilder) =>
             .defaultOrdering([{ field: "_updatedAt", direction: "desc" }]),
         ),
 
-      // ── ⏸ Fora do ar — publicadas, não operando (US-O5) ──────────────
+      // ── ⏸ Fora do ar — publicadas, encerradas/em obras/esgotadas (US-O5) ─
       S.listItem()
         .title("⏸ Fora do ar")
         .child(
           S.documentList()
             .title("Fora do ar — publicadas e não operando")
             .filter(
-              '_type == "atracao" && !(_originalId in path("drafts.**")) && status != "operando"',
+              '_type == "atracao" && !(_originalId in path("drafts.**")) && status in ["encerrada", "em_obras", "esgotada"]',
+            )
+            .defaultOrdering([{ field: "nome", direction: "asc" }]),
+        ),
+
+      // ── ⛔ Rejeitadas — lista negra permanente (US-O14) ───────────────
+      S.listItem()
+        .title("⛔ Rejeitadas")
+        .child(
+          S.documentList()
+            .title("⛔ Rejeitadas — fora de escopo ou fora do Rio")
+            .filter(
+              '_type == "atracao" && status == "rejeitado"',
             )
             .defaultOrdering([{ field: "nome", direction: "asc" }]),
         ),
@@ -114,6 +126,14 @@ export const structure = (S: StructureBuilder) =>
                   S.documentList()
                     .title("Esgotada")
                     .filter('_type == "atracao" && status == "esgotada"')
+                    .defaultOrdering([{ field: "nome", direction: "asc" }]),
+                ),
+              S.listItem()
+                .title("⛔ Rejeitada")
+                .child(
+                  S.documentList()
+                    .title("⛔ Rejeitada")
+                    .filter('_type == "atracao" && status == "rejeitado"')
                     .defaultOrdering([{ field: "nome", direction: "asc" }]),
                 ),
             ]),

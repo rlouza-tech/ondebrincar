@@ -107,6 +107,22 @@ export async function fetchExistingSlugs(): Promise<Set<string>> {
 }
 
 /**
+ * Busca slugs da lista negra permanente (status = "rejeitado").
+ * Fichas rejeitadas são ignoradas silenciosamente — sem criar novo documento.
+ */
+export async function fetchRejectedSlugs(): Promise<Set<string>> {
+  const docs = await sanityWriteClient.fetch<Array<{ slug?: { current?: string } }>>(
+    `*[_type == "atracao" && status == "rejeitado"]{slug}`,
+  );
+  const slugs = new Set<string>();
+  for (const doc of docs) {
+    const s = doc.slug?.current;
+    if (s) slugs.add(s);
+  }
+  return slugs;
+}
+
+/**
  * Filtra linhas, retornando apenas as cujo slug não existe no Set.
  */
 export function filterNewRows(
@@ -303,12 +319,25 @@ async function main() {
   // Dedup: busca slugs existentes no Sanity antes de iterar.
   // Evita recriação de fichas em rodadas repetidas (Sympla, Clubinho, Manual).
   let dedupIgnored = 0;
+  let rejectedIgnored = 0;
   if (options.source === "sympla" || options.source === "clubinho" || options.source === "manual") {
     console.log("Buscando slugs existentes no Sanity para dedup...");
-    const existingSlugs = await fetchExistingSlugs();
+    const [existingSlugs, rejectedSlugs] = await Promise.all([
+      fetchExistingSlugs(),
+      fetchRejectedSlugs(),
+    ]);
+
+    // 1. Filtra rejeitadas (lista negra permanente) — silencioso, sem criar documento.
+    const beforeReject = rows.length;
+    rows = rows.filter((r) => !rejectedSlugs.has(r.slug));
+    rejectedIgnored = beforeReject - rows.length;
+
+    // 2. Dedup normal — slugs já existentes no Sanity.
     const result = filterNewRows(rows, existingSlugs);
     dedupIgnored = result.ignoredCount;
     rows = result.newRows;
+
+    console.log(`Rejeitadas (lista negra): ${rejectedIgnored} ignoradas`);
     console.log(`Dedup: ${dedupIgnored} ignoradas (já existem no Sanity), ${rows.length} a processar`);
   }
 
@@ -468,6 +497,7 @@ async function main() {
 
   console.log("\nResumo");
   console.log(`Total (após dedup): ${report.total}`);
+  if (rejectedIgnored > 0) console.log(`Ignoradas (lista negra rejeitado): ${rejectedIgnored}`);
   if (dedupIgnored > 0) console.log(`Ignoradas (já existem no Sanity): ${dedupIgnored}`);
   if (expired.length > 0) console.log(`Rejeitadas (data expirada): ${expired.length}`);
   console.log(`Criados: ${report.created}`);
