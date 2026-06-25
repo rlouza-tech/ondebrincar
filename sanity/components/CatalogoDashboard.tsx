@@ -4,9 +4,12 @@ import { useClient } from "sanity";
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 
 interface AtracaoRaw {
+  nome?: string;
+  slug?: { current?: string };
   bairro?: string;
   categoria?: string;
   preco?: number | null;
+  proxima_data?: string | null;
 }
 
 interface DashboardData {
@@ -268,17 +271,73 @@ function TabelaContagem({
 
 // ── Query GROQ ─────────────────────────────────────────────────────────────────
 
-const QUERY = `*[_type == "atracao" && !(_id in path("drafts.**")) && status == "operando"] {
+const QUERY = `*[_type == "atracao" && !(_id in path("drafts.**")) && status == "operando"] | order(nome asc) {
+  nome,
+  "slug": slug.current,
   bairro,
   categoria,
-  preco
+  preco,
+  proxima_data
 }`;
+
+// ── CSV download ───────────────────────────────────────────────────────────────
+
+function gerarCSV(items: AtracaoRaw[]): void {
+  const CATEGORIA_LABEL: Record<string, string> = {
+    parque: "Parque",
+    museu: "Museu",
+    praia: "Praia",
+    pracinha: "Pracinha",
+    "atividade-extra": "Atividade extra",
+    evento: "Evento",
+    "colonia-de-ferias": "Colônia de férias",
+    futebol: "Futebol",
+    restaurante: "Restaurante",
+    "festa-junina": "Festa junina",
+  };
+
+  const escape = (v: string | number | null | undefined): string => {
+    if (v === null || v === undefined) return "";
+    const s = String(v);
+    return s.includes(",") || s.includes('"') || s.includes("\n")
+      ? `"${s.replace(/"/g, '""')}"`
+      : s;
+  };
+
+  const precoLabel = (preco: number | null | undefined): string => {
+    if (preco === 0) return "Gratuita";
+    if (typeof preco === "number" && preco > 0) return `R$ ${preco.toFixed(2)}`;
+    return "";
+  };
+
+  const header = ["Nome", "Slug", "Bairro", "Categoria", "Preço", "Próxima data"].join(",");
+  const rows = items.map((i) =>
+    [
+      escape(i.nome),
+      escape(typeof i.slug === "string" ? i.slug : i.slug?.current),
+      escape(i.bairro),
+      escape(i.categoria ? (CATEGORIA_LABEL[i.categoria] ?? i.categoria) : ""),
+      escape(precoLabel(i.preco)),
+      escape(i.proxima_data ?? ""),
+    ].join(",")
+  );
+
+  const csv = [header, ...rows].join("\n");
+  const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `catalogo-onde-brincar-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 // ── Componente principal ───────────────────────────────────────────────────────
 
 export function CatalogoDashboard() {
   const client = useClient({ apiVersion: "2024-05-15" });
   const [dados, setDados] = useState<DashboardData | null>(null);
+  const [items, setItems] = useState<AtracaoRaw[]>([]);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
   const [atualizadoEm, setAtualizadoEm] = useState<string>("");
@@ -287,8 +346,9 @@ export function CatalogoDashboard() {
     setLoading(true);
     setErro(null);
     try {
-      const items = await client.fetch<AtracaoRaw[]>(QUERY);
-      setDados(agregar(items));
+      const result = await client.fetch<AtracaoRaw[]>(QUERY);
+      setItems(result);
+      setDados(agregar(result));
       setAtualizadoEm(new Date().toLocaleTimeString("pt-BR"));
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Erro ao carregar dados");
@@ -331,9 +391,14 @@ export function CatalogoDashboard() {
             Atrações <em>operando</em> · atualizado às {atualizadoEm}
           </p>
         </div>
-        <button style={S.btnRefresh} onClick={() => void carregar()}>
-          ↺ Atualizar
-        </button>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button style={S.btnRefresh} onClick={() => void carregar()}>
+            ↺ Atualizar
+          </button>
+          <button style={S.btnRefresh} onClick={() => gerarCSV(items)}>
+            ↓ Baixar CSV
+          </button>
+        </div>
       </div>
 
       {/* Cards de resumo */}
