@@ -6,7 +6,7 @@ import { getReferenceDateIso } from "./reference-date";
 import type { LinhaInput } from "./types";
 
 /** Incrementar manualmente ao mudar o prompt (US-S6). */
-export const PROMPT_VERSION = "v1.0.3";
+export const PROMPT_VERSION = "v1.0.4";
 
 function buildScraperV2Block(linha: LinhaInput): string {
   const hasV2 =
@@ -120,13 +120,14 @@ Casos comuns do scraper v1:
   Exemplo completo: "Sessões nos dias 23, 24, 30 e 31. Consulte horário ao clicar em 'Ver ingresso'."
 - preco_bruto vazio ou ambíguo: preco_centavos null + marque preco_centavos em abstain_fields.
 - duração não inferível: duracao_min null + marque duracao_min em abstain_fields se relevante.
+  REGRA ANTI-DURAÇÃO GENÉRICA (US-S18): nunca mencione duração estimada ou aproximada em descricao, mini_review ou programacao_texto quando não estiver explicitamente declarada no input. Frases como "duração aproximada de 60 minutos", "espetáculo com duração de 1 hora", "cerca de 1h de espetáculo" ou qualquer variação inferida são proibidas nos campos de texto. Se duracao_minutos do scraper v2 estiver preenchido, use apenas no campo JSON duracao_min — não o transcreva para o texto descritivo como "duração de X minutos". Quando a duração for desconhecida: duracao_min null + abstain_fields — nunca compense com estimativa no texto.
 - Não omita a ressalva só porque programacao_texto já cabe nos 200 caracteres — priorize transparência.
 
 CAMPO aviso_operacional: use este campo para qualquer aviso prático sobre compra, acesso ou disponibilidade — prazo de venda de ingressos, lotação limitada, retirada de ingresso físico, evento já encerrado, etc. Exemplos: "Vendas encerram 1h antes de cada sessão.", "Apresentação já ocorreu — verifique novas datas.", "Vagas limitadas; compre com antecedência."
 - descricao e mini_review devem ser limpos, sem avisos operacionais.
 - NUNCA use a palavra "Ressalva:" em nenhum campo de texto. O campo aviso_operacional já é o lugar correto para esse conteúdo.
 
-Bom output: JSON estrito, sem markdown, descrições entre 50 e 600 caracteres, mini_review entre 50 e 400 caracteres. Mau output: usar frases como "não tenho informação", inventar endereço/duração/horário exatos sem pista, deixar campos críticos vagos, ou adicionar bloco "Ressalva:" ao final de qualquer campo de texto.
+Bom output: JSON estrito, sem markdown, descrições entre 50 e 600 caracteres, mini_review entre 50 e 400 caracteres. Mau output: usar frases como "não tenho informação", inventar endereço/duração/horário exatos sem pista, deixar campos críticos vagos, adicionar bloco "Ressalva:" ao final de qualquer campo de texto, ou mencionar duração estimada em texto descritivo sem fonte explícita no input (ex.: "duração aproximada de 60 minutos" quando duracao_minutos não veio no scraper v2 e o texto de entrada não menciona duração).
 
 Entrada crua:
 - nome: ${linha.nome}
