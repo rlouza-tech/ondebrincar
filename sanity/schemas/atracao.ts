@@ -136,6 +136,14 @@ export const atracao = defineType({
       validation: (Rule) => Rule.required().min(2).max(80),
     }),
     defineField({
+      name: "endereco",
+      title: "Endereço",
+      type: "string",
+      description:
+        "Endereço completo. Ex.: Rua Marquês de São Vicente, 52 — Gávea. Usado para gerar link do Google Maps na ficha.",
+      validation: (Rule) => Rule.max(200),
+    }),
+    defineField({
       name: "indoor_outdoor",
       title: "Indoor / outdoor",
       type: "string",

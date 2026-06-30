@@ -142,15 +142,6 @@ export async function extrairPrecos(
   page: import("playwright").Page
 ): Promise<{ minPriceCents: number | null; multiplasFaixas: boolean }> {
   return page.evaluate(() => {
-    function parsePriceCents(text: string): number | null {
-      const match = text.match(/R\$\s*([\d.]+(?:,\d{2})?)/);
-      if (!match) return null;
-      const normalized = match[1].replace(/\./g, "").replace(",", ".");
-      const value = Number.parseFloat(normalized);
-      if (Number.isNaN(value) || value <= 0 || value > 100000) return null;
-      return Math.round(value * 100);
-    }
-
     // Tenta escopar a busca à seção de tickets (mais preciso)
     const ticketSelectors = [
       "[data-testid*='ticket']",
@@ -174,8 +165,12 @@ export async function extrairPrecos(
     const matches = [...text.matchAll(/R\$\s*([\d.]+(?:,\d{2})?)/g)];
     const prices: number[] = [];
     for (const m of matches) {
-      const cents = parsePriceCents(`R$ ${m[1]}`);
-      if (cents !== null) prices.push(cents);
+      // Inline: converte "29,90" ou "29.990,00" → centavos
+      const normalized = m[1].replace(/\./g, "").replace(",", ".");
+      const value = Number.parseFloat(normalized);
+      if (!Number.isNaN(value) && value > 0 && value <= 100000) {
+        prices.push(Math.round(value * 100));
+      }
     }
 
     if (prices.length === 0) return { minPriceCents: null, multiplasFaixas: false };

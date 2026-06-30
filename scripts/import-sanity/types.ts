@@ -26,6 +26,7 @@ export interface SanityAtracaoDocInput {
   link_compra: string;
   partner: string;
   bairro: string;
+  endereco?: string;
   indoor_outdoor: string;
   status: string;
   tipo_programacao: string;

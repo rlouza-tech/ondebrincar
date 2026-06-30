@@ -13,6 +13,7 @@ const atracaoProjection = groq`
   link_compra,
   partner,
   bairro,
+  endereco,
   indoor_outdoor,
   status,
   tipo_programacao,

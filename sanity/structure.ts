@@ -25,6 +25,18 @@ export const structure = (S: StructureBuilder) =>
                     .defaultOrdering([{ field: "nome", direction: "asc" }]),
                 ),
 
+                      // US-I24: fichas sem endereço — preencher manualmente no Studio
+              S.listItem()
+                .title("📍 Sem endereço — preencher")
+                .child(
+                  S.documentList()
+                    .title("📍 Sem endereço — operando e sem campo endereço")
+                    .filter(
+                      '_type == "atracao" && !(_originalId in path("drafts.**")) && status == "operando" && !defined(endereco)',
+                    )
+                    .defaultOrdering([{ field: "nome", direction: "asc" }]),
+                ),
+
               // US-O6: subseção data vencida (ainda no ar — candidatas a mark-expired)
               S.listItem()
                 .title("⚠️ Data vencida — verificar (ainda no ar)")

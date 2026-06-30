@@ -133,10 +133,13 @@ Entrada crua:
 - categoria_origem: ${linha.categoria_origem}
 - venue: ${linha.venue}
 - bairro: ${linha.bairro}
+- endereco: ${linha.endereco ?? ""}
 - dias_apresentacao: ${linha.dias_apresentacao}
 - desconto_percentual: ${linha.desconto_percentual}
 - preco_bruto: ${linha.preco_bruto}
 - url_origem: ${linha.url_origem}
+
+INSTRUÇÃO DE ENDEREÇO: o campo "endereco" acima vem do scraper quando disponível (ex.: Sympla fornece o endereço do venue). Se preenchido, use-o como está — não reescreva. Se vazio, não invente; deixe null. Este campo não faz parte do seu JSON de saída — será propagado automaticamente pelo pipeline.
 
 Gere exclusivamente um JSON com os campos definidos no schema da resposta. Regras importantes:
 - categoria: "teatro" | "parque" | "pracinha" | "museu" | "atividade-extra" | "evento" | "praia"

@@ -55,6 +55,7 @@ function mapSanityAtracao(document: SanityAtracaoDocument): Atracao {
     idadeMin: document.idade_min,
     idadeMax: document.idade_max,
     bairro: document.bairro,
+    endereco: document.endereco,
     precoTipo: document.preco === 0 ? "gratuito" : "pago",
     precoLabel: precoLabelFromCents(document.preco),
     precoAPartir: document.preco_a_partir ?? false,

@@ -170,6 +170,7 @@ function buildLinhaEnriquecida(
     link_compra: linha.url_ingresso ?? linha.url_origem ?? "",
     partner: inferPartner(linha.url_ingresso ?? linha.url_origem ?? ""),
     bairro: linha.bairro,
+    endereco: linha.endereco,
     indoor_outdoor: resposta.indoor_outdoor,
     status: "operando",
     descricao: resposta.descricao,
