@@ -36,6 +36,7 @@ import {
 import { fetchExistingSlugs } from "@/scripts/import-sanity/index";
 import { filterGeo, appendGeoRejections, GEO_REJECTED_LOG_PATH } from "./geo-filter";
 import { filterLinkCompra, appendLinkRejections, LINK_REJECTED_LOG_PATH } from "./link-validator";
+import { extractBairroFromVenue } from "./bairro-extractor";
 
 type Source = "clubinho" | "sympla" | "whatsapp" | "manual";
 
@@ -147,6 +148,39 @@ function buildSlug(linha: LinhaInput): string {
   return slugify([linha.nome, linha.venue || linha.bairro].filter(Boolean).join(" "));
 }
 
+interface BairroEnrichLog {
+  slug: string;
+  venue: string;
+  bairro: string;
+  method: string;
+}
+
+/**
+ * Pré-processa fichas com bairro vazio aplicando venue_map e bairro_scan (US-S16).
+ * Muta as linhas in-place e retorna log para exibição.
+ * Gemini assume como terceira camada (bairro_inferido no JSON de resposta).
+ */
+function enrichBairrosPreGemini(rows: LinhaInput[]): BairroEnrichLog[] {
+  const log: BairroEnrichLog[] = [];
+
+  for (const linha of rows) {
+    if (linha.bairro.trim()) continue;
+
+    const result = extractBairroFromVenue(linha.venue);
+    if (result) {
+      linha.bairro = result.bairro;
+      log.push({
+        slug: buildSlug(linha),
+        venue: linha.venue,
+        bairro: result.bairro,
+        method: result.method,
+      });
+    }
+  }
+
+  return log;
+}
+
 function buildLinhaEnriquecida(
   linha: LinhaInput,
   resposta: RespostaGemini,
@@ -170,7 +204,8 @@ function buildLinhaEnriquecida(
     // Para fontes sem ingresso (curadoria manual, parques, museus gratuitos), url_ingresso fica vazio.
     link_compra: linha.url_ingresso ?? linha.url_origem ?? "",
     partner: inferPartner(linha.url_ingresso ?? linha.url_origem ?? ""),
-    bairro: linha.bairro,
+    // US-S16: se bairro ainda vazio após pré-processamento, usa fallback do Gemini
+    bairro: linha.bairro || resposta.bairro_inferido || "",
     endereco: linha.endereco,
     indoor_outdoor: resposta.indoor_outdoor,
     status: "operando",
@@ -250,6 +285,17 @@ async function main() {
   const dedupIgnored = inputRows.length - dedupedRows.length;
   console.log(`Dedup: ${dedupIgnored} ignoradas (já existem no Sanity), ${dedupedRows.length} a processar`);
 
+  // Pré-processamento de bairro (US-S16): roda ANTES do geo-filter para que fichas
+  // com bairro vazio mas venue reconhecível não sejam rejeitadas indevidamente.
+  const bairroLog = enrichBairrosPreGemini(dedupedRows);
+  if (bairroLog.length > 0) {
+    console.log(`\nBairro inferido (pré-Gemini): ${bairroLog.length} ficha(s) corrigida(s):`);
+    for (const entry of bairroLog) {
+      console.log(`  ✓ ${entry.slug} | venue: "${entry.venue}" | bairro: "${entry.bairro}" | método: ${entry.method}`);
+    }
+    console.log();
+  }
+
   const { accepted: geoAccepted, rejected: geoRejected } = filterGeo(dedupedRows);
   if (geoRejected.length > 0) {
     console.log(`\nFiltro geográfico: ${geoRejected.length} ficha(s) rejeitada(s) (fora do município do Rio de Janeiro):`);
@@ -273,6 +319,8 @@ async function main() {
     await appendLinkRejections(linkRejected, options.source ?? label);
     console.log(`Link rejected log: ${LINK_REJECTED_LOG_PATH}`);
   }
+
+
 
   const rowsToProcess = options.limit ? linkAccepted.slice(0, options.limit) : linkAccepted;
   const enrichedRows: LinhaEnriquecida[] = [];

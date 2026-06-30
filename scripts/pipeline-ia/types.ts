@@ -67,6 +67,12 @@ export interface RespostaGemini {
   abstain_fields: string[];
   aviso_operacional: string | null;
   notes_for_editor?: string;
+  /**
+   * Preenchido pelo Gemini apenas quando `bairro` do input está vazio (US-S16).
+   * Representa o bairro carioca inferido a partir do venue.
+   * null = Gemini não conseguiu inferir com confiança.
+   */
+  bairro_inferido?: string | null;
   error?: string;
 }
 
