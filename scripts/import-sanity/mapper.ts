@@ -47,5 +47,9 @@ export function toSanityDoc(linha: LinhaEnriquecida): SanityAtracaoDocInput {
     doc.preco_a_partir = true;
   }
 
+  if (linha.endereco) {
+    doc.endereco = linha.endereco;
+  }
+
   return doc;
 }

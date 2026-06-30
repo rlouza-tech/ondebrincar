@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { AtracaoDetailActions } from "@/components/AtracaoDetailActions";
 import { AttractionDetailTracker } from "@/components/AttractionDetailTracker";
 import { JsonLd } from "@/components/JsonLd";
+import { AddressLink } from "@/components/AddressLink";
 import { OutboundLink } from "@/components/OutboundLink";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -207,6 +208,14 @@ export default async function AtracaoPage({ params, searchParams }: AtracaoPageP
                 <dt className="font-medium text-primary">Bairro</dt>
                 <dd className="text-secondary">{atracao.bairro}</dd>
               </div>
+              {atracao.endereco ? (
+                <div className="sm:col-span-2">
+                  <dt className="font-medium text-primary">Endereço</dt>
+                  <dd className="text-secondary">
+                    <AddressLink atracao={atracao} endereco={atracao.endereco} />
+                  </dd>
+                </div>
+              ) : null}
               <div>
                 <dt className="font-medium text-primary">Preço</dt>
                 <dd className="text-secondary">{formatPreco(atracao)}</dd>

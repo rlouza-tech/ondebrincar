@@ -70,6 +70,13 @@ export interface OutboundClickParams {
 /** Disparado especificamente ao clicar em "Ver ingresso". Coexiste com outbound_click. */
 export type BuyTicketClickParams = Omit<OutboundClickParams, "source">;
 
+export interface AddressClickParams {
+  attraction_id: string;
+  attraction_name: string;
+  category: string;
+  address: string;
+}
+
 export function mapEnvironmentForAnalytics(
   indoorOutdoor: IndoorOutdoor,
 ): NonNullable<AttractionViewParams["environment"]> {

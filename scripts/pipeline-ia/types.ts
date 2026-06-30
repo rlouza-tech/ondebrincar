@@ -47,6 +47,8 @@ export interface LinhaInput {
   url_ingresso?: string;
   /** true quando há múltiplas faixas de preço na fonte (lotes, early bird, meia/inteira). */
   preco_a_partir?: boolean;
+  /** Endereço completo extraído pelo scraper (ex.: Sympla fornece venue address). */
+  endereco?: string;
 }
 
 export interface RespostaGemini {
@@ -87,6 +89,7 @@ export interface LinhaEnriquecida {
   programacao_texto: string;
   proxima_data: string | null;
   foto_url: string;
+  endereco?: string;
   aviso_operacional: string | null;
   review_status: ReviewStatus;
   abstain_reasons: string[];

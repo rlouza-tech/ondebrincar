@@ -10,6 +10,7 @@ export interface Atracao {
   idadeMin: number;
   idadeMax: number;
   bairro: string;
+  endereco?: string;
   precoTipo: PrecoTipo;
   precoLabel?: string;
   /** true quando há múltiplas faixas de preço — exibe "A partir de R$X" no site. */
@@ -38,6 +39,7 @@ export interface SanityAtracaoDocument {
   link_compra?: string;
   partner?: "sympla" | "eventim" | "outro";
   bairro: string;
+  endereco?: string;
   indoor_outdoor: IndoorOutdoor;
   status: StatusAtracao;
   tipo_programacao?: TipoProgramacao;
