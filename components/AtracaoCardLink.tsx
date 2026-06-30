@@ -59,6 +59,7 @@ export function AtracaoCardLink({ atracao, className, filterRef, sempreDisponive
           price={formatPreco(atracao)}
           imageUrl={atracao.imagemUrl}
           imageAlt={`Foto: ${atracao.titulo}`}
+          bairro={atracao.bairro}
           proximaData={atracao.proximaData}
           categoria={atracao.categoria}
           sempreDisponivel={sempreDisponivel}
