@@ -115,6 +115,13 @@ Se for ambíguo demais, retorne null em proxima_data e marque proxima_data em ab
 
 TRANSPARÊNCIA SOBRE LACUNAS
 Quando dados críticos faltarem no input, NÃO invente — em vez disso, sinalize no texto ou em abstain_fields.
+
+CAMPOS QUE GEMINI NÃO DEVE PREENCHER SEM FONTE EXPLÍCITA NO INPUT:
+- duracao_min: sem menção de duração no texto → null (não infira "60 min" por ser padrão de teatro ou atividade)
+- preco_centavos: sem preço no input → null (não infira por categoria, venue ou contexto habitual)
+- proxima_data: sem data inferível → null (não invente data "provável" ou "provável próximo fim de semana")
+- idade_min / idade_max: sem menção de faixa etária → abstain_fields (não infira por categoria)
+Regra geral: se você está adivinhando o valor, a resposta correta é null + abstain_fields + reduza confidence.
 Casos comuns do scraper v1:
 - dias_apresentacao lista dias mas SEM horário (ex.: "Dias 23, 30, 31"): em programacao_texto, inclua os dias E acrescente frase explícita como "Consulte horário ao clicar em 'Ver ingresso'".
   Exemplo completo: "Sessões nos dias 23, 24, 30 e 31. Consulte horário ao clicar em 'Ver ingresso'."
@@ -147,7 +154,12 @@ Gere exclusivamente um JSON com os campos definidos no schema da resposta. Regra
   Use a categoria_origem como ponto de partida — só reclassifique se houver evidência clara de categoria diferente.
   Use "pracinha" para praças de bairro com parquinho infantil. Use "praia" para praias. Use "parque" para parques maiores, reservas e espaços verdes extensos. Use "teatro" apenas para espetáculos com sessão marcada e ingresso.
 - idade_min e idade_max: inteiros 0-18
-- duracao_min: inteiro ou null
+- duracao_min: inteiro ou null. Refere-se exclusivamente à duração real do espetáculo/atividade em si.
+  NÃO use tempos mencionados em contexto operacional como valor de duracao_min. Exemplos proibidos:
+  ❌ "chegar 15 min antes" → duracao_min: 15 (instrução de chegada, não duração)
+  ❌ "portões abrem 30 min antes" → duracao_min: 30 (aviso de acesso, não duração)
+  ❌ "retirar ingresso 20 min antes" → duracao_min: 20 (logística, não duração)
+  Se a duração real não estiver explícita, retorne null e marque duracao_min em abstain_fields.
 - preco_centavos: inteiro ou null. Exemplos: "a partir de R$54,90" -> 5490; "de R$100" -> 10000; vazio -> null
 - indoor_outdoor: "indoor" | "outdoor" | "ambos" (slugs técnicos do schema — veja regra de ambiente abaixo)
 - descricao: 50-600 caracteres, objetiva, voz Onde Brincar (bairro ${linha.bairro} como contexto de planejamento)
