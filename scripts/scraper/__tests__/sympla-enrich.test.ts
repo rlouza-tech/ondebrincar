@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseDescricao, parseArgs, MIN_DESCRICAO_CHARS } from "../sympla-enrich";
+import { parseDescricao, parseArgs, parsePrecos, MIN_DESCRICAO_CHARS } from "../sympla-enrich";
 
 // ---------------------------------------------------------------------------
 // parseDescricao
@@ -69,6 +69,96 @@ describe("parseDescricao", () => {
     const entrada = "Linha 1\r\nLinha 2\r\n" + "x".repeat(MIN_DESCRICAO_CHARS);
     const resultado = parseDescricao(entrada);
     expect(resultado).not.toMatch(/\r/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// parsePrecos (US-S23)
+// ---------------------------------------------------------------------------
+
+describe("parsePrecos", () => {
+  it("retorna null quando texto não tem preço", () => {
+    expect(parsePrecos("Sem preço aqui")).toEqual({
+      minPriceCents: null,
+      multiplasFaixas: false,
+    });
+  });
+
+  it("extrai preço único com centavos", () => {
+    expect(parsePrecos("Ingresso: R$ 29,90")).toEqual({
+      minPriceCents: 2990,
+      multiplasFaixas: false,
+    });
+  });
+
+  it("extrai preço sem centavos (R$ 30)", () => {
+    expect(parsePrecos("Ingresso R$ 30")).toEqual({
+      minPriceCents: 3000,
+      multiplasFaixas: false,
+    });
+  });
+
+  it("extrai menor de múltiplos preços e sinaliza multiplasFaixas", () => {
+    expect(parsePrecos("Inteira: R$ 59,90\nMeia: R$ 29,90")).toEqual({
+      minPriceCents: 2990,
+      multiplasFaixas: true,
+    });
+  });
+
+  it("preços iguais em lotes distintos não geram multiplasFaixas", () => {
+    expect(parsePrecos("Lote 1: R$ 30,00\nLote 2: R$ 30,00")).toEqual({
+      minPriceCents: 3000,
+      multiplasFaixas: false,
+    });
+  });
+
+  it("normaliza separador de milhar (R$ 1.000,00)", () => {
+    expect(parsePrecos("Ingresso VIP R$ 1.000,00")).toEqual({
+      minPriceCents: 100_000,
+      multiplasFaixas: false,
+    });
+  });
+
+  it("ignora R$ 0,00 (ingressos gratuitos — Gemini detecta via texto)", () => {
+    expect(parsePrecos("Gratuito R$ 0,00")).toEqual({
+      minPriceCents: null,
+      multiplasFaixas: false,
+    });
+  });
+
+  it("ignora valores acima de R$100.000 (limite anti-lixo)", () => {
+    // R$ 150.000 → filtrado (acima do limite); R$ 50 fica
+    expect(parsePrecos("VIP R$ 150.000,00\nGeral R$ 50,00")).toEqual({
+      minPriceCents: 5000,
+      multiplasFaixas: false,
+    });
+  });
+
+  it("ignora valores acima de R$100.000 — só caros, retorna null", () => {
+    expect(parsePrecos("Pacote R$ 200.000,00")).toEqual({
+      minPriceCents: null,
+      multiplasFaixas: false,
+    });
+  });
+
+  it("múltiplos lotes com preços diferentes — retorna mais barato", () => {
+    const texto = [
+      "Lote Solidário R$ 49,90",
+      "Lote 1 R$ 69,90",
+      "Lote 2 R$ 89,90",
+      "VIP R$ 150,00",
+    ].join("\n");
+    expect(parsePrecos(texto)).toEqual({
+      minPriceCents: 4990,
+      multiplasFaixas: true,
+    });
+  });
+
+  it("R$ sem espaço (R$29,90)", () => {
+    expect(parsePrecos("Ingresso R$29,90")).toEqual({
+      minPriceCents: 2990,
+      multiplasFaixas: false,
+    });
   });
 });
 

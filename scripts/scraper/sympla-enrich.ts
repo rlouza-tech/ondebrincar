@@ -130,6 +130,40 @@ export function parseDescricao(raw: string | null | undefined): string | null {
 }
 
 // ---------------------------------------------------------------------------
+// Parsing puro — separado do Playwright para testabilidade (US-S23)
+// ---------------------------------------------------------------------------
+
+/**
+ * Dado um texto bruto (ex.: innerText de um elemento), extrai padrões "R$ X,XX"
+ * e retorna o menor preço em centavos e se há múltiplas faixas de preço.
+ *
+ * Exportada para testes unitários — não depende do browser.
+ *
+ * Limites:
+ * - Ignora valores ≤ 0 (ex.: R$ 0,00 para ingressos gratuitos — Gemini detecta via texto)
+ * - Ignora valores > R$100.000 (limite anti-lixo; valores maiores provavelmente vêm de
+ *   CNPJs, telefones ou outros números não monetários que contêm "R$" por coincidência)
+ */
+export function parsePrecos(text: string): {
+  minPriceCents: number | null;
+  multiplasFaixas: boolean;
+} {
+  const matches = [...text.matchAll(/R\$\s*([\d.]+(?:,\d{2})?)/g)];
+  const prices: number[] = [];
+  for (const m of matches) {
+    // "29,90" → "29.90" | "1.000,00" → "1000.00"
+    const normalized = m[1].replace(/\./g, "").replace(",", ".");
+    const value = Number.parseFloat(normalized);
+    if (!Number.isNaN(value) && value > 0 && value <= 100_000) {
+      prices.push(Math.round(value * 100));
+    }
+  }
+  if (prices.length === 0) return { minPriceCents: null, multiplasFaixas: false };
+  const unique = [...new Set(prices)];
+  return { minPriceCents: Math.min(...unique), multiplasFaixas: unique.length > 1 };
+}
+
+// ---------------------------------------------------------------------------
 // Extração de preços via Playwright (roda no browser)
 // ---------------------------------------------------------------------------
 
@@ -137,10 +171,27 @@ export function parseDescricao(raw: string | null | undefined): string | null {
  * Extrai preços de uma página de evento Sympla já carregada.
  * Busca padrões "R$ X,XX" no container de tickets.
  * Retorna o menor preço em centavos e se há múltiplas faixas.
+ *
+ * NOTA (US-S23): Sympla é uma SPA React. O `gotoWithRetry` usa
+ * `domcontentloaded`, que dispara antes do React renderizar a seção de
+ * ingressos. Aguardamos até 5s pelo primeiro padrão "R$ \d" no innerText
+ * antes de correr o page.evaluate(), para não capturar uma página vazia.
  */
 export async function extrairPrecos(
   page: import("playwright").Page
 ): Promise<{ minPriceCents: number | null; multiplasFaixas: boolean }> {
+  // Aguarda a SPA renderizar os preços. Timeout generoso de 5s — eventos
+  // sem preço visível (esgotado, login obrigatório) terão timeout silencioso.
+  try {
+    await page.waitForFunction(
+      () => /R\$\s*\d/.test(document.body.innerText),
+      { timeout: 5_000 },
+    );
+  } catch {
+    // Timeout silencioso — nenhum "R$ X" apareceu na página.
+    // Retorno abaixo será { minPriceCents: null, multiplasFaixas: false }.
+  }
+
   return page.evaluate(() => {
     // Tenta escopar a busca à seção de tickets (mais preciso)
     const ticketSelectors = [
@@ -162,13 +213,14 @@ export async function extrairPrecos(
     }
 
     const text = (searchEl as HTMLElement).innerText ?? "";
+    // Lógica espelhada de parsePrecos() — inline pois page.evaluate()
+    // roda no contexto do browser e não pode chamar funções Node.js.
     const matches = [...text.matchAll(/R\$\s*([\d.]+(?:,\d{2})?)/g)];
     const prices: number[] = [];
     for (const m of matches) {
-      // Inline: converte "29,90" ou "29.990,00" → centavos
       const normalized = m[1].replace(/\./g, "").replace(",", ".");
       const value = Number.parseFloat(normalized);
-      if (!Number.isNaN(value) && value > 0 && value <= 100000) {
+      if (!Number.isNaN(value) && value > 0 && value <= 100_000) {
         prices.push(Math.round(value * 100));
       }
     }
