@@ -8,17 +8,17 @@ export const FAIXAS_ETARIAS = [
 ] as const;
 
 export const CATEGORIA_OPTIONS = [
-  { label: "Teatro", value: "teatro" },
+  { label: "Atividade extra", value: "atividade-extra" },
+  { label: "Colônia de Férias", value: "colonia-de-ferias" },
+  { label: "Evento", value: "evento" },
+  { label: "Festa Junina", value: "festa-junina" },
+  { label: "Futebol", value: "futebol" },
+  { label: "Museu", value: "museu" },
   { label: "Parque", value: "parque" },
   { label: "Pracinha", value: "pracinha" },
-  { label: "Museu", value: "museu" },
   { label: "Praia", value: "praia" },
-  { label: "Atividade extra", value: "atividade-extra" },
-  { label: "Evento", value: "evento" },
-  { label: "Colônia de Férias", value: "colonia-de-ferias" },
-  { label: "Futebol", value: "futebol" },
   { label: "Restaurante", value: "restaurante" },
-  { label: "Festa Junina", value: "festa-junina" },
+  { label: "Teatro", value: "teatro" },
 ] as const;
 
 export const PRECO_OPTIONS: Array<{ label: string; value: PrecoTipo }> = [
