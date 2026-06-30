@@ -78,7 +78,9 @@ export function evaluate(
     reasons.push("idade_fora_do_intervalo_0_18");
   }
 
-  if (!linhaInput.bairro.trim()) {
+  // US-S16: bairro pode ter sido inferido pelo Gemini (bairro_inferido) mesmo que input venha vazio
+  const bairroEfetivo = linhaInput.bairro.trim() || resposta.bairro_inferido?.trim() || "";
+  if (!bairroEfetivo) {
     reasons.push("bairro_vazio");
   }
 

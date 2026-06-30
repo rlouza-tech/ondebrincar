@@ -6,7 +6,7 @@ import { getReferenceDateIso } from "./reference-date";
 import type { LinhaInput } from "./types";
 
 /** Incrementar manualmente ao mudar o prompt (US-S6). */
-export const PROMPT_VERSION = "v1.0.4";
+export const PROMPT_VERSION = "v1.0.5";
 
 function buildScraperV2Block(linha: LinhaInput): string {
   const hasV2 =
@@ -43,16 +43,31 @@ Exceção — duração suspeita:
 - Se duracao_minutos for ≤ 5, descarte esse valor (provavelmente veio de "X minutos de caminhada" ou outro contexto errado). Trate duracao_min como null, marque em abstain_fields e adicione note_for_editor: "duracao_minutos no input (Xmin) parece dado de distância/caminhada, não duração do espetáculo."`;
 }
 
+function buildBairroInferenciaBlock(linha: LinhaInput): string {
+  if (linha.bairro.trim()) return "";
+
+  return `
+INFERÊNCIA DE BAIRRO (US-S16):
+O campo "bairro" do input está vazio. Tente inferir o bairro carioca a partir do campo "venue".
+Se conseguir identificar com confiança (ex.: "Teatro Bangu Shopping" → "Bangu"; "Teatro Leblon" → "Leblon"; "Teatro Laura Alvim" → "Ipanema"):
+- Preencha o campo "bairro_inferido" no JSON de resposta com o nome do bairro (ex: "Centro", "Botafogo").
+Se não tiver certeza suficiente:
+- Retorne "bairro_inferido": null
+Este campo só existe quando bairro do input está vazio. Não o inclua quando bairro já estiver preenchido.`;
+}
+
 export function buildPrompt(linha: LinhaInput, referenceDate = new Date()): string {
   const dataAtual = getReferenceDateIso(referenceDate);
   const voice = buildVoiceSystemPrompt();
   const incerteza = buildIncertezaInstruction();
   const scraperV2 = buildScraperV2Block(linha);
+  const bairroInferencia = buildBairroInferenciaBlock(linha);
 
   return `${voice}
 
 ${incerteza}
 ${scraperV2}
+${bairroInferencia}
 
 EXEMPLOS FEW-SHOT (use como referência de calibração — não copie os valores, aprenda o padrão)
 
@@ -149,7 +164,7 @@ Entrada crua:
 
 INSTRUÇÃO DE ENDEREÇO: o campo "endereco" acima vem do scraper quando disponível (ex.: Sympla fornece o endereço do venue). Se preenchido, use-o como está — não reescreva. Se vazio, não invente; deixe null. Este campo não faz parte do seu JSON de saída — será propagado automaticamente pelo pipeline.
 
-Gere exclusivamente um JSON com os campos definidos no schema da resposta. Regras importantes:
+Gere exclusivamente um JSON com os campos definidos no schema da resposta. Quando solicitado pela seção "INFERÊNCIA DE BAIRRO" acima, inclua também o campo "bairro_inferido". Regras importantes:
 - categoria: "teatro" | "parque" | "pracinha" | "museu" | "atividade-extra" | "evento" | "praia"
   Use a categoria_origem como ponto de partida — só reclassifique se houver evidência clara de categoria diferente.
   Use "pracinha" para praças de bairro com parquinho infantil. Use "praia" para praias. Use "parque" para parques maiores, reservas e espaços verdes extensos. Use "teatro" apenas para espetáculos com sessão marcada e ingresso.
