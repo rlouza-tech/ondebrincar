@@ -8,6 +8,7 @@ export interface PipelineRunEntry {
   fichas_novas: number;
   dedup_ignored: number;
   geo_rejected: number;
+  link_rejected: number;
   custo_estimado_usd: number;
   latencia_media_ms: number;
   erros: string[];
