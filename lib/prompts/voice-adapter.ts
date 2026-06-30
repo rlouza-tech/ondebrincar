@@ -16,21 +16,21 @@ export const CANONICAL_EXAMPLES = [
     descricao:
       "O Mágico de Oz no Teatro Clara Nunes, no Shopping da Gávea, é um musical com 25 atores mirins que traz a história clássica de criança para criança. Ambiente fechado, sessão de 60 minutos — boa pedida para apresentar o teatro a crianças de 2 a 12 anos. Planeje o deslocamento para a Gávea.",
     mini_review:
-      "Um clássico que ganha uma versão especial com elenco infantil, ideal para a primeira ida ao teatro. Com 60 minutos de duração, é um tempo bom para a faixa etária de 2 a 12 anos. Fica no Shopping da Gávea, então planeje o deslocamento. Ressalva: as vendas encerram 1 hora antes — garanta o ingresso com antecedência.",
+      "Um clássico que ganha uma versão especial com elenco infantil, ideal para a primeira ida ao teatro. Com 60 minutos de duração, é um tempo bom para a faixa etária de 2 a 12 anos. Fica no Shopping da Gávea, então planeje o deslocamento — e garanta o ingresso com antecedência: as vendas encerram 1 hora antes.",
   },
   {
     titulo: "Musical Disney com lista de personagens e ressalva de ingresso (Show Mickey, Cachambi)",
     descricao:
       "O Show Musical do Mickey no Teatro Miguel Falabella, dentro do Norte Shopping (Cachambi), mistura bonecos, fantoches e humor com Mickey, Pateta, Moana, Mauí e a Ansiedade de Divertida Mente 2. Musical leve e interativo em ambiente fechado, 60 minutos, para crianças de 2 a 12 anos.",
     mini_review:
-      "Um musical animado e colorido para os pequenos fãs da Disney. Com 60 minutos, é um programa ideal para o fim de semana no Norte Shopping, em Cachambi. Ressalva: as vendas encerram uma hora antes de cada sessão — garanta seu ingresso com antecedência para não perder a diversão.",
+      "Um musical animado e colorido para os pequenos fãs da Disney. Com 60 minutos, é um programa ideal para o fim de semana no Norte Shopping, em Cachambi. As vendas encerram uma hora antes de cada sessão — garanta seu ingresso com antecedência para não perder a diversão.",
   },
   {
     titulo: "Peça temática com ressalva prática de deslocamento e horário (João e Maria, Cachambi)",
     descricao:
       "João e Maria - Uma Aventura Desconectada leva os irmãos a uma floresta encantada onde precisam resolver problemas sem internet. Encontram bruxa cozinheira e corvo amigável em 60 minutos de musical leve para crianças de 2 a 12 anos no Teatro Miguel Falabella, Norte Shopping (Cachambi).",
     mini_review:
-      "Uma boa pedida para o fim de semana no Norte Shopping, no Cachambi. A história com o toque 'desconectado' é atual e estimula a imaginação dos pequenos. A duração de 60 minutos é ideal para a faixa etária. Ressalva: as vendas de ingresso encerram 1 hora antes da sessão — garanta seu lugar com antecedência.",
+      "Uma boa pedida para o fim de semana no Norte Shopping, no Cachambi. A história com o toque 'desconectado' é atual e estimula a imaginação dos pequenos. A duração de 60 minutos é ideal para a faixa etária. As vendas de ingresso encerram 1 hora antes da sessão — garanta seu lugar com antecedência.",
   },
 ] as const;
 
