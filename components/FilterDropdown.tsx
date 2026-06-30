@@ -95,9 +95,14 @@ export function FilterDropdown({
         return;
       }
       const rect = containerRef.current.getBoundingClientRect();
+      const EDGE_MARGIN = 8;
+      const estimatedDropdownWidth = Math.max(rect.width, 192);
+      const rawLeft = rect.left;
+      const maxLeft = window.innerWidth - estimatedDropdownWidth - EDGE_MARGIN;
+      const clampedLeft = Math.max(EDGE_MARGIN, Math.min(rawLeft, maxLeft));
       setMenuPosition({
         top: rect.bottom + 8,
-        left: rect.left,
+        left: clampedLeft,
         minWidth: rect.width,
       });
     };

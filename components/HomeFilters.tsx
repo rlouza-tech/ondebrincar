@@ -143,7 +143,7 @@ export function HomeFilters({ bairros, atracoes }: HomeFiltersProps) {
     <section aria-label="Filtros de busca">
       <div
         className={cn(
-          "-mx-1 flex flex-nowrap items-center gap-2 overflow-x-auto px-1 pb-1",
+          "-mx-4 flex flex-nowrap items-center gap-2 overflow-x-auto px-4 pb-1",
           "[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
         )}
       >
