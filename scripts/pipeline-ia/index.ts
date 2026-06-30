@@ -35,6 +35,7 @@ import {
 } from "@/scripts/normalizer/manual";
 import { fetchExistingSlugs } from "@/scripts/import-sanity/index";
 import { filterGeo, appendGeoRejections, GEO_REJECTED_LOG_PATH } from "./geo-filter";
+import { filterLinkCompra, appendLinkRejections, LINK_REJECTED_LOG_PATH } from "./link-validator";
 
 type Source = "clubinho" | "sympla" | "whatsapp" | "manual";
 
@@ -259,7 +260,20 @@ async function main() {
     console.log(`Geo rejected log: ${GEO_REJECTED_LOG_PATH}`);
   }
 
-  const rowsToProcess = options.limit ? geoAccepted.slice(0, options.limit) : geoAccepted;
+  // Filtro de link_compra: rejeita URLs com domínio inválido antes do Gemini (US-S17).
+  // URLs vazias são aceitas — ausência de link de compra é legítima.
+  const { accepted: linkAccepted, rejected: linkRejected } = filterLinkCompra(geoAccepted);
+  if (linkRejected.length > 0) {
+    console.log(`\nFiltro link_compra: ${linkRejected.length} ficha(s) rejeitada(s) (URL inválida):`);
+    for (const r of linkRejected) {
+      console.log(`  ✗ ${r.slug} | url: "${r.url}" | motivo: ${r.motivo}`);
+    }
+    console.log();
+    await appendLinkRejections(linkRejected, options.source ?? label);
+    console.log(`Link rejected log: ${LINK_REJECTED_LOG_PATH}`);
+  }
+
+  const rowsToProcess = options.limit ? linkAccepted.slice(0, options.limit) : linkAccepted;
   const enrichedRows: LinhaEnriquecida[] = [];
   const costLogEntries: CostLogEntry[] = [];
   const latenciasMs: number[] = [];
@@ -372,6 +386,7 @@ async function main() {
     fichas_novas: report.total,
     dedup_ignored: dedupIgnored,
     geo_rejected: geoRejected.length,
+    link_rejected: linkRejected.length,
     custo_estimado_usd: custoUsd,
     latencia_media_ms: latenciaMedia,
     erros,
