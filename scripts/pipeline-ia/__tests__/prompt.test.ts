@@ -139,4 +139,12 @@ describe("buildPrompt", () => {
     expect(prompt).toMatch(/caminhada|distância/i);
     expect(prompt).toMatch(/duracao_min.*null/is);
   });
+
+  it("proíbe duração estimada em campos de texto quando não declarada no input (US-S18)", () => {
+    const prompt = buildPrompt(baseInput());
+    expect(prompt).toContain("REGRA ANTI-DURAÇÃO GENÉRICA");
+    expect(prompt).toMatch(/duração aproximada de 60 minutos.*proibidas/is);
+    expect(prompt).toMatch(/duracao_min null.*abstain_fields/is);
+    expect(prompt).toMatch(/nunca compense com estimativa no texto/i);
+  });
 });
