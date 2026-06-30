@@ -37,8 +37,8 @@ export function HomeContent({ atracoes, bairros }: HomeContentProps) {
         <p className="text-sm font-medium uppercase tracking-wide text-success">
           Curadoria humana
         </p>
-        <h1 className="text-[28px] font-display font-bold text-primary md:text-[42px]">
-          O que fazer com criança no Rio
+        <h1 className="text-[38px] font-display font-bold text-primary md:text-[42px]">
+          O que fazer com<br className="md:hidden" /> criança no Rio
         </h1>
         <p className="max-w-2xl text-base text-secondary">
           Peças, parques e museus selecionados para famílias cariocas — com
