@@ -11,6 +11,7 @@ export interface AtracaoCardProps extends HTMLAttributes<HTMLDivElement> {
   price: string;
   imageUrl: string;
   imageAlt: string;
+  bairro?: string | null;
   proximaData?: string | null;
   categoria?: string | null;
   sempreDisponivel?: boolean;
@@ -101,6 +102,7 @@ export function AtracaoCard({
   price,
   imageUrl,
   imageAlt,
+  bairro,
   proximaData,
   categoria,
   sempreDisponivel = false,
@@ -183,7 +185,7 @@ export function AtracaoCard({
           {name}
         </h3>
         <p className="truncate text-sm text-secondary">
-          {[ageRange, price].filter(Boolean).join(" · ")}
+          {[bairro, ageRange, price].filter(Boolean).join(" · ")}
         </p>
         {sempreDisponivel ? (
           <span

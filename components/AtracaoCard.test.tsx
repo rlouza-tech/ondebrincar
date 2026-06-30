@@ -115,6 +115,29 @@ describe("AtracaoCard", () => {
     expect(spans.some((s) => badgeTexts.includes(s.textContent ?? ""))).toBe(false);
   });
 
+  // US-I25 — bairro no card
+  it("exibe bairro quando fornecido", () => {
+    render({ bairro: "Botafogo" });
+    expect(container.textContent).toContain("Botafogo");
+  });
+
+  it("não exibe bairro quando não fornecido", () => {
+    render();
+    expect(container.textContent).not.toContain("Botafogo");
+  });
+
+  it("não quebra layout com bairro longo", () => {
+    render({ bairro: "Recreio dos Bandeirantes" });
+    expect(container.textContent).toContain("Recreio dos Bandeirantes");
+  });
+
+  it("não exibe bairro quando null", () => {
+    render({ bairro: null });
+    const p = container.querySelector("p");
+    // linha de info não deve ter separador extra nem texto vazio
+    expect(p?.textContent).not.toMatch(/^ · | · $/);
+  });
+
   it("não exibe badge para categoria desconhecida", () => {
     render({ categoria: "categoria-inexistente" });
     const spans = Array.from(container.querySelectorAll("span"));
