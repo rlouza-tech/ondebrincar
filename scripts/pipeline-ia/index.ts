@@ -10,6 +10,7 @@ import { appendPipelineRun, PIPELINE_RUNS_LOG_PATH } from "./pipeline-run-log";
 import { PROMPT_VERSION } from "./prompt";
 import { evaluate } from "./quality-gate";
 import type {
+  Categoria,
   LinhaEnriquecida,
   LinhaInput,
   Partner,
@@ -17,6 +18,7 @@ import type {
   RespostaGemini,
 } from "./types";
 import { CATEGORIAS_VALIDAS } from "./types";
+import { inferirCategoriaPorKeyword } from "./categoria-inferencia";
 import {
   normalizeClubinho,
   DEFAULT_INPUT_PATH as CLUBINHO_DEFAULT_PATH,
@@ -181,6 +183,29 @@ function enrichBairrosPreGemini(rows: LinhaInput[]): BairroEnrichLog[] {
   return log;
 }
 
+/**
+ * Resolve a categoria final da ficha em três estágios (US-S22):
+ *  1. categoria_origem já canônica → usa diretamente (sem Gemini)
+ *  2. Gemini retornou valor válido  → usa
+ *  3. Gemini retornou inválido      → tenta inferência por keyword
+ *     - Match encontrado → usa e loga
+ *     - Sem match        → mantém valor inválido (quality gate sinaliza needs_human)
+ */
+function resolveCategoria(linha: LinhaInput, respostaCategoria: RespostaGemini["categoria"]): {
+  categoria: Categoria;
+  inferida: boolean;
+} {
+  if ((CATEGORIAS_VALIDAS as readonly string[]).includes(linha.categoria_origem)) {
+    return { categoria: linha.categoria_origem as Categoria, inferida: false };
+  }
+  if ((CATEGORIAS_VALIDAS as readonly string[]).includes(respostaCategoria)) {
+    return { categoria: respostaCategoria, inferida: false };
+  }
+  // Gemini retornou valor fora de CATEGORIAS_VALIDAS — inferência por keyword.
+  const inferred = inferirCategoriaPorKeyword(linha.nome, linha.categoria_origem, linha.venue);
+  return { categoria: inferred ?? respostaCategoria, inferida: inferred !== null };
+}
+
 function buildLinhaEnriquecida(
   linha: LinhaInput,
   resposta: RespostaGemini,
@@ -189,13 +214,11 @@ function buildLinhaEnriquecida(
   processedAt: string,
   meta: Pick<LinhaEnriquecida, "ai_generated" | "ai_model" | "pipeline_failed">,
 ): LinhaEnriquecida {
+  const { categoria } = resolveCategoria(linha, resposta.categoria);
   return {
     nome: linha.nome,
     slug: buildSlug(linha),
-    // Se categoria_origem já é um valor canônico válido, respeita sem deixar o Gemini sobrescrever.
-    categoria: (CATEGORIAS_VALIDAS as readonly string[]).includes(linha.categoria_origem)
-      ? (linha.categoria_origem as typeof CATEGORIAS_VALIDAS[number])
-      : resposta.categoria,
+    categoria,
     idade_min: resposta.idade_min,
     idade_max: resposta.idade_max,
     duracao_min: resposta.duracao_min,
@@ -359,6 +382,15 @@ async function main() {
 
     const gate = evaluate(linha, enrich.resposta);
     const processedAt = new Date().toISOString();
+
+    // Loga inferência de categoria antes de chamar buildLinhaEnriquecida (US-S22).
+    const catResolution = resolveCategoria(linha, enrich.resposta.categoria);
+    if (catResolution.inferida) {
+      console.log(
+        `  ↩ [US-S22] ${slug}: categoria inferida por keyword "${catResolution.categoria}" (Gemini: "${enrich.resposta.categoria}", origem: "${linha.categoria_origem}")`,
+      );
+    }
+
     const enriched = buildLinhaEnriquecida(
       linha,
       enrich.resposta,
