@@ -278,6 +278,102 @@ async function extrairDescricao(
 }
 
 // ---------------------------------------------------------------------------
+// Extração de endereço via Playwright (roda no browser)
+// ---------------------------------------------------------------------------
+
+/**
+ * Tenta extrair o endereço do venue de uma página de evento Sympla já carregada.
+ *
+ * Estratégia em cascata:
+ * 1. window.__NEXT_DATA__ — dados de hidratação do Next.js (mais confiável, estruturado)
+ * 2. DOM selectors — fallback para elementos visíveis na página
+ *
+ * Retorna null se não encontrar ou se o texto parecer genérico/inútil.
+ */
+export async function extrairEndereco(
+  page: import("playwright").Page
+): Promise<string | null> {
+  return page.evaluate(() => {
+    // --- Estratégia 1: __NEXT_DATA__ ---
+    // Caminho real confirmado via debug: props.pageProps.hydrationData.eventHydration.event.eventsAddress
+    // Campos: address (rua), addressNum (número), addressAlt (complemento), neighborhood (bairro)
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const nd = (window as any).__NEXT_DATA__;
+      const pageProps = nd?.props?.pageProps ?? {};
+
+      // Caminho confirmado (Sympla ≥ 2024)
+      const eventsAddress =
+        pageProps.hydrationData?.eventHydration?.event?.eventsAddress;
+
+      if (eventsAddress && typeof eventsAddress === "object") {
+        const rua = eventsAddress.address?.trim() ?? "";
+        const num = eventsAddress.addressNum?.trim() ?? "";
+        const comp = eventsAddress.addressAlt?.trim() ?? "";
+        const bairro = eventsAddress.neighborhood?.trim() ?? "";
+
+        const streetPart = [rua, num].filter(Boolean).join(", ");
+        const rest = [comp, bairro].filter(Boolean).join(" — ");
+        const full = [streetPart, rest].filter(Boolean).join(" — ");
+        if (full.length > 5) return full;
+      }
+
+      // Fallback: estruturas alternativas (versões antigas ou outros endpoints)
+      const altEv =
+        pageProps.event ??
+        pageProps.initialData?.event ??
+        pageProps.eventData?.event;
+
+      if (altEv) {
+        const a = altEv.address ?? altEv.location?.address ?? altEv.venue?.address;
+        if (a && typeof a === "object") {
+          const street = a.street?.trim() ?? a.logradouro?.trim() ?? "";
+          const number = a.number ?? a.numero ?? "";
+          const complement = a.complement ?? a.complemento ?? "";
+          const neighborhood = a.neighborhood ?? a.bairro ?? a.district ?? "";
+
+          const streetPart = [street, number].filter(Boolean).join(", ");
+          const rest = [complement, neighborhood].filter(Boolean).join(" — ");
+          const full = [streetPart, rest].filter(Boolean).join(" — ");
+          if (full.length > 5) return full;
+        }
+        const locStr = altEv.location?.name ?? altEv.venue?.name ?? altEv.local;
+        if (typeof locStr === "string" && locStr.length > 5 && locStr.length < 200) {
+          return locStr;
+        }
+      }
+    } catch {
+      // __NEXT_DATA__ ausente ou estrutura inesperada — segue para fallback
+    }
+
+    // --- Estratégia 2: DOM selectors ---
+    const selectors = [
+      "[data-testid='event-address']",
+      "[data-testid*='location'] address",
+      "[data-testid*='venue'] address",
+      "[class*='EventLocation'] address",
+      "[class*='EventAddress']",
+      "address",
+    ];
+
+    for (const sel of selectors) {
+      try {
+        const el = document.querySelector(sel) as HTMLElement | null;
+        const text = el?.innerText?.trim()
+          .replace(/\s*\n\s*/g, ", ")
+          .replace(/,\s*,/g, ",")
+          .trim();
+        if (text && text.length > 5 && text.length < 300) return text;
+      } catch {
+        // seletor inválido — próximo
+      }
+    }
+
+    return null;
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
@@ -293,6 +389,8 @@ export interface SymplarRawEvent {
   preco_inteira_centavos?: string;
   /** true quando há múltiplas faixas de preço (lotes, meia/inteira, etc.). */
   preco_a_partir?: boolean;
+  /** Endereço completo do venue extraído da página do evento. */
+  endereco?: string;
 }
 
 async function main() {
@@ -355,11 +453,13 @@ async function main() {
         const { texto, seletor } = await extrairDescricao(page);
         const descricaoLimpa = parseDescricao(texto);
         const { minPriceCents, multiplasFaixas } = await extrairPrecos(page);
+        const enderecoExtraido = await extrairEndereco(page);
 
-        // Campos de preço extraídos da página do evento
-        const precoExtra: Pick<SymplarRawEvent, "preco_inteira_centavos" | "preco_a_partir"> = {
+        // Campos extras extraídos da página do evento
+        const precoExtra: Pick<SymplarRawEvent, "preco_inteira_centavos" | "preco_a_partir" | "endereco"> = {
           ...(minPriceCents !== null ? { preco_inteira_centavos: String(minPriceCents) } : {}),
           preco_a_partir: multiplasFaixas,
+          ...(enderecoExtraido ? { endereco: enderecoExtraido } : {}),
         };
 
         if (descricaoLimpa) {
