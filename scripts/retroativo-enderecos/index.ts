@@ -6,7 +6,12 @@
  *   1. venue-map — busca o campo `nome` + `slug` da ficha contra mapa estático
  *      de endereços conhecidos. O slug codifica o venue quando o nome não o menciona
  *      (ex: slug "a-bela-e-a-fera-norte-shopping" → match em "norte shopping" → endereço).
- *   2. Gemini   — fallback: consulta direcionada por nome + bairro
+ *   2. Clubinho — visita a página do produto via Playwright headed e chama a API
+ *      interna do Clubinho (/api/rio-de-janeiro/<slug>) para extrair venues[0].address.
+ *      Roda para todas as fichas (Clubinho não tem partner=clubinho consistente).
+ *   3. Sympla   — se url_origem for do Sympla, abre a página via Playwright headed
+ *      e extrai o endereço do __NEXT_DATA__ (fonte autoritativa — antes do Gemini).
+ *   4. Gemini   — fallback: consulta direcionada por nome + bairro
  *      ("qual é o endereço de [nome] em [bairro], Rio de Janeiro?")
  *
  * Dry-run por padrão: imprime tabela e salva JSON. Nunca escreve no Sanity
@@ -33,6 +38,10 @@ import { writeFile, mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { GoogleGenAI } from "@google/genai";
 import { hasSanityConfig, sanityWriteClient } from "@/lib/sanity/client";
+import { createBrowserSession, fetchProductApi, gotoWithRetry } from "@/scripts/scraper/browser";
+import { extrairEndereco } from "@/scripts/scraper/sympla-enrich";
+import type { BrowserSession } from "@/scripts/scraper/browser";
+import type { ClubinhoProductApi } from "@/scripts/scraper/clubinho-api";
 
 // ---------------------------------------------------------------------------
 // VENUE_ENDERECO_MAP
@@ -67,7 +76,9 @@ export const VENUE_ENDERECO_MAP: Record<string, string> = {
   "teatro shopping tijuca": "Av. Maracanã, 987 — Tijuca",
   "teatro shopping rio sul": "Rua Lauro Müller, 116 — Botafogo",
   "teatro rio sul": "Rua Lauro Müller, 116 — Botafogo",
-  "teatro clara nunes": "Praça da Apoteose, s/n — Centro",
+  "teatro clara nunes": "R. Marquês de São Vicente, 52 — Gávea",    // Shopping da Gávea (corrigido: era Praça da Apoteose — errado)
+  "teatro vannucci": "R. Marquês de São Vicente, 52 — Gávea",       // Shopping da Gávea
+  "shopping da gavea": "R. Marquês de São Vicente, 52 — Gávea",     // Shopping da Gávea
   "teatro rival": "Rua Álvaro Alvim, 33 — Centro",
   "teatro leblon": "Av. Afrânio de Melo Franco, 290 — Leblon",
   "teatro maison de france": "Av. Presidente Antônio Carlos, 58 — Centro",
@@ -93,6 +104,7 @@ export const VENUE_ENDERECO_MAP: Record<string, string> = {
   "espaço cria": "Rua Almirante Alexandrino, 1030 — Santa Teresa",
   "espaço kapim": "Rua Almirante Alexandrino, 660 — Santa Teresa",
   "casa daros": "Rua General Severiano, 159 — Botafogo",
+  "eleva botafogo": "Rua General Severiano, 159 — Botafogo",        // ex-Casa Daros, hoje Escola Eleva
 
   // Shoppings (venue frequente)
   "barra shopping": "Av. das Américas, 4666 — Barra da Tijuca",
@@ -113,7 +125,8 @@ export const VENUE_ENDERECO_MAP: Record<string, string> = {
   "rio sul": "Rua Lauro Müller, 116 — Botafogo",
   "downtown barra": "Av. das Américas, 500 — Barra da Tijuca",
 
-  // Aquários / atrações permanentes
+  // Parques temáticos / atrações permanentes
+  "parque rita lee": "Av. Embaixador Abelardo Bueno, 3401 — Barra da Tijuca",  // ex-Parque Olímpico
   "aquario": "Praça Muhammad Ali, Via Binário do Porto, s/n — Porto Maravilha",
 
   // Parques e espaços outdoor
@@ -128,7 +141,7 @@ export const VENUE_ENDERECO_MAP: Record<string, string> = {
 // Tipos
 // ---------------------------------------------------------------------------
 
-export type MetodoEndereco = "venue_map" | "gemini" | "sem_match";
+export type MetodoEndereco = "venue_map" | "clubinho" | "gemini" | "sympla" | "sem_match";
 
 export interface ResultadoEndereco {
   slug: string;
@@ -144,6 +157,8 @@ interface SanityFichaSemEndereco {
   slug: string;
   nome: string;
   bairro: string;
+  url_origem?: string;
+  partner?: string;
 }
 
 interface GeminiAddressResponse {
@@ -191,8 +206,111 @@ export function tryVenueEndereco(nome: string, slug: string): string | null {
 }
 
 // ---------------------------------------------------------------------------
-// Estratégia 2: Gemini
-// Consulta direcionada: nome + bairro → endereço completo.
+// Estratégia 2: Clubinho via plain fetch + LD+JSON
+//
+// O Clubinho usa Inertia.js e renderiza o LD+JSON server-side — plain fetch funciona.
+// O bloco `@type: "Event"` contém `location.address.streetAddress` com rua + bairro.
+//
+// Se já tivermos a URL (via link_compra), usamos direto.
+// Se não (fichas antigas com link_compra null), tentamos localizar via Algolia:
+//   - O Clubinho expõe publicamente seus credentials Algolia no HTML da página
+//   - Buscamos por nome e derivamos a URL do hit
+//
+// Ativação: url_origem contém "clubinhodeofertas.com.br"
+//   OU partner é "clubinho" | "outro" (proxy temporário até migração no Studio)
+// ---------------------------------------------------------------------------
+
+const CLUBINHO_ALGOLIA_APP_ID = "CUM4V9330E";
+const CLUBINHO_ALGOLIA_KEY = "e44ddfef706279649b24a5051fccfc56";
+const CLUBINHO_ALGOLIA_INDEX = "search_products_index";
+
+interface AlgoliaHit {
+  objectID?: string;
+  slug?: string;
+  url?: string;
+  permalink?: string;
+  name?: string;
+  title?: string;
+}
+
+interface AlgoliaResponse {
+  hits: AlgoliaHit[];
+}
+
+async function searchClubinhoUrl(nome: string): Promise<string | null> {
+  try {
+    const res = await fetch(
+      `https://${CLUBINHO_ALGOLIA_APP_ID}-dsn.algolia.net/1/indexes/${CLUBINHO_ALGOLIA_INDEX}/query`,
+      {
+        method: "POST",
+        headers: {
+          "X-Algolia-Application-Id": CLUBINHO_ALGOLIA_APP_ID,
+          "X-Algolia-API-Key": CLUBINHO_ALGOLIA_KEY,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ query: nome, hitsPerPage: 1 }),
+        signal: AbortSignal.timeout(10_000),
+      },
+    );
+    console.log(`    [algolia] status: ${res.status}`);
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      console.log(`    [algolia] erro: ${body.slice(0, 200)}`);
+      return null;
+    }
+
+    const data = (await res.json()) as AlgoliaResponse;
+    const hit = data.hits?.[0];
+    console.log(`    [algolia] hits: ${data.hits?.length ?? 0} | hit[0]: ${JSON.stringify(hit ?? null).slice(0, 200)}`);
+    if (!hit) return null;
+
+    // Tenta extrair URL do hit (ordem de preferência)
+    if (hit.url) return hit.url;
+    if (hit.permalink) return hit.permalink;
+    if (hit.slug) return `https://clubinhodeofertas.com.br/rio-de-janeiro/${hit.slug}`;
+
+    return null;
+  } catch (err) {
+    console.log(`    [algolia] exception: ${err instanceof Error ? err.message : String(err)}`);
+    return null;
+  }
+}
+
+async function tryClubinhoEndereco(
+  session: BrowserSession,
+  nome: string,
+  url?: string,
+): Promise<string | null> {
+  // Obtém a URL do Clubinho: direto via link_compra ou buscando no Algolia pelo nome.
+  const clubinhoUrl = url || (await searchClubinhoUrl(nome));
+  console.log(`    [clubinho] url: ${clubinhoUrl ?? "null"}`);
+  if (!clubinhoUrl) return null;
+
+  // Clubinho bloqueia plain fetch via Cloudflare (403). Usa Playwright headed
+  // com a mesma sessão já aberta para o Sympla. Navega até a página do produto
+  // para estabelecer cookies/sessão, depois chama a API interna do Clubinho.
+  const apiPath = `/api${new URL(clubinhoUrl).pathname}`;
+  await gotoWithRetry(session.page, clubinhoUrl, 20_000);
+  const { status, data } = await fetchProductApi<ClubinhoProductApi>(session.page, apiPath);
+  console.log(`    [clubinho-api] status: ${status}`);
+  if (status !== 200 || !data) return null;
+
+  const venueAddress = data.venues?.[0]?.address;
+  if (!venueAddress?.street && !venueAddress?.number) return null;
+
+  // Mesma lógica de composição de endereço do scrape-atracao.ts
+  const rua = [venueAddress.street?.trim(), venueAddress.number]
+    .filter(Boolean)
+    .join(", ");
+  const localizacao = [venueAddress.complement, venueAddress.neighborhood]
+    .filter(Boolean)
+    .join(" — ");
+  return [rua, localizacao].filter(Boolean).join(" — ") || null;
+}
+
+// ---------------------------------------------------------------------------
+// Estratégia 3: Gemini
+// Fallback: consulta direcionada por nome + bairro → endereço completo.
 // ---------------------------------------------------------------------------
 
 const GEMINI_MODEL = "gemini-2.5-flash";
@@ -267,13 +385,28 @@ function sleep(ms: number): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
+// Estratégia 4: Sympla via Playwright
+// Visita a página do evento no Sympla e extrai o endereço do __NEXT_DATA__.
+// Só chamada quando url_origem contém "sympla.com.br".
+// Requer browser headed (Sympla bloqueia headless via Cloudflare).
+// ---------------------------------------------------------------------------
+
+async function trySymplaEndereco(
+  session: BrowserSession,
+  url: string,
+): Promise<string | null> {
+  await gotoWithRetry(session.page, url, 25_000);
+  return extrairEndereco(session.page);
+}
+
+// ---------------------------------------------------------------------------
 // Busca fichas publicadas sem `endereco` no Sanity
 // ---------------------------------------------------------------------------
 
 async function fetchFichasSemEndereco(
   limit?: number,
 ): Promise<SanityFichaSemEndereco[]> {
-  const groq = `*[_type == "atracao"
+  const groqQuery = `*[_type == "atracao"
     && !(_id in path("drafts.**"))
     && status == "operando"
     && !defined(endereco)
@@ -281,10 +414,12 @@ async function fetchFichasSemEndereco(
     _id,
     "slug": slug.current,
     nome,
-    bairro
+    bairro,
+    "url_origem": link_compra,
+    partner
   }${limit !== undefined ? `[0...${limit}]` : ""}`;
 
-  return sanityWriteClient.fetch<SanityFichaSemEndereco[]>(groq);
+  return sanityWriteClient.fetch<SanityFichaSemEndereco[]>(groqQuery);
 }
 
 // ---------------------------------------------------------------------------
@@ -297,6 +432,10 @@ async function patchEndereco(
   endereco: string,
   dryRun: boolean,
 ): Promise<{ patched: number; skipped: number }> {
+  // Tenta patchar publicado + draft (se existir).
+  // Não usa getDocument() antes do patch — o Sanity client com token de escrita
+  // nem sempre tem permissão de leitura individual via getDocument, mas consegue
+  // patch direto. Documento inexistente lança erro → skipped.
   const prefixes = ["", "drafts."];
   let patched = 0;
   let skipped = 0;
@@ -304,16 +443,12 @@ async function patchEndereco(
   for (const prefix of prefixes) {
     const id = `${prefix}${baseId}`;
     try {
-      const doc = await sanityWriteClient.getDocument(id);
-      if (!doc) {
-        skipped++;
-        continue;
-      }
       if (!dryRun) {
         await sanityWriteClient.patch(id).set({ endereco }).commit();
       }
       patched++;
     } catch {
+      // Documento não existe com esse prefixo — normal para drafts.
       skipped++;
     }
   }
@@ -363,7 +498,7 @@ function printTable(resultados: ResultadoEndereco[]): void {
 
 async function saveJson(
   resultados: ResultadoEndereco[],
-  stats: { total: number; venue_map: number; gemini: number; sem_match: number; stopped_early: boolean },
+  stats: { total: number; venue_map: number; clubinho: number; gemini: number; sympla: number; sem_match: number; stopped_early: boolean },
 ): Promise<string> {
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
   const outputDir = join(process.cwd(), "data", "output");
@@ -450,47 +585,109 @@ async function main(): Promise<void> {
   const PRE_MORTEM_THRESHOLD = 0.20;
   const MIN_FICHAS_PARA_PREMORTEM = 5; // só ativa o gate após 5 fichas processadas
 
-  for (let i = 0; i < fichas.length; i++) {
-    const ficha = fichas[i];
-    console.log(`\n[${i + 1}/${fichas.length}] ${ficha.slug}`);
+  // Browser lazy: só abre se houver fichas Sympla que passarem por Strategy 3.
+  // Sempre headed — Sympla bloqueia headless via Cloudflare.
+  let browserSession: BrowserSession | null = null;
 
-    // Estratégia 1: venue-map (busca em nome + slug)
-    const venueEndereco = tryVenueEndereco(ficha.nome, ficha.slug);
-    if (venueEndereco) {
-      console.log(`  ✅ venue_map → "${venueEndereco}"`);
-      resultados.push({
-        slug: ficha.slug,
-        _id: ficha._id,
-        nome: ficha.nome,
-        bairro: ficha.bairro,
-        endereco_sugerido: venueEndereco,
-        metodo: "venue_map",
-      });
-      continue;
-    }
+  try {
+    for (let i = 0; i < fichas.length; i++) {
+      const ficha = fichas[i];
+      console.log(`\n[${i + 1}/${fichas.length}] ${ficha.slug}`);
 
-    // Estratégia 2: Gemini
-    console.log(`  → venue_map sem match, consultando Gemini...`);
-    await sleep(GEMINI_RATE_LIMIT_DELAY_MS);
+      // Estratégia 1: venue-map (busca em nome + slug)
+      const venueEndereco = tryVenueEndereco(ficha.nome, ficha.slug);
+      if (venueEndereco) {
+        console.log(`  ✅ venue_map → "${venueEndereco}"`);
+        resultados.push({
+          slug: ficha.slug,
+          _id: ficha._id,
+          nome: ficha.nome,
+          bairro: ficha.bairro,
+          endereco_sugerido: venueEndereco,
+          metodo: "venue_map",
+        });
+        continue;
+      }
 
-    let geminiEndereco: string | null = null;
-    try {
-      geminiEndereco = await tryGeminiEndereco(ficha.nome, ficha.bairro);
-    } catch (err) {
-      console.log(`  ⚠️  Gemini erro: ${err instanceof Error ? err.message : String(err)}`);
-    }
+      // Estratégia 2: Clubinho via LD+JSON
+      // Tenta para todas as fichas: se url_origem já for do Clubinho, usa direto.
+      // Caso contrário, busca via Algolia pelo nome (API pública do Clubinho).
+      // Se a ficha não estiver no catálogo do Clubinho, Algolia retorna vazio → segue adiante.
+      console.log(`  → venue_map sem match, tentando Clubinho (API via Playwright)...`);
+      try {
+        if (!browserSession) {
+          console.log(`  → Abrindo browser headed para Clubinho...`);
+          browserSession = await createBrowserSession(true);
+        }
+        const clubinhoEndereco = await tryClubinhoEndereco(browserSession, ficha.nome, ficha.url_origem);
+        if (clubinhoEndereco) {
+          console.log(`  ✅ clubinho → "${clubinhoEndereco}"`);
+          resultados.push({
+            slug: ficha.slug,
+            _id: ficha._id,
+            nome: ficha.nome,
+            bairro: ficha.bairro,
+            endereco_sugerido: clubinhoEndereco,
+            metodo: "clubinho",
+          });
+          continue;
+        }
+      } catch (err) {
+        console.log(`  ⚠️  Clubinho erro: ${err instanceof Error ? err.message : String(err)}`);
+      }
 
-    if (geminiEndereco) {
-      console.log(`  ✅ gemini → "${geminiEndereco}"`);
-      resultados.push({
-        slug: ficha.slug,
-        _id: ficha._id,
-        nome: ficha.nome,
-        bairro: ficha.bairro,
-        endereco_sugerido: geminiEndereco,
-        metodo: "gemini",
-      });
-    } else {
+      // Estratégia 3: Sympla via Playwright (antes do Gemini — fonte autoritativa)
+      // Sympla tem o endereço exato; Gemini pode alucinar número de rua.
+      const isSympla = ficha.url_origem?.includes("sympla.com.br");
+      if (isSympla && ficha.url_origem) {
+        console.log(`  → tentando Sympla (__NEXT_DATA__)...`);
+        try {
+          if (!browserSession) {
+            console.log(`  → Abrindo browser headed para Sympla...`);
+            browserSession = await createBrowserSession(true);
+          }
+          const symplaEndereco = await trySymplaEndereco(browserSession, ficha.url_origem);
+          if (symplaEndereco) {
+            console.log(`  ✅ sympla → "${symplaEndereco}"`);
+            resultados.push({
+              slug: ficha.slug,
+              _id: ficha._id,
+              nome: ficha.nome,
+              bairro: ficha.bairro,
+              endereco_sugerido: symplaEndereco,
+              metodo: "sympla",
+            });
+            continue;
+          }
+        } catch (err) {
+          console.log(`  ⚠️  Sympla erro: ${err instanceof Error ? err.message : String(err)}`);
+        }
+      }
+
+      // Estratégia 4: Gemini — fallback quando nenhuma fonte autoritativa funcionou
+      console.log(`  → sem match via fonte, consultando Gemini...`);
+      await sleep(GEMINI_RATE_LIMIT_DELAY_MS);
+
+      let geminiEndereco: string | null = null;
+      try {
+        geminiEndereco = await tryGeminiEndereco(ficha.nome, ficha.bairro);
+      } catch (err) {
+        console.log(`  ⚠️  Gemini erro: ${err instanceof Error ? err.message : String(err)}`);
+      }
+
+      if (geminiEndereco) {
+        console.log(`  ✅ gemini → "${geminiEndereco}"`);
+        resultados.push({
+          slug: ficha.slug,
+          _id: ficha._id,
+          nome: ficha.nome,
+          bairro: ficha.bairro,
+          endereco_sugerido: geminiEndereco,
+          metodo: "gemini",
+        });
+        continue;
+      }
+
       console.log(`  ❌ sem_match`);
       semMatchCount++;
       resultados.push({
@@ -501,31 +698,35 @@ async function main(): Promise<void> {
         endereco_sugerido: null,
         metodo: "sem_match",
       });
-    }
 
-    // Pré-mortem: verificar taxa de sem_match após mínimo de fichas processadas.
-    // Pode ser desativado com --skip-premortem para processar todas as fichas
-    // e ter visibilidade completa do resultado antes de decidir o que fazer.
-    if (!skipPremortem) {
-      const processadas = i + 1;
-      if (processadas >= MIN_FICHAS_PARA_PREMORTEM) {
-        const taxaSemMatch = semMatchCount / processadas;
-        if (taxaSemMatch > PRE_MORTEM_THRESHOLD) {
-          console.log(
-            `\n⛔ PRÉ-MORTEM: ${semMatchCount}/${processadas} fichas sem match ` +
-            `(${(taxaSemMatch * 100).toFixed(0)}% > 20%). ` +
-            `Parando execução e entregando resultado parcial.`,
-          );
-          console.log(
-            `   As ${fichas.length - processadas} fichas restantes não foram processadas.`,
-          );
-          console.log(
-            `   Para processar todas e ter visibilidade completa: use --skip-premortem`,
-          );
-          stoppedEarly = true;
-          break;
+      // Pré-mortem: verificar taxa de sem_match após mínimo de fichas processadas.
+      // Pode ser desativado com --skip-premortem para processar todas as fichas
+      // e ter visibilidade completa do resultado antes de decidir o que fazer.
+      if (!skipPremortem) {
+        const processadas = i + 1;
+        if (processadas >= MIN_FICHAS_PARA_PREMORTEM) {
+          const taxaSemMatch = semMatchCount / processadas;
+          if (taxaSemMatch > PRE_MORTEM_THRESHOLD) {
+            console.log(
+              `\n⛔ PRÉ-MORTEM: ${semMatchCount}/${processadas} fichas sem match ` +
+              `(${(taxaSemMatch * 100).toFixed(0)}% > 20%). ` +
+              `Parando execução e entregando resultado parcial.`,
+            );
+            console.log(
+              `   As ${fichas.length - processadas} fichas restantes não foram processadas.`,
+            );
+            console.log(
+              `   Para processar todas e ter visibilidade completa: use --skip-premortem`,
+            );
+            stoppedEarly = true;
+            break;
+          }
         }
       }
+    }
+  } finally {
+    if (browserSession) {
+      await browserSession.browser.close();
     }
   }
 
@@ -534,7 +735,9 @@ async function main(): Promise<void> {
     total: fichas.length,
     processadas: resultados.length,
     venue_map: resultados.filter((r) => r.metodo === "venue_map").length,
+    clubinho: resultados.filter((r) => r.metodo === "clubinho").length,
     gemini: resultados.filter((r) => r.metodo === "gemini").length,
+    sympla: resultados.filter((r) => r.metodo === "sympla").length,
     sem_match: resultados.filter((r) => r.metodo === "sem_match").length,
     stopped_early: stoppedEarly,
   };
@@ -547,7 +750,9 @@ async function main(): Promise<void> {
   console.log(`  Total buscadas:    ${stats.total}`);
   console.log(`  Processadas:       ${stats.processadas}`);
   console.log(`  venue_map:         ${stats.venue_map}`);
+  console.log(`  clubinho:          ${stats.clubinho}`);
   console.log(`  gemini:            ${stats.gemini}`);
+  console.log(`  sympla:            ${stats.sympla}`);
   console.log(`  sem_match:         ${stats.sem_match}`);
   if (stoppedEarly) {
     console.log(`  ⚠️  Parado cedo — ${fichas.length - resultados.length} fichas não processadas → US-O17`);
