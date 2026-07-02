@@ -10,7 +10,7 @@ import type { Atracao } from "@/lib/sanity/types";
 
 export function useAttractionView(
   atracao: Atracao,
-  source: AttractionViewParams["source"],
+  source: AttractionViewParams["view_source"],
 ) {
   const cardRef = useRef<HTMLDivElement>(null);
   const firedRef = useRef(false);

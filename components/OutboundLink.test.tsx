@@ -154,7 +154,7 @@ describe("OutboundLink — US-I8.4", () => {
       expect(trackEvent).toHaveBeenCalledTimes(2);
     });
 
-    it("buy_ticket_click não tem campo source", () => {
+    it("buy_ticket_click não tem campo view_source", () => {
       renderLink(true);
       act(() => { getLink()!.click(); });
 
@@ -162,10 +162,10 @@ describe("OutboundLink — US-I8.4", () => {
         ([name]) => name === "buy_ticket_click",
       );
       expect(buyCall).toBeDefined();
-      expect(buyCall![1]).not.toHaveProperty("source");
+      expect(buyCall![1]).not.toHaveProperty("view_source");
     });
 
-    it("outbound_click tem campo source", () => {
+    it("outbound_click tem campo view_source", () => {
       renderLink(true);
       act(() => { getLink()!.click(); });
 
@@ -173,7 +173,7 @@ describe("OutboundLink — US-I8.4", () => {
         ([name]) => name === "outbound_click",
       );
       expect(outboundCall).toBeDefined();
-      expect(outboundCall![1]).toHaveProperty("source", "detail_page");
+      expect(outboundCall![1]).toHaveProperty("view_source", "detail_page");
     });
   });
 

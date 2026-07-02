@@ -100,7 +100,7 @@ describe("AtracaoDetailActions — botão Salvar (US-F1)", () => {
       attraction_id: mockAtracao.slug,
       attraction_name: mockAtracao.titulo,
       category: mockAtracao.categoria,
-      source: "detail_page",
+      view_source: "detail_page",
     });
   });
 

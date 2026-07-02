@@ -62,7 +62,7 @@ export function AtracaoDetailActions({ atracao }: AtracaoDetailActionsProps) {
       attraction_id: atracao.slug,
       attraction_name: atracao.titulo,
       category: atracao.categoria,
-      source: "detail_page",
+      view_source: "detail_page",
     } satisfies SaveClickParams);
 
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
