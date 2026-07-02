@@ -32,7 +32,7 @@ export function AtracaoCardLink({ atracao, className, filterRef, sempreDisponive
         attraction_id: atracao.slug,
         attraction_name: atracao.titulo,
         category: atracao.categoria,
-        source: "listing_card",
+        view_source: "listing_card",
       } satisfies SaveClickParams);
     }
 

@@ -30,7 +30,7 @@ export interface AttractionViewParams {
   environment?: "indoor" | "outdoor" | "hibrido";
   age_min?: number;
   age_max?: number;
-  source: "listing" | "detail_page";
+  view_source: "listing" | "detail_page";
 }
 
 export interface FilterUsedParams {
@@ -44,7 +44,7 @@ export interface SaveClickParams {
   attraction_id: string;
   attraction_name: string;
   category: string;
-  source: "listing_card" | "detail_page";
+  view_source: "listing_card" | "detail_page";
 }
 
 export interface ShareClickParams {
@@ -52,7 +52,7 @@ export interface ShareClickParams {
   attraction_name: string;
   category: string;
   share_method: "copy_link" | "native_share" | "whatsapp";
-  source: "listing_card" | "detail_page";
+  view_source: "listing_card" | "detail_page";
 }
 
 export interface OutboundClickParams {
@@ -62,13 +62,13 @@ export interface OutboundClickParams {
   destination_url: string;
   destination_type: "sympla" | "eventim" | "official_site" | "instagram" | "clubinho" | "other";
   cta_label: string;
-  source: "detail_page" | "listing_card";
+  view_source: "detail_page" | "listing_card";
   /** Canal de venda registrado no Sanity (sympla | eventim | outro). Útil para medir conversão por canal. */
   partner?: string;
 }
 
 /** Disparado especificamente ao clicar em "Ver ingresso". Coexiste com outbound_click. */
-export type BuyTicketClickParams = Omit<OutboundClickParams, "source">;
+export type BuyTicketClickParams = Omit<OutboundClickParams, "view_source">;
 
 export interface AddressClickParams {
   attraction_id: string;
@@ -85,7 +85,7 @@ export function mapEnvironmentForAnalytics(
 
 export function buildAttractionViewParams(
   atracao: Atracao,
-  source: AttractionViewParams["source"],
+  source: AttractionViewParams["view_source"],
 ): AttractionViewParams {
   return {
     attraction_id: atracao.slug,
@@ -96,7 +96,7 @@ export function buildAttractionViewParams(
     environment: mapEnvironmentForAnalytics(atracao.indoorOutdoor),
     age_min: atracao.idadeMin,
     age_max: atracao.idadeMax,
-    source,
+    view_source: source,
   };
 }
 
@@ -130,7 +130,7 @@ export function buildShareUrl(baseUrl: string, shareSource: ShareSource): string
 export async function trackShareClick(
   atracao: Pick<Atracao, "slug" | "titulo" | "categoria">,
   shareUrl: string,
-  source: ShareClickParams["source"],
+  source: ShareClickParams["view_source"],
 ): Promise<void> {
   let shareMethod: ShareClickParams["share_method"] = "copy_link";
 
@@ -153,6 +153,6 @@ export async function trackShareClick(
     attraction_name: atracao.titulo,
     category: atracao.categoria,
     share_method: shareMethod,
-    source,
+    view_source: source,
   } satisfies ShareClickParams);
 }

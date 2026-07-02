@@ -14,7 +14,7 @@ interface OutboundLinkProps
   atracao: Atracao;
   href: string;
   ctaLabel: string;
-  source?: OutboundClickParams["source"];
+  source?: OutboundClickParams["view_source"];
   /** Quando true, dispara buy_ticket_click em paralelo ao outbound_click. */
   isBuyTicket?: boolean;
   children: ReactNode;
@@ -42,7 +42,7 @@ export function OutboundLink({
           destination_url: href,
           destination_type: detectDestinationType(href),
           cta_label: ctaLabel,
-          source,
+          view_source: source,
           partner: atracao.partner,
         };
 

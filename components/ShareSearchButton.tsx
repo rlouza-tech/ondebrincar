@@ -46,7 +46,7 @@ export function ShareSearchButton({ searchParams }: ShareSearchButtonProps) {
       attraction_name: `Busca: ${searchParams.toString()}`,
       category: "busca",
       share_method: "copy_link",
-      source: "listing_card",
+      view_source: "listing_card",
     } satisfies ShareClickParams);
 
     setCopiado(true);
