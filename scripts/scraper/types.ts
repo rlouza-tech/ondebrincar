@@ -17,6 +17,8 @@ export interface LinhaEnriquecida {
   url_ingresso: string;
   /** true quando há múltiplas faixas de preço (ex: lotes, early bird, dias avulsos vs semana). */
   preco_a_partir?: boolean;
+  /** Endereço completo do venue extraído pelo scraper. Ex.: Rua Fonseca, 240 — Bangu. */
+  endereco?: string;
 }
 
 export interface ListingPreview {

@@ -25,6 +25,7 @@
     "check-atualizacoes": "dotenv -e .env.local -- tsx scripts/check-atualizacoes/index.ts",
     "auto-avancar-datas": "dotenv -e .env.local -- tsx scripts/auto-avancar-datas/index.ts",
     "fill-missing-images": "dotenv -e .env.local -- tsx scripts/fill-missing-images/index.ts",
+    "retroativo-enderecos": "dotenv -e .env.local -- tsx scripts/retroativo-enderecos/index.ts",
     "mark-expired": "dotenv -e .env.local -- tsx scripts/mark-expired.ts",
     "cleanup-proxima-data": "dotenv -e .env.local -- tsx scripts/cleanup-proxima-data.ts",
     "test": "vitest run",

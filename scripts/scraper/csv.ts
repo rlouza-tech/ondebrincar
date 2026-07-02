@@ -20,6 +20,7 @@ export const CSV_COLUMNS: Array<keyof LinhaEnriquecida> = [
   "preco_inteira_centavos",
   "url_ingresso",
   "preco_a_partir",
+  "endereco",
 ];
 
 export async function writeScrapedCsv(

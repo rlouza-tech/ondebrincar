@@ -42,8 +42,22 @@ function mapToLinha(
     ld.venue ||
     api?.venues?.[0]?.name ||
     preview.venue;
+  const venueAddress = api?.venues?.[0]?.address;
   const bairro =
-    api?.venues?.[0]?.address?.neighborhood ?? extractBairroFromVenue(venue);
+    venueAddress?.neighborhood ?? extractBairroFromVenue(venue);
+
+  // Compõe endereço completo a partir dos campos estruturados da API Clubinho.
+  // Formato: "Rua Fonseca, 240 — Shopping Bangu — Bangu" (complement opcional).
+  const endereco: string | undefined = (() => {
+    if (!venueAddress?.street && !venueAddress?.number) return undefined;
+    const rua = [venueAddress.street?.trim(), venueAddress.number]
+      .filter(Boolean)
+      .join(", ");
+    const localizacao = [venueAddress.complement, venueAddress.neighborhood]
+      .filter(Boolean)
+      .join(" — ");
+    return [rua, localizacao].filter(Boolean).join(" — ") || undefined;
+  })();
 
   const fullPrice = api?.lowestPrice?.full ?? null;
   const salePrice = api?.lowestPrice?.sale ?? null;
@@ -87,6 +101,7 @@ function mapToLinha(
     url_ingresso: productUrl,
     // max_discount > 0 indica desconto estrutural de lote — há múltiplas faixas de preço.
     preco_a_partir: (maxDiscount ?? 0) > 0,
+    ...(endereco ? { endereco } : {}),
   };
 }
 

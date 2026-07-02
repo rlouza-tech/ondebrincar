@@ -110,11 +110,12 @@ export const atracao = defineType({
       name: "partner",
       title: "Partner",
       type: "string",
-      description: "Parceiro do link de compra. Ex.: sympla, eventim ou outro.",
+      description: "Parceiro do link de compra. Ex.: sympla, eventim, clubinho ou outro.",
       options: {
         list: [
           { title: "Sympla", value: "sympla" },
           { title: "Eventim", value: "eventim" },
+          { title: "Clubinho de Ofertas", value: "clubinho" },
           { title: "Outro", value: "outro" },
         ],
         layout: "radio",
