@@ -36,6 +36,7 @@
     "@sanity/client": "^7.22.0",
     "@sanity/image-url": "^2.1.1",
     "@sanity/vision": "^3.99.0",
+    "@vercel/speed-insights": "^2.0.0",
     "csv-parse": "^6.2.1",
     "csv-stringify": "^6.7.0",
     "lucide-react": "^1.16.0",

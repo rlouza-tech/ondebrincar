@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, Nunito } from "next/font/google";
 import Script from "next/script";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 
 const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID;
@@ -75,6 +76,8 @@ export default function RootLayout({
             })(window, document, "clarity", "script", "${CLARITY_ID}");
           `}</Script>
         )}
+
+        <SpeedInsights />
       </body>
     </html>
   );
