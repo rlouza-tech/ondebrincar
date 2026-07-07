@@ -125,8 +125,15 @@ export async function scrapeAtracao(
 
   const { status, data } = await fetchProductApi<ClubinhoProductApi>(page, apiPath);
   if (status === 200 && data) {
-    return mapToLinha(preview, productUrl, pageData, data);
+    return { ...mapToLinha(preview, productUrl, pageData, data), _apiStatus: status };
   }
 
-  return mapPreviewFallback(preview, pageData);
+  // Diagnóstico US-S36 (06/07/2026): fetchProductApi falhou sem lançar exceção —
+  // cai em fallback silencioso (sem endereço, sem os demais campos vindos da API
+  // de produto). Log aqui pra correlacionar com fichas de endereço vazio na
+  // rodada de quinta. Ver docs/discovery/DISCOVERY-2026-07-06-endereco-clubinho.md.
+  console.warn(
+    `[scrape-atracao] fetchProductApi falhou (status ${status}) — ${apiPath} — "${preview.nome}". Fallback sem dados de API (sem endereço).`,
+  );
+  return { ...mapPreviewFallback(preview, pageData), _apiStatus: status };
 }

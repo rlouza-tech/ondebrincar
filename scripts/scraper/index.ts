@@ -144,6 +144,20 @@ async function main() {
 
   console.log(`\n${aceitas} eventos aceitos / ${descartadas} descartados (fora do município do RJ)`);
 
+  // Diagnóstico US-S36 (06/07/2026): agrega quantas fichas caíram em fallback
+  // sem dados de API (sem endereço) por fetchProductApi não ter retornado 200.
+  // Ver docs/discovery/DISCOVERY-2026-07-06-endereco-clubinho.md.
+  const apiFailures = rows.filter((r) => r._apiStatus !== 200);
+  if (apiFailures.length > 0) {
+    console.warn(
+      `\n⚠️  ${apiFailures.length}/${rows.length} fichas com fetchProductApi falhando (sem endereço/dados de API) — status: ${apiFailures
+        .map((r) => r._apiStatus ?? "sem status")
+        .join(", ")}. Ver warnings [scrape-atracao] acima para URL de cada uma.`,
+    );
+  } else {
+    console.log(`\n✅ fetchProductApi retornou 200 para todas as ${rows.length} fichas aceitas.`);
+  }
+
   await writeScrapedCsv(options.outputPath, rows);
   await session.browser.close();
 
