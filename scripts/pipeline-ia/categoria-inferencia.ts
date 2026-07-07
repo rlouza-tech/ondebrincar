@@ -1,14 +1,17 @@
 /**
- * categoria-inferencia.ts — US-S22
+ * categoria-inferencia.ts — US-S22 (reaberta 06/jul/2026)
  *
- * Inferência de categoria canônica por palavra-chave quando o Gemini
- * retorna um valor inválido (fora de CATEGORIAS_VALIDAS).
+ * Inferência de categoria canônica por palavra-chave quando o Gemini retorna
+ * um valor inválido (fora de CATEGORIAS_VALIDAS) OU um valor válido-porém-genérico
+ * ("evento" / "atividade-extra" — catch-all do prompt, ver prompt.ts).
  *
- * Fluxo de resolução em buildLinhaEnriquecida (index.ts):
- *   1. categoria_origem já é canônica  → usa direto (sem Gemini)
- *   2. Gemini retornou categoria válida → usa
- *   3. Gemini retornou inválida         → tenta inferirCategoriaPorKeyword()
- *   4. Sem match                        → mantém valor inválido (quality gate sinaliza needs_human)
+ * Fluxo de resolução em resolveCategoria (index.ts):
+ *   1. categoria_origem já é canônica            → usa direto (sem Gemini)
+ *   2. Gemini retornou categoria válida e específica → usa
+ *   3. Gemini retornou inválida OU válida-porém-genérica → tenta inferirCategoriaPorKeyword()
+ *      - Match encontrado → keyword vence sobre a genérica do Gemini
+ *   4. Sem match                                  → mantém valor do Gemini (se inválido,
+ *      quality gate sinaliza needs_human; se genérico válido, fica como está)
  *
  * Busca em texto combinado: nome + categoria_origem + venue.
  * Regras ordenadas por especificidade — a primeira que fizer match vence.
