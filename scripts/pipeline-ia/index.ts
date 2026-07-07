@@ -217,26 +217,45 @@ function enrichBairrosPreGemini(rows: LinhaInput[]): BairroEnrichLog[] {
 }
 
 /**
- * Resolve a categoria final da ficha em três estágios (US-S22):
- *  1. categoria_origem já canônica → usa diretamente (sem Gemini)
- *  2. Gemini retornou valor válido  → usa
- *  3. Gemini retornou inválido      → tenta inferência por keyword
- *     - Match encontrado → usa e loga
- *     - Sem match        → mantém valor inválido (quality gate sinaliza needs_human)
+ * Categorias válidas porém genéricas — servem de catch-all no prompt do Gemini
+ * (ver prompt.ts) e não devem impedir a inferência por keyword de encontrar uma
+ * categoria mais específica (US-S22, reaberta 06/jul/2026).
  */
-function resolveCategoria(linha: LinhaInput, respostaCategoria: RespostaGemini["categoria"]): {
+const CATEGORIAS_GENERICAS: ReadonlySet<Categoria> = new Set(["evento", "atividade-extra"]);
+
+/**
+ * Resolve a categoria final da ficha em três estágios (US-S22, reaberta):
+ *  1. categoria_origem já canônica              → usa diretamente (sem Gemini)
+ *  2. Gemini retornou valor válido E específico  → usa
+ *  3. Gemini retornou inválido OU válido-porém-genérico (evento/atividade-extra)
+ *     → tenta inferência por keyword
+ *     - Match encontrado → keyword vence sobre a categoria genérica do Gemini, usa e loga
+ *     - Sem match        → mantém o valor do Gemini (genérico válido, ou inválido —
+ *       nesse caso o quality gate sinaliza needs_human)
+ */
+export function resolveCategoria(linha: LinhaInput, respostaCategoria: RespostaGemini["categoria"]): {
   categoria: Categoria;
   inferida: boolean;
 } {
   if ((CATEGORIAS_VALIDAS as readonly string[]).includes(linha.categoria_origem)) {
     return { categoria: linha.categoria_origem as Categoria, inferida: false };
   }
-  if ((CATEGORIAS_VALIDAS as readonly string[]).includes(respostaCategoria)) {
+
+  const geminiValida = (CATEGORIAS_VALIDAS as readonly string[]).includes(respostaCategoria);
+  const geminiGenerica = geminiValida && CATEGORIAS_GENERICAS.has(respostaCategoria);
+
+  // Só aceita a resposta do Gemini sem checar keyword se ela for válida E específica.
+  if (geminiValida && !geminiGenerica) {
     return { categoria: respostaCategoria, inferida: false };
   }
-  // Gemini retornou valor fora de CATEGORIAS_VALIDAS — inferência por keyword.
+
+  // Gemini retornou valor inválido, ou válido-porém-genérico (evento/atividade-extra)
+  // — em ambos os casos, tenta inferência por keyword antes de aceitar a resposta do Gemini.
   const inferred = inferirCategoriaPorKeyword(linha.nome, linha.categoria_origem, linha.venue);
-  return { categoria: inferred ?? respostaCategoria, inferida: inferred !== null };
+  if (inferred !== null) {
+    return { categoria: inferred, inferida: true };
+  }
+  return { categoria: respostaCategoria, inferida: false };
 }
 
 function buildLinhaEnriquecida(
