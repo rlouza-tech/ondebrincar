@@ -19,6 +19,14 @@ export interface LinhaEnriquecida {
   preco_a_partir?: boolean;
   /** Endereço completo do venue extraído pelo scraper. Ex.: Rua Fonseca, 240 — Bangu. */
   endereco?: string;
+  /**
+   * Diagnóstico — US-S36 (instrumentação, 06/07/2026).
+   * Status HTTP retornado por fetchProductApi() para esta ficha. Não faz parte
+   * do CSV de saída (fora de CSV_COLUMNS, é ignorado por writeScrapedCsv).
+   * Serve só pra correlacionar, no log da rodada, quais fichas caíram em
+   * mapPreviewFallback() (sem endereço) por falha silenciosa da API do produto.
+   */
+  _apiStatus?: number;
 }
 
 export interface ListingPreview {
