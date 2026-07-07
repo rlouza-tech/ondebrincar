@@ -190,9 +190,10 @@ interface BairroEnrichLog {
 }
 
 /**
- * Pré-processa fichas com bairro vazio aplicando venue_map e bairro_scan (US-S16).
+ * Pré-processa fichas com bairro vazio aplicando venue_map e bairro_scan contra o
+ * venue e, se não bater, contra o endereço (US-S16 + US-S25).
  * Muta as linhas in-place e retorna log para exibição.
- * Gemini assume como terceira camada (bairro_inferido no JSON de resposta).
+ * Gemini assume como camada seguinte (bairro_inferido no JSON de resposta).
  */
 function enrichBairrosPreGemini(rows: LinhaInput[]): BairroEnrichLog[] {
   const log: BairroEnrichLog[] = [];
@@ -200,7 +201,7 @@ function enrichBairrosPreGemini(rows: LinhaInput[]): BairroEnrichLog[] {
   for (const linha of rows) {
     if (linha.bairro.trim()) continue;
 
-    const result = extractBairroFromVenue(linha.venue);
+    const result = extractBairroFromVenue(linha.venue, linha.endereco);
     if (result) {
       linha.bairro = result.bairro;
       log.push({
