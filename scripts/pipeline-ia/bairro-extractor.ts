@@ -170,15 +170,30 @@ function tryBairroScan(venueNorm: string): BairroExtractionResult | null {
 }
 
 /**
- * Tenta extrair bairro a partir do texto do venue.
- * Retorna null se não conseguir inferir com confiança mínima.
+ * Tenta extrair bairro a partir do texto do venue e, se não bater, do endereço (US-S25).
+ * Retorna null se não conseguir inferir com confiança mínima em nenhum dos dois campos.
  *
- * Fluxo: venue_map → bairro_scan → null (Gemini assume no chamador)
+ * Fluxo: venue_map(venue) → bairro_scan(venue) → venue_map(endereco) → bairro_scan(endereco) → null
+ * (Gemini assume como terceira/quarta camada no chamador — ver prompt.ts)
+ *
+ * Caso real que motivou o fallback (Sprint 12): evento Sympla "Festa Junina - Creche
+ * Comunitária Anita Way" — venue = "R. Orestes, 28 - Rio de Janeiro, RJ" (sem bairro),
+ * endereco = "Rua Orestes, 28 — Santo Cristo" (bairro presente só no endereço).
  */
-export function extractBairroFromVenue(venue: string): BairroExtractionResult | null {
-  if (!venue.trim()) return null;
+export function extractBairroFromVenue(
+  venue: string,
+  endereco?: string,
+): BairroExtractionResult | null {
+  if (venue.trim()) {
+    const venueNorm = normalize(venue);
+    const fromVenue = tryVenueMap(venueNorm) ?? tryBairroScan(venueNorm);
+    if (fromVenue) return fromVenue;
+  }
 
-  const venueNorm = normalize(venue);
+  if (endereco?.trim()) {
+    const enderecoNorm = normalize(endereco);
+    return tryVenueMap(enderecoNorm) ?? tryBairroScan(enderecoNorm);
+  }
 
-  return tryVenueMap(venueNorm) ?? tryBairroScan(venueNorm);
+  return null;
 }

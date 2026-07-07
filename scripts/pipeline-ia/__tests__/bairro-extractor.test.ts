@@ -86,6 +86,46 @@ describe("extractBairroFromVenue", () => {
     });
   });
 
+  // --- fallback pro campo endereco (US-S25) ---
+
+  describe("fallback pro campo endereco quando venue não bate (US-S25)", () => {
+    it("caso real: Festa Junina - Creche Comunitária Anita Way (Santo Cristo)", () => {
+      // venue vem sem bairro identificável; endereco tem o bairro que faltou.
+      const venue = "R. Orestes, 28 - Rio de Janeiro, RJ";
+      const endereco = "Rua Orestes, 28 — Santo Cristo";
+      const result = extractBairroFromVenue(venue, endereco);
+      expect(result).toEqual({ bairro: "Santo Cristo", method: "bairro_scan" });
+    });
+
+    it("prioriza venue quando ele já tem match, ignora endereco", () => {
+      const result = extractBairroFromVenue("Teatro Oi Futuro", "Rua Exemplo, 1 — Copacabana");
+      expect(result).toEqual({ bairro: "Flamengo", method: "venue_map" });
+    });
+
+    it("usa endereco quando venue vem vazio", () => {
+      const result = extractBairroFromVenue("", "Rua Exemplo, 1 — Copacabana");
+      expect(result?.bairro.toLowerCase()).toBe("copacabana");
+    });
+
+    it("retorna null quando nem venue nem endereco têm bairro identificável", () => {
+      const result = extractBairroFromVenue(
+        "Venue Inexistente XYZ-999",
+        "Rua Sem Bairro Reconhecível, 42",
+      );
+      expect(result).toBeNull();
+    });
+
+    it("mantém comportamento antigo quando endereco não é passado", () => {
+      const result = extractBairroFromVenue("R. Orestes, 28 - Rio de Janeiro, RJ");
+      expect(result).toBeNull();
+    });
+
+    it("também tenta venue_map contra o endereco, não só bairro_scan", () => {
+      const result = extractBairroFromVenue("", "Evento no Teatro Oi Futuro");
+      expect(result).toEqual({ bairro: "Flamengo", method: "venue_map" });
+    });
+  });
+
   // --- cobertura do VENUE_BAIRRO_MAP ---
 
   describe("sanidade do VENUE_BAIRRO_MAP", () => {

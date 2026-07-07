@@ -46,12 +46,19 @@ Exceção — duração suspeita:
 function buildBairroInferenciaBlock(linha: LinhaInput): string {
   if (linha.bairro.trim()) return "";
 
+  const temEndereco = Boolean(linha.endereco?.trim());
+  const enderecoLine = temEndereco ? `\n- endereco: ${linha.endereco}` : "";
+  const fontesTexto = temEndereco
+    ? 'a partir dos campos "venue" e "endereco" abaixo'
+    : 'a partir do campo "venue" abaixo';
+
   return `
-INFERÊNCIA DE BAIRRO (US-S16):
-O campo "bairro" do input está vazio. Tente inferir o bairro carioca a partir do campo "venue".
-Se conseguir identificar com confiança (ex.: "Teatro Bangu Shopping" → "Bangu"; "Teatro Leblon" → "Leblon"; "Teatro Laura Alvim" → "Ipanema"):
+INFERÊNCIA DE BAIRRO (US-S16 / US-S25):
+O campo "bairro" do input está vazio. Tente inferir o bairro carioca ${fontesTexto}.
+- venue: ${linha.venue}${enderecoLine}
+Se conseguir identificar com confiança (ex.: "Teatro Bangu Shopping" → "Bangu"; "Teatro Leblon" → "Leblon"; "Teatro Laura Alvim" → "Ipanema"; endereço "Rua Orestes, 28 — Santo Cristo" → "Santo Cristo"):
 - Preencha o campo "bairro_inferido" no JSON de resposta com o nome do bairro (ex: "Centro", "Botafogo").
-Se não tiver certeza suficiente:
+Se não tiver certeza suficiente em nenhum dos campos:
 - Retorne "bairro_inferido": null
 Este campo só existe quando bairro do input está vazio. Não o inclua quando bairro já estiver preenchido.`;
 }
