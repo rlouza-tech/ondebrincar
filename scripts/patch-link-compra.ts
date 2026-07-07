@@ -18,6 +18,8 @@
 
 import fs from "fs";
 import path from "path";
+import { createHash } from "node:crypto";
+import { fileURLToPath } from "node:url";
 import { parse } from "csv-parse/sync";
 import { sanityWriteClient } from "@/lib/sanity/client";
 
@@ -36,9 +38,10 @@ const PRODUCT_URL_PATTERN =
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function inferPartner(url: string): "sympla" | "eventim" | "outro" {
+export function inferPartner(url: string): "sympla" | "eventim" | "clubinho" | "outro" {
   if (/sympla\.com\.br/i.test(url)) return "sympla";
   if (/eventim\.com\.br/i.test(url)) return "eventim";
+  if (/clubinhodeofertas\.com\.br/i.test(url)) return "clubinho";
   return "outro";
 }
 
@@ -51,11 +54,31 @@ function slugify(str: string): string {
     .replace(/^-|-$/g, "");
 }
 
+// US-S26: mesmo truncamento de pipeline-ia/index.ts::buildSlug e
+// lib/slug.ts::buildSlugFromParts, replicado aqui de propósito (comentário
+// acima já documenta que esta função reconstrói o slug do mesmo jeito, pra
+// não quebrar o cruzamento CSV↔Sanity). Limite de 113 chars = 128 (limite de
+// _id do Sanity) - 15 ("drafts.atracao-").
+const SLUG_MAX_LENGTH = 113;
+const HASH_LENGTH = 6;
+
+function truncateSlug(slug: string): string {
+  if (slug.length <= SLUG_MAX_LENGTH) return slug;
+  const hash = createHash("sha1").update(slug).digest("hex").slice(0, HASH_LENGTH);
+  const suffix = `-${hash}`;
+  const targetLength = SLUG_MAX_LENGTH - suffix.length;
+  const cut = slug.slice(0, targetLength);
+  const lastDash = cut.lastIndexOf("-");
+  // Corta na última palavra inteira em vez de partir uma palavra ao meio.
+  const trimmed = lastDash > 0 ? cut.slice(0, lastDash) : cut;
+  return `${trimmed}${suffix}`;
+}
+
 // Reconstrói slug da mesma forma que pipeline-ia/index.ts: slugify(nome + " " + venue)
-function buildSlugFromRow(row: Record<string, string>): string {
+export function buildSlugFromRow(row: Record<string, string>): string {
   const nome = row["nome"] ?? "";
   const venue = row["venue"] ?? row["bairro"] ?? "";
-  return slugify([nome, venue].filter(Boolean).join(" "));
+  return truncateSlug(slugify([nome, venue].filter(Boolean).join(" ")));
 }
 
 // ─── Main ────────────────────────────────────────────────────────────────────
@@ -157,7 +180,9 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  console.error("Erro fatal:", err);
-  process.exit(1);
-});
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main().catch((err) => {
+    console.error("Erro fatal:", err);
+    process.exit(1);
+  });
+}

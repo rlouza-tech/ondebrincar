@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { filterGeo, GEO_EXCEPTIONS } from "../geo-filter";
+import { filterGeo, GEO_EXCEPTIONS, buildSlug } from "../geo-filter";
 import type { PipelineInput } from "@/lib/pipeline/types";
 
 function makeRow(overrides: Partial<PipelineInput>): PipelineInput {
@@ -81,5 +81,29 @@ describe("filterGeo", () => {
     const { accepted, rejected } = filterGeo([rj, sp]);
     expect(accepted).toHaveLength(1);
     expect(rejected).toHaveLength(1);
+  });
+});
+
+// US-S26: buildSlug() aqui é réplica local de pipeline-ia/index.ts (evita
+// import circular) — usada no log de rejeição e na comparação com
+// GEO_EXCEPTIONS. Precisa truncar igual, senão uma exceção cadastrada com o
+// slug truncado (formato que index.ts agora gera) nunca bate pra nomes+venue
+// longos.
+describe("buildSlug (geo-filter)", () => {
+  it("não trunca nomes curtos", () => {
+    const row = makeRow({ nome: "Peça de Teatro", venue: "Teatro Rival", bairro: "" });
+    expect(buildSlug(row)).toBe("peca-de-teatro-teatro-rival");
+  });
+
+  it("trunca preservando palavra inteira — caso real Gracie Kore (128 chars)", () => {
+    const row = makeRow({
+      nome: "Colônia de Férias Gracie Kore - TEMA: Anti-Bullying - Coragem para Ser Você",
+      venue: "Gracie Kore by Kyra Gracie - Vogue Square - Rio de Janeiro, RJ",
+      bairro: "",
+    });
+    const slug = buildSlug(row);
+    expect(slug.length).toBeLessThanOrEqual(113);
+    expect(`drafts.atracao-${slug}`.length).toBeLessThanOrEqual(128);
+    expect(slug.endsWith("-")).toBe(false);
   });
 });

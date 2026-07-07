@@ -1,7 +1,9 @@
 #!/usr/bin/env tsx
 
+import { createHash } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import { basename, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { readCSV, writeCSV } from "./csv";
 import type { CostLogEntry, CostSummary } from "./cost-log";
 import { buildCostSummary, estimateCostUsd } from "./cost-log";
@@ -135,7 +137,7 @@ function slugify(value: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-function inferPartner(url: string): Partner {
+export function inferPartner(url: string): Partner {
   const normalized = url.toLowerCase();
   if (normalized.includes("sympla")) {
     return "sympla";
@@ -143,11 +145,41 @@ function inferPartner(url: string): Partner {
   if (normalized.includes("eventim")) {
     return "eventim";
   }
+  if (normalized.includes("clubinhodeofertas")) {
+    return "clubinho";
+  }
   return "outro";
 }
 
-function buildSlug(linha: LinhaInput): string {
-  return slugify([linha.nome, linha.venue || linha.bairro].filter(Boolean).join(" "));
+// US-S26: limite de _id do Sanity é 128 chars. O prefixo "drafts.atracao-"
+// (15 chars) consome parte disso, então o slug em si precisa caber em 113
+// chars úteis. Sem truncamento, nome+venue longos (caso real: Colônia de
+// Férias Gracie Kore, slug de exatos 128 chars) derrubavam a ficha
+// silenciosamente na escrita do Sanity — essa é a função que de fato gera o
+// slug usado pra criar a ficha (via buildLinhaEnriquecida → CSV → import-sanity).
+//
+// AC2 (board Notion): truncar por palavra inteira sozinho pode colidir —
+// dois eventos com nome+venue idênticos nos primeiros ~106 chars (ex: mesma
+// colônia de férias, "Turma A" vs "Turma B" cortado fora) gerariam o mesmo
+// slug. Por isso, quando trunca, anexa um hash curto e determinístico (6
+// hex chars derivados do slug completo) pra garantir unicidade.
+const SLUG_MAX_LENGTH = 113;
+const HASH_LENGTH = 6;
+
+function truncateSlug(slug: string): string {
+  if (slug.length <= SLUG_MAX_LENGTH) return slug;
+  const hash = createHash("sha1").update(slug).digest("hex").slice(0, HASH_LENGTH);
+  const suffix = `-${hash}`;
+  const targetLength = SLUG_MAX_LENGTH - suffix.length;
+  const cut = slug.slice(0, targetLength);
+  const lastDash = cut.lastIndexOf("-");
+  // Corta na última palavra inteira em vez de partir uma palavra ao meio.
+  const trimmed = lastDash > 0 ? cut.slice(0, lastDash) : cut;
+  return `${trimmed}${suffix}`;
+}
+
+export function buildSlug(linha: LinhaInput): string {
+  return truncateSlug(slugify([linha.nome, linha.venue || linha.bairro].filter(Boolean).join(" ")));
 }
 
 interface BairroEnrichLog {
@@ -492,7 +524,9 @@ async function main() {
   console.log(`Run log: ${PIPELINE_RUNS_LOG_PATH}`);
 }
 
-main().catch((error) => {
-  console.error(error instanceof Error ? error.message : error);
-  process.exit(1);
-});
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main().catch((error) => {
+    console.error(error instanceof Error ? error.message : error);
+    process.exit(1);
+  });
+}
