@@ -152,6 +152,35 @@ causa raiz + proposta documentada, não fix em produção).
 - Não rodei o scraper nem o pipeline nesta sessão (sandbox não executa Playwright/pnpm — débito
   conhecido do projeto).
 
+## ✅ Hipótese confirmada empiricamente (07/07/2026)
+
+Rafa rodou `pnpm scrape --headed` no dia seguinte à spike, com a instrumentação ativa
+(branch `feat/us-s36-diagnostico-endereco`, commit `0e04670`). Resultado:
+
+```
+60 eventos aceitos / 18 descartados (fora do município do RJ)
+✅ fetchProductApi retornou 200 para todas as 60 fichas aceitas.
+```
+
+**60/60 fichas com `endereco` preenchido no CSV gerado** (`data/input/planilha-origem.csv`,
+07/07/2026). As 8 fichas que estavam vazias na rodada de 06/07 (Maria Clara e JP, O Show da
+Luna, Colônia Gecrear Flamengo/Laranjeiras, Auto da Compadecida, Sábado Musical Jubarte, Toy
+Story, A Família Addams) vieram **todas com endereço completo e batendo exatamente** com o JSON
+bruto consultado nesta spike (ex.: "Rua Siqueira Campos, 143 — Sobreloja — Copacabana").
+
+**Conclusão: causa raiz confirmada.** Quando `fetchProductApi()` retorna 200 pra todas as
+fichas (rodada de hoje), 100% delas ficam com endereço. Quando parte das chamadas falha
+silenciosamente (rodada de 06/07, sem instrumentação pra provar na hora, mas consistente com
+o padrão observado), o endereço some — não porque a fonte não tem o dado, mas porque a falha
+de rede/Cloudflare joga a ficha inteira no fallback sem endereço. **É intermitente, não
+permanente** — a mesma API que falhou (parcialmente, presume-se) em 06/07 funcionou 100% em
+07/07, o que é consistente com bloqueio anti-bot/rate limiting esporádico, não com a API
+estando genuinamente fora do ar.
+
+**Status da story:** decisão de causa raiz cumprida com evidência direta. Fix de verdade
+(retry por item — item 2 da proposta abaixo) continua não implementado, é trabalho de story
+nova, a critério do Rafa.
+
 ## Instrumentação adicionada (06/07/2026, pós-spike)
 
 A pedido do Rafa, item 1 da proposta de fix foi implementado — só instrumentação de diagnóstico,
