@@ -11,6 +11,7 @@
  * função base). Para casos ambíguos legítimos, adicione o slug em GEO_EXCEPTIONS.
  */
 
+import { createHash } from "node:crypto";
 import { appendFile, mkdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { isLocalizacaoRioDeJaneiro } from "@/scripts/scraper/parse";
@@ -77,8 +78,30 @@ function slugify(value: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-function buildSlug(linha: PipelineInput): string {
-  return slugify([linha.nome, linha.venue || linha.bairro].filter(Boolean).join(" "));
+// US-S26: mesmo truncamento de pipeline-ia/index.ts::buildSlug, replicado
+// aqui (assim como slugify acima) pra evitar import circular. Sem isso, um
+// slug adicionado em GEO_EXCEPTIONS no formato truncado (o que index.ts
+// agora gera) nunca bateria contra o slug não-truncado calculado aqui pra
+// nomes+venue longos. Limite: 128 (limite de _id do Sanity) - 15
+// ("drafts.atracao-") = 113. AC2 (board Notion): anexa hash de 6 hex chars
+// quando trunca, pra evitar colisão entre eventos com nome+venue idênticos
+// nos primeiros ~106 chars.
+const SLUG_MAX_LENGTH = 113;
+const HASH_LENGTH = 6;
+
+function truncateSlug(slug: string): string {
+  if (slug.length <= SLUG_MAX_LENGTH) return slug;
+  const hash = createHash("sha1").update(slug).digest("hex").slice(0, HASH_LENGTH);
+  const suffix = `-${hash}`;
+  const targetLength = SLUG_MAX_LENGTH - suffix.length;
+  const cut = slug.slice(0, targetLength);
+  const lastDash = cut.lastIndexOf("-");
+  const trimmed = lastDash > 0 ? cut.slice(0, lastDash) : cut;
+  return `${trimmed}${suffix}`;
+}
+
+export function buildSlug(linha: PipelineInput): string {
+  return truncateSlug(slugify([linha.nome, linha.venue || linha.bairro].filter(Boolean).join(" ")));
 }
 
 export function filterGeo(rows: PipelineInput[]): GeoFilterResult {

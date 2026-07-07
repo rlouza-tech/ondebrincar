@@ -10,6 +10,7 @@
  * Padrão análogo ao geo-filter.ts.
  */
 
+import { createHash } from "node:crypto";
 import { appendFile, mkdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import type { LinhaInput } from "./types";
@@ -171,6 +172,26 @@ function slugify(value: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-function buildSlugLocal(linha: LinhaInput): string {
-  return slugify([linha.nome, linha.venue || linha.bairro].filter(Boolean).join(" "));
+// US-S26: mesmo truncamento de pipeline-ia/index.ts::buildSlug. Aqui o slug
+// só alimenta o log de rejeição (link-rejected.jsonl) — ficha rejeitada
+// nunca chega a virar doc no Sanity — mas mantém consistência com as demais
+// cópias e evita confundir quem for ler o log comparando com fichas reais.
+// AC2 (board Notion): anexa hash de 6 hex chars quando trunca, pra evitar
+// colisão entre eventos com nome+venue idênticos nos primeiros ~106 chars.
+const SLUG_MAX_LENGTH = 113;
+const HASH_LENGTH = 6;
+
+function truncateSlug(slug: string): string {
+  if (slug.length <= SLUG_MAX_LENGTH) return slug;
+  const hash = createHash("sha1").update(slug).digest("hex").slice(0, HASH_LENGTH);
+  const suffix = `-${hash}`;
+  const targetLength = SLUG_MAX_LENGTH - suffix.length;
+  const cut = slug.slice(0, targetLength);
+  const lastDash = cut.lastIndexOf("-");
+  const trimmed = lastDash > 0 ? cut.slice(0, lastDash) : cut;
+  return `${trimmed}${suffix}`;
+}
+
+export function buildSlugLocal(linha: LinhaInput): string {
+  return truncateSlug(slugify([linha.nome, linha.venue || linha.bairro].filter(Boolean).join(" ")));
 }

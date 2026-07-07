@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { validateLinkCompra, filterLinkCompra } from "../link-validator";
+import { validateLinkCompra, filterLinkCompra, buildSlugLocal } from "../link-validator";
 import type { LinhaInput } from "../types";
 
 // ---------------------------------------------------------------------------
@@ -169,5 +169,26 @@ describe("filterLinkCompra", () => {
     const { rejected } = filterLinkCompra([row]);
     expect(rejected[0].slug).toBe("show-infantil-teatro-da-tijuca");
     expect(rejected[0].nome).toBe("Show Infantil");
+  });
+});
+
+// US-S26: buildSlugLocal() é réplica local de pipeline-ia/index.ts::buildSlug
+// (evita import circular), usada só pra popular o slug no log de rejeição.
+describe("buildSlugLocal", () => {
+  it("não trunca nomes curtos", () => {
+    const row = makeRow({ nome: "Peça de Teatro", venue: "Teatro Rival", bairro: "" });
+    expect(buildSlugLocal(row)).toBe("peca-de-teatro-teatro-rival");
+  });
+
+  it("trunca preservando palavra inteira — caso real Gracie Kore (128 chars)", () => {
+    const row = makeRow({
+      nome: "Colônia de Férias Gracie Kore - TEMA: Anti-Bullying - Coragem para Ser Você",
+      venue: "Gracie Kore by Kyra Gracie - Vogue Square - Rio de Janeiro, RJ",
+      bairro: "",
+    });
+    const slug = buildSlugLocal(row);
+    expect(slug.length).toBeLessThanOrEqual(113);
+    expect(`drafts.atracao-${slug}`.length).toBeLessThanOrEqual(128);
+    expect(slug.endsWith("-")).toBe(false);
   });
 });
