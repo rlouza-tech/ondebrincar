@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { NewsletterSignup } from "./NewsletterSignup";
 
 function InstagramIcon() {
   return (
@@ -73,6 +74,14 @@ export function SiteFooter() {
             Sugira uma atração
           </a>
         </nav>
+
+        {/* Newsletter */}
+        <div className="flex w-full flex-col items-center gap-2 border-t border-surface-muted pt-5">
+          <p className="text-base font-normal text-ink">
+            Receba novidades sobre Onde Brincar por e-mail
+          </p>
+          <NewsletterSignup />
+        </div>
 
         {/* Links institucionais */}
         <nav

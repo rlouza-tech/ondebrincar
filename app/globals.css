@@ -13,3 +13,16 @@
     text-wrap: balance;
   }
 }
+
+/* US-N1: embed do formulário Beehiiv no footer.
+   Widget de terceiro injeta seu próprio DOM dentro de .beehiiv-embed;
+   isso evita overflow horizontal em telas pequenas (AC3, 390px) mesmo
+   que a largura configurada no builder do Beehiiv não seja "Fill". */
+.beehiiv-embed {
+  width: 100%;
+}
+
+.beehiiv-embed * {
+  max-width: 100%;
+  box-sizing: border-box;
+}
