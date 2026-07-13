@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { parseDescricao, parseArgs, parsePrecos, MIN_DESCRICAO_CHARS } from "../sympla-enrich";
+import {
+  parseDescricao,
+  parseArgs,
+  parsePrecos,
+  isBiletoUrl,
+  precisaRevisaoManual,
+  MIN_DESCRICAO_CHARS,
+} from "../sympla-enrich";
 
 // ---------------------------------------------------------------------------
 // parseDescricao
@@ -159,6 +166,75 @@ describe("parsePrecos", () => {
       minPriceCents: 2990,
       multiplasFaixas: false,
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// isBiletoUrl + precisaRevisaoManual (US-S40)
+// ---------------------------------------------------------------------------
+
+describe("isBiletoUrl", () => {
+  it("reconhece bileto.sympla.com.br/event/ID", () => {
+    expect(isBiletoUrl("https://bileto.sympla.com.br/event/121678")).toBe(true);
+  });
+
+  it("reconhece path com /d/ e query params (fixtures reais)", () => {
+    expect(
+      isBiletoUrl("https://bileto.sympla.com.br/event/122583/d/393901/s/2597882"),
+    ).toBe(true);
+    expect(
+      isBiletoUrl(
+        "https://bileto.sympla.com.br/event/123227?mp_rloc=Festas+Juninas",
+      ),
+    ).toBe(true);
+  });
+
+  it("não marca URL padrão sympla.com.br/evento/...", () => {
+    expect(
+      isBiletoUrl(
+        "https://www.sympla.com.br/evento/oficina-de-circo-em-familia/3484120",
+      ),
+    ).toBe(false);
+  });
+
+  it("não marca outros subdomínios sympla sem /event/ID", () => {
+    expect(isBiletoUrl("https://bileto.sympla.com.br/")).toBe(false);
+    expect(isBiletoUrl("https://www.sympla.com.br/")).toBe(false);
+  });
+});
+
+describe("precisaRevisaoManual", () => {
+  it("marca bileto independente do nome", () => {
+    expect(
+      precisaRevisaoManual(
+        "Soldadinho de Chumbo e a Bonequinha",
+        "https://bileto.sympla.com.br/event/121678",
+      ),
+    ).toBe(true);
+  });
+
+  it("mantém regra de escola/colégio pelo nome", () => {
+    expect(
+      precisaRevisaoManual(
+        "Colônia Eleva Champions Camp",
+        "https://www.sympla.com.br/evento/eleva-camp/1",
+      ),
+    ).toBe(true);
+    expect(
+      precisaRevisaoManual(
+        "Peça da Escola Municipal",
+        "https://www.sympla.com.br/evento/peca/1",
+      ),
+    ).toBe(true);
+  });
+
+  it("não marca evento normal sympla.com.br/evento/...", () => {
+    expect(
+      precisaRevisaoManual(
+        "Oficina de circo em família",
+        "https://www.sympla.com.br/evento/ato-021-oficina/3484120",
+      ),
+    ).toBe(false);
   });
 });
 

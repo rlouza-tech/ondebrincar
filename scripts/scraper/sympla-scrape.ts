@@ -209,9 +209,11 @@ function extractCards(): SymplarRawEvent[] {
   const results: SymplarRawEvent[] = [];
   const seen = new Set<string>();
 
-  // Sympla usa links /evento/slug — filtrar links de menu/header
+  // Sympla usa links /evento/slug — filtrar links de menu/header.
+  // Alguns venues usam o produto white-label "Bileto" (bileto.sympla.com.br/event/ID/d/ID),
+  // que tem padrão de URL diferente (US-S40) — captura os dois.
   const anchors = Array.from(
-    document.querySelectorAll('a[href*="/evento/"]')
+    document.querySelectorAll('a[href*="/evento/"], a[href*="bileto.sympla.com.br"]')
   ) as HTMLAnchorElement[];
 
   for (const a of anchors) {
@@ -222,8 +224,12 @@ function extractCards(): SymplarRawEvent[] {
       ? href
       : `https://www.sympla.com.br${href}`;
 
-    // Só links que parecem páginas de evento (contêm slug após /evento/)
-    if (!/\/evento\/[^/]+/.test(link)) continue;
+    // Só links que parecem páginas de evento: /evento/slug (sympla.com.br) ou
+    // bileto.sympla.com.br/event/ID/... (white-label)
+    const pareceEvento =
+      /\/evento\/[^/]+/.test(link) ||
+      /bileto\.sympla\.com\.br\/event\/\d+/.test(link);
+    if (!pareceEvento) continue;
     if (seen.has(link)) continue;
     seen.add(link);
 
