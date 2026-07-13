@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { buildPrompt } from "../prompt";
+import { buildPrompt, PROMPT_VERSION } from "../prompt";
 import type { LinhaInput } from "../types";
 
 function baseInput(overrides: Partial<LinhaInput> = {}): LinhaInput {
@@ -129,6 +129,59 @@ describe("buildPrompt", () => {
     expect(prompt).toContain("Classificação: Livre");
     expect(prompt).toMatch(/idade_min.*0.*independente/is);
     expect(prompt).toMatch(/meia.entrada.*não.*classificação/is);
+  });
+
+  it("instrui descartar idade de regra de documento/identificação (US-S45)", () => {
+    const prompt = buildPrompt(baseInput());
+    expect(prompt).toContain("REGRA ANTI-DOCUMENTO/IDENTIFICAÇÃO");
+    expect(prompt).toMatch(/documento.*identidade.*obrigatório apresentar/is);
+    expect(prompt).toMatch(
+      /NÃO popule idade_min nem idade_max|NÃO use o número em idade_min/i,
+    );
+    expect(prompt).toMatch(
+      /classificação indicativa ou recomendação de público/i,
+    );
+  });
+
+  /**
+   * Caso real 09/07/2026 — Museu do Flamengo (card principal + combo Tour na Gávea).
+   * Antes (PROMPT_VERSION v1.0.5): scraper V2 mandou idade_minima=6 vinda de regra de
+   * documento ("a partir de 6 anos"); o Gemini tratou como público mínimo → ficha 6–18.
+   * Depois (v1.0.6 / US-S45): o prompt instrui explicitamente a ignorar esse padrão.
+   */
+  it("caso Museu do Flamengo: prompt pós-US-S45 rejeita idade_minima de regra de documento", () => {
+    const sinopseMuseuFlamengo =
+      "Classificação: Livre. ⚠️ Regras de ingressos: obrigatória apresentação de documento para crianças a partir de 6 anos. Identificação idade de crianças entre 6 e 12 anos na bilheteria.";
+
+    const prompt = buildPrompt(
+      baseInput({
+        nome: "Museu Flamengo",
+        categoria_origem: "Museu",
+        venue: "Museu Flamengo",
+        bairro: "Leblon",
+        sinopse_oficial: sinopseMuseuFlamengo,
+        idade_minima: "6",
+        idade_maxima: "18",
+      }),
+    );
+
+    // Depois: versão bumped + instrução negativa + exemplo real
+    expect(PROMPT_VERSION).toBe("v1.0.6");
+    expect(prompt).toContain("Exceção — regra de documento/identificação (US-S45)");
+    expect(prompt).toContain("REGRA ANTI-DOCUMENTO/IDENTIFICAÇÃO (US-S45)");
+    expect(prompt).toContain("Museu do Flamengo");
+    expect(prompt).toContain(
+      "obrigatória apresentação de documento para crianças a partir de 6 anos",
+    );
+    expect(prompt).toMatch(
+      /idade_minima:\s*6\s*→\s*idade_min:\s*0,\s*idade_max:\s*18/i,
+    );
+    expect(prompt).toMatch(/regra de identificação, não público mínimo/i);
+
+    // O input problemático continua no bloco V2 (o que o Gemini priorizava antes);
+    // o fix é a instrução negativa, não remover o campo.
+    expect(prompt).toContain("idade_minima: 6");
+    expect(prompt).toContain(sinopseMuseuFlamengo);
   });
 
   it("instrui descartar duracao_minutos ≤ 5 como dado suspeito", () => {
