@@ -5,6 +5,7 @@ import {
   parsePrecos,
   isBiletoUrl,
   precisaRevisaoManual,
+  parseEnderecoBileto,
   MIN_DESCRICAO_CHARS,
 } from "../sympla-enrich";
 
@@ -204,7 +205,7 @@ describe("isBiletoUrl", () => {
 });
 
 describe("precisaRevisaoManual", () => {
-  it("marca bileto independente do nome", () => {
+  it("marca bileto quando não há endereço extraído (temEndereco omitido = false)", () => {
     expect(
       precisaRevisaoManual(
         "Soldadinho de Chumbo e a Bonequinha",
@@ -213,11 +214,32 @@ describe("precisaRevisaoManual", () => {
     ).toBe(true);
   });
 
-  it("mantém regra de escola/colégio pelo nome", () => {
+  it("marca bileto quando temEndereco é explicitamente false (US-S51: extração falhou)", () => {
+    expect(
+      precisaRevisaoManual(
+        "Soldadinho de Chumbo e a Bonequinha",
+        "https://bileto.sympla.com.br/event/121678",
+        false,
+      ),
+    ).toBe(true);
+  });
+
+  it("NÃO marca bileto quando temEndereco é true (US-S51: extração via shadow DOM funcionou)", () => {
+    expect(
+      precisaRevisaoManual(
+        "Soldadinho de Chumbo e a Bonequinha",
+        "https://bileto.sympla.com.br/event/121678",
+        true,
+      ),
+    ).toBe(false);
+  });
+
+  it("mantém regra de escola/colégio pelo nome, mesmo com endereço extraído", () => {
     expect(
       precisaRevisaoManual(
         "Colônia Eleva Champions Camp",
         "https://www.sympla.com.br/evento/eleva-camp/1",
+        true,
       ),
     ).toBe(true);
     expect(
@@ -235,6 +257,52 @@ describe("precisaRevisaoManual", () => {
         "https://www.sympla.com.br/evento/ato-021-oficina/3484120",
       ),
     ).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// parseEnderecoBileto (US-S51)
+// ---------------------------------------------------------------------------
+
+describe("parseEnderecoBileto", () => {
+  it("retorna null para entrada nula/undefined/vazia", () => {
+    expect(parseEnderecoBileto(null)).toBeNull();
+    expect(parseEnderecoBileto(undefined)).toBeNull();
+    expect(parseEnderecoBileto("")).toBeNull();
+  });
+
+  it("retorna null para texto curto demais para ser endereço", () => {
+    expect(parseEnderecoBileto("N/A")).toBeNull();
+  });
+
+  it("limpa o texto real do fixture 121678 (Soldadinho de Chumbo)", () => {
+    const raw =
+      "Rua Marques São Vicente , 52 - 3º andar Loja 371,\n" +
+      "                              Rio de Janeiro -\n" +
+      "                              Rio de Janeiro";
+    expect(parseEnderecoBileto(raw)).toBe(
+      "Rua Marques São Vicente, 52 - 3º andar Loja 371, Rio de Janeiro - Rio de Janeiro",
+    );
+  });
+
+  it("limpa o texto real do fixture 122583 (Arraiá da Lona)", () => {
+    const raw =
+      "Praça Primeiro de Maio, s/n,\n" +
+      "                              Rio de Janeiro -\n" +
+      "                              Rio de Janeiro";
+    expect(parseEnderecoBileto(raw)).toBe(
+      "Praça Primeiro de Maio, s/n, Rio de Janeiro - Rio de Janeiro",
+    );
+  });
+
+  it("limpa o texto real do fixture 123227 (EcoFeira Julina) — corrige vírgula colada", () => {
+    const raw =
+      "Parque Poeta Manuel Bandeira,0,\n" +
+      "                              Rio de Janeiro -\n" +
+      "                              Rio de Janeiro";
+    expect(parseEnderecoBileto(raw)).toBe(
+      "Parque Poeta Manuel Bandeira, 0, Rio de Janeiro - Rio de Janeiro",
+    );
   });
 });
 
