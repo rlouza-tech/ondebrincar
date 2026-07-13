@@ -24,6 +24,7 @@ const OPTIONAL_V2_COLUMNS: Array<keyof LinhaInput> = [
   "idade_maxima",
   "preco_inteira_centavos",
   "url_ingresso",
+  "endereco",
 ];
 
 /**
