@@ -135,8 +135,12 @@ export function parseDescricao(raw: string | null | undefined): string | null {
 
 /**
  * Detecta checkout white-label Bileto (bileto.sympla.com.br/event/ID/...).
- * Nessas páginas não há __NEXT_DATA__ e o DOM útil fica em web components /
- * shadow DOM — extrairEndereco falha em silêncio (US-S40). Marcamos revisão.
+ * Nessas páginas não há __NEXT_DATA__ e o conteúdo fica dentro de web
+ * components com shadow DOM. Até a US-S51, extrairEndereco falhava em
+ * silêncio (US-S40) e marcávamos revisão manual sempre. A partir da US-S51,
+ * extrairEnderecoBileto() consegue ler o endereço via page.locator() do
+ * Playwright (que atravessa shadow root aberto) — revisão manual só é
+ * forçada quando essa extração falha (ver precisaRevisaoManual).
  */
 export function isBiletoUrl(url: string): boolean {
   return /bileto\.sympla\.com\.br\/event\/\d+/i.test(url);
@@ -151,14 +155,38 @@ export const ESCOLAS_CONHECIDAS = ["maple bear", "eleva"] as const;
 /**
  * Retorna true se o evento precisa de revisão humana antes de importar:
  * - nome sugere escola/colégio (ou lista de escolas conhecidas)
- * - URL é bileto.sympla.com.br (endereço não extraível de forma confiável)
+ * - URL é bileto.sympla.com.br E a extração automática de endereço falhou
+ *   (temEndereco = false) — US-S51 só força revisão quando não há endereço.
  */
-export function precisaRevisaoManual(nome: string, link = ""): boolean {
-  if (isBiletoUrl(link)) return true;
+export function precisaRevisaoManual(nome: string, link = "", temEndereco = false): boolean {
+  if (isBiletoUrl(link) && !temEndereco) return true;
   const nomeLower = nome.toLowerCase();
   if (/escola|col[eé]gio/i.test(nome)) return true;
   if (ESCOLAS_CONHECIDAS.some((e) => nomeLower.includes(e))) return true;
   return false;
+}
+
+/**
+ * Limpa o texto bruto extraído de `.sta-event-venue-address-text` (bileto).
+ *
+ * Formato observado (US-S51, 3 fixtures reais): quebras de linha e espaços
+ * de indentação do template Sympla ao redor de cada parte do endereço, ex.:
+ *   "Rua Marques São Vicente , 52 - 3º andar Loja 371,\n   Rio de Janeiro -\n   Rio de Janeiro"
+ *
+ * Retorna null se o resultado ficar curto demais para ser um endereço real.
+ */
+export function parseEnderecoBileto(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+
+  const cleaned = raw
+    .replace(/[\r\n]+/g, " ")     // quebras de linha → espaço
+    .replace(/\s{2,}/g, " ")      // colapsa espaços múltiplos
+    .replace(/\s*,\s*/g, ", ")    // normaliza espaçamento ao redor de vírgulas
+    .replace(/^\s*,\s*/, "")      // remove vírgula perdida no início
+    .replace(/,\s*$/, "")         // remove vírgula sobrando no fim
+    .trim();
+
+  return cleaned.length > 5 ? cleaned : null;
 }
 
 /**
@@ -310,22 +338,59 @@ async function extrairDescricao(
 // ---------------------------------------------------------------------------
 
 /**
+ * Extrai o endereço de uma página bileto.sympla.com.br (checkout white-label).
+ *
+ * Causa raiz do fracasso anterior (US-S40): a página não é Next.js e o
+ * conteúdo vive dentro de web components com shadow DOM aninhado
+ * (`<app-page> > <event-page> > <span class="sta-event-venue-address-text">`).
+ * `page.evaluate()` + `document.querySelector()` (usado no restante deste
+ * arquivo) NÃO atravessa shadow DOM — por isso vinha vazio. `page.locator()`
+ * do Playwright atravessa shadow root aberto automaticamente, então
+ * conseguimos ler o texto sem escrever um walker manual.
+ *
+ * A classe `.sta-event-venue-address-text` aparece 2x aninhada na mesma
+ * árvore (confirmado nos 3 fixtures da US-S51: 121678, 122583, 123227) — o
+ * elemento externo tem "Nome do venue - endereço completo", o interno (mais
+ * profundo, por isso `.last()`) só o endereço, sem duplicar o venue (que já
+ * vem por outro caminho, o campo `venue` do scraper).
+ *
+ * Retorna null se o seletor não existir, der timeout, ou o texto limpo ficar
+ * curto demais — nesse caso quem chama decide revisão manual (US-S40).
+ */
+export async function extrairEnderecoBileto(
+  page: import("playwright").Page
+): Promise<string | null> {
+  try {
+    const raw = await page
+      .locator(".sta-event-venue-address-text")
+      .last()
+      .innerText({ timeout: 5_000 });
+    return parseEnderecoBileto(raw);
+  } catch {
+    // Seletor ausente, timeout, ou layout diferente do esperado — sem endereço.
+    return null;
+  }
+}
+
+/**
  * Tenta extrair o endereço do venue de uma página de evento Sympla já carregada.
  *
  * Estratégia em cascata:
+ * 0. Se a URL for bileto.sympla.com.br (US-S51) — delega para extrairEnderecoBileto,
+ *    que usa page.locator() (atravessa shadow DOM) em vez de page.evaluate().
  * 1. window.__NEXT_DATA__ — dados de hidratação do Next.js (mais confiável, estruturado)
  * 2. DOM selectors — fallback para elementos visíveis na página
  *
  * Retorna null se não encontrar ou se o texto parecer genérico/inútil.
- *
- * Limite conhecido (US-S40): bileto.sympla.com.br não é Next.js e o conteúdo
- * útil não aparece no DOM acessível via page.frames() (só ads/login). Nesses
- * casos o enrich marca revisao_manual via isBiletoUrl — não deixe o null
- * silencioso passar como endereço ok.
  */
 export async function extrairEndereco(
-  page: import("playwright").Page
+  page: import("playwright").Page,
+  url?: string
 ): Promise<string | null> {
+  if (url && isBiletoUrl(url)) {
+    return extrairEnderecoBileto(page);
+  }
+
   return page.evaluate(() => {
     // --- Estratégia 1: __NEXT_DATA__ ---
     // Caminho real confirmado via debug: props.pageProps.hydrationData.eventHydration.event.eventsAddress
@@ -469,7 +534,7 @@ async function main() {
         const { texto, seletor } = await extrairDescricao(page);
         const descricaoLimpa = parseDescricao(texto);
         const { minPriceCents, multiplasFaixas } = await extrairPrecos(page);
-        const enderecoExtraido = await extrairEndereco(page);
+        const enderecoExtraido = await extrairEndereco(page, ev.link);
 
         // Campos extras extraídos da página do evento
         const precoExtra: Pick<SymplarRawEvent, "preco_inteira_centavos" | "preco_a_partir" | "endereco"> = {
@@ -487,7 +552,11 @@ async function main() {
             process.stdout.write(`🚫 descartado (não infantil)\n`);
             nDescartados++;
           } else {
-            const revisao = precisaRevisaoManual(evEnriquecido.nome, evEnriquecido.link);
+            const revisao = precisaRevisaoManual(
+              evEnriquecido.nome,
+              evEnriquecido.link,
+              Boolean(evEnriquecido.endereco)
+            );
             const evFinal = revisao ? { ...evEnriquecido, revisao_manual: true } : evEnriquecido;
             if (descricaoLimpa.length > ev.descricao_raw.length) {
               const precoLog = minPriceCents ? ` R$${(minPriceCents/100).toFixed(0)}${multiplasFaixas ? "+" : ""}` : "";
@@ -508,7 +577,7 @@ async function main() {
             process.stdout.write(`🚫 descartado (não infantil, sem descrição)\n`);
             nDescartados++;
           } else {
-            const revisao = precisaRevisaoManual(ev.nome, ev.link);
+            const revisao = precisaRevisaoManual(ev.nome, ev.link, Boolean(precoExtra.endereco));
             const evFinal = revisao ? { ...ev, ...precoExtra, revisao_manual: true } : { ...ev, ...precoExtra };
             const biletoLog = isBiletoUrl(ev.link) ? " (bileto)" : "";
             process.stdout.write(`⚠ nenhum seletor retornou ≥${MIN_DESCRICAO_CHARS} chars${revisao ? ` 🔍 revisão manual${biletoLog}` : ""}\n`);
