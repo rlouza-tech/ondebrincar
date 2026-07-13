@@ -134,6 +134,34 @@ export function parseDescricao(raw: string | null | undefined): string | null {
 // ---------------------------------------------------------------------------
 
 /**
+ * Detecta checkout white-label Bileto (bileto.sympla.com.br/event/ID/...).
+ * Nessas páginas não há __NEXT_DATA__ e o DOM útil fica em web components /
+ * shadow DOM — extrairEndereco falha em silêncio (US-S40). Marcamos revisão.
+ */
+export function isBiletoUrl(url: string): boolean {
+  return /bileto\.sympla\.com\.br\/event\/\d+/i.test(url);
+}
+
+/**
+ * Escolas conhecidas que usam o Sympla para eventos (possivelmente privados).
+ * Adicione novos nomes aqui conforme forem identificados.
+ */
+export const ESCOLAS_CONHECIDAS = ["maple bear", "eleva"] as const;
+
+/**
+ * Retorna true se o evento precisa de revisão humana antes de importar:
+ * - nome sugere escola/colégio (ou lista de escolas conhecidas)
+ * - URL é bileto.sympla.com.br (endereço não extraível de forma confiável)
+ */
+export function precisaRevisaoManual(nome: string, link = ""): boolean {
+  if (isBiletoUrl(link)) return true;
+  const nomeLower = nome.toLowerCase();
+  if (/escola|col[eé]gio/i.test(nome)) return true;
+  if (ESCOLAS_CONHECIDAS.some((e) => nomeLower.includes(e))) return true;
+  return false;
+}
+
+/**
  * Dado um texto bruto (ex.: innerText de um elemento), extrai padrões "R$ X,XX"
  * e retorna o menor preço em centavos e se há múltiplas faixas de preço.
  *
@@ -289,6 +317,11 @@ async function extrairDescricao(
  * 2. DOM selectors — fallback para elementos visíveis na página
  *
  * Retorna null se não encontrar ou se o texto parecer genérico/inútil.
+ *
+ * Limite conhecido (US-S40): bileto.sympla.com.br não é Next.js e o conteúdo
+ * útil não aparece no DOM acessível via page.frames() (só ads/login). Nesses
+ * casos o enrich marca revisao_manual via isBiletoUrl — não deixe o null
+ * silencioso passar como endereço ok.
  */
 export async function extrairEndereco(
   page: import("playwright").Page
@@ -423,23 +456,6 @@ async function main() {
   let nDescartados = 0;
   let nRevisao = 0;
 
-  /**
-   * Escolas conhecidas que usam o Sympla para eventos (possivelmente privados).
-   * Adicione novos nomes aqui conforme forem identificados.
-   */
-  const ESCOLAS_CONHECIDAS = [
-    "maple bear",
-    "eleva",
-  ];
-
-  /** Retorna true se o nome do evento sugere evento de escola (possivelmente privado) */
-  const precisaRevisaoManual = (nome: string) => {
-    const nomeLower = nome.toLowerCase();
-    if (/escola|col[eé]gio/i.test(nome)) return true;
-    if (ESCOLAS_CONHECIDAS.some((e) => nomeLower.includes(e))) return true;
-    return false;
-  };
-
   const resultados: SymplarRawEvent[] = [];
 
   try {
@@ -471,14 +487,16 @@ async function main() {
             process.stdout.write(`🚫 descartado (não infantil)\n`);
             nDescartados++;
           } else {
-            const revisao = precisaRevisaoManual(evEnriquecido.nome);
+            const revisao = precisaRevisaoManual(evEnriquecido.nome, evEnriquecido.link);
             const evFinal = revisao ? { ...evEnriquecido, revisao_manual: true } : evEnriquecido;
             if (descricaoLimpa.length > ev.descricao_raw.length) {
               const precoLog = minPriceCents ? ` R$${(minPriceCents/100).toFixed(0)}${multiplasFaixas ? "+" : ""}` : "";
-              process.stdout.write(`✅ (${seletor}, ${descricaoLimpa.length} chars${precoLog})${revisao ? " 🔍 revisão manual" : ""}\n`);
+              const biletoLog = isBiletoUrl(ev.link) ? " (bileto)" : "";
+              process.stdout.write(`✅ (${seletor}, ${descricaoLimpa.length} chars${precoLog})${revisao ? ` 🔍 revisão manual${biletoLog}` : ""}\n`);
               nEnriquecidos++;
             } else {
-              process.stdout.write(`→ sem melhora${revisao ? " 🔍 revisão manual" : ""}\n`);
+              const biletoLog = isBiletoUrl(ev.link) ? " (bileto)" : "";
+              process.stdout.write(`→ sem melhora${revisao ? ` 🔍 revisão manual${biletoLog}` : ""}\n`);
               nSemMelhora++;
             }
             resultados.push(evFinal);
@@ -490,9 +508,10 @@ async function main() {
             process.stdout.write(`🚫 descartado (não infantil, sem descrição)\n`);
             nDescartados++;
           } else {
-            const revisao = precisaRevisaoManual(ev.nome);
+            const revisao = precisaRevisaoManual(ev.nome, ev.link);
             const evFinal = revisao ? { ...ev, ...precoExtra, revisao_manual: true } : { ...ev, ...precoExtra };
-            process.stdout.write(`⚠ nenhum seletor retornou ≥${MIN_DESCRICAO_CHARS} chars${revisao ? " 🔍 revisão manual" : ""}\n`);
+            const biletoLog = isBiletoUrl(ev.link) ? " (bileto)" : "";
+            process.stdout.write(`⚠ nenhum seletor retornou ≥${MIN_DESCRICAO_CHARS} chars${revisao ? ` 🔍 revisão manual${biletoLog}` : ""}\n`);
             resultados.push(evFinal);
             nFalhas++;
             if (revisao) nRevisao++;
