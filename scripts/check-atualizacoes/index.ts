@@ -47,6 +47,18 @@ interface SanityFicha {
   descricao?: string | null;
   programacao_texto?: string | null;
   link_compra?: string | null;
+  status?: string | null;
+}
+
+/**
+ * US-S47: fichas já fechadas (encerrada/rejeitado) nunca têm informação nova
+ * a oferecer no relatório de "fichas expiradas" — o script relê
+ * programacao_texto já salvo no Sanity, então reportar essas fichas de novo
+ * é ruído puro. Fichas com status ativo (operando ou similar) continuam
+ * aparecendo normalmente.
+ */
+export function isFichaFechada(status?: string | null): boolean {
+  return status === "encerrada" || status === "rejeitado";
 }
 
 interface Divergencia {
@@ -290,7 +302,8 @@ async function fetchFichasSanity(slugs: string[]): Promise<Map<string, SanityFic
       proxima_data,
       descricao,
       programacao_texto,
-      link_compra
+      link_compra,
+      status
     }`,
     { slugs },
   );
@@ -375,11 +388,85 @@ async function fetchFichasExpiradasSemFonte(
       proxima_data,
       descricao,
       programacao_texto,
-      link_compra
+      link_compra,
+      status
     }`,
     { hoje },
   );
   return docs.filter((d) => !excluirSlugs.includes(d.slug));
+}
+
+// ---------------------------------------------------------------------------
+// Montar relatório de expiradas (filtra fichas já fechadas — US-S47)
+// ---------------------------------------------------------------------------
+
+/**
+ * Fichas em comum (fonte ∩ Sanity) com proxima_data vencida viram entrada no
+ * relatório de expiradas, exceto quando já estão encerradas/rejeitadas —
+ * essas não têm informação nova a oferecer. Fichas não vencidas seguem para
+ * a checagem normal de divergências.
+ */
+export function processarEmComum(
+  emComum: { input: PipelineInput; slug: string }[],
+  fichasSanity: Map<string, SanityFicha>,
+  hoje: string,
+): { expiradas: FichaExpirada[]; divergencias: Divergencia[] } {
+  const expiradas: FichaExpirada[] = [];
+  const divergencias: Divergencia[] = [];
+
+  for (const { input, slug } of emComum) {
+    const sanity = fichasSanity.get(slug)!;
+
+    if (sanity.proxima_data && sanity.proxima_data.slice(0, 10) < hoje) {
+      if (isFichaFechada(sanity.status)) continue;
+
+      const prog = sanity.programacao_texto ?? "";
+      const sugestao = extrairDataFutura(prog, hoje);
+      expiradas.push({
+        slug,
+        _id: sanity._id,
+        link_fonte: input.url_origem ?? "",
+        link_compra: sanity.link_compra ?? "",
+        data_sanity: sanity.proxima_data.slice(0, 10),
+        programacao_texto: prog || "(vazio)",
+        sugestao,
+      });
+    } else {
+      const divs = compararFicha(slug, input, sanity, hoje);
+      divergencias.push(...divs);
+    }
+  }
+
+  return { expiradas, divergencias };
+}
+
+/**
+ * Fichas expiradas no Sanity que não estão na fonte atual — mesmo filtro de
+ * status fechado (US-S47): encerrada/rejeitado não entra no relatório.
+ */
+export function processarExpiradasSemFonte(
+  fichasExpiradasSemFonte: SanityFicha[],
+  hoje: string,
+): FichaExpirada[] {
+  const expiradas: FichaExpirada[] = [];
+
+  for (const sanity of fichasExpiradasSemFonte) {
+    if (isFichaFechada(sanity.status)) continue;
+
+    const prog = sanity.programacao_texto ?? "";
+    const sugestao = extrairDataFutura(prog, hoje);
+    expiradas.push({
+      slug: sanity.slug,
+      _id: sanity._id,
+      link_fonte: "",
+      link_compra: sanity.link_compra ?? "",
+      data_sanity: (sanity.proxima_data ?? "").slice(0, 10),
+      programacao_texto: prog || "(vazio)",
+      sugestao,
+    });
+  }
+
+  return expiradas;
 }
 
 // ---------------------------------------------------------------------------
@@ -436,44 +523,14 @@ async function main() {
     process.exit(0);
   }
 
-  const expiradas: FichaExpirada[] = [];
-  const divergencias: Divergencia[] = [];
-
-  for (const { input, slug } of emComum) {
-    const sanity = fichasSanity.get(slug)!;
-
-    if (sanity.proxima_data && sanity.proxima_data.slice(0, 10) < hoje) {
-      const prog = sanity.programacao_texto ?? "";
-      const sugestao = extrairDataFutura(prog, hoje);
-      expiradas.push({
-        slug,
-        _id: sanity._id,
-        link_fonte: input.url_origem ?? "",
-        link_compra: sanity.link_compra ?? "",
-        data_sanity: sanity.proxima_data.slice(0, 10),
-        programacao_texto: prog || "(vazio)",
-        sugestao,
-      });
-    } else {
-      const divs = compararFicha(slug, input, sanity, hoje);
-      divergencias.push(...divs);
-    }
-  }
-
+  const { expiradas: expiradasEmComum, divergencias } = processarEmComum(
+    emComum,
+    fichasSanity,
+    hoje,
+  );
   // Fichas expiradas sem fonte — sem link_fonte (não estão no CSV atual)
-  for (const sanity of fichasExpiradasSemFonte) {
-    const prog = sanity.programacao_texto ?? "";
-    const sugestao = extrairDataFutura(prog, hoje);
-    expiradas.push({
-      slug: sanity.slug,
-      _id: sanity._id,
-      link_fonte: "",
-      link_compra: sanity.link_compra ?? "",
-      data_sanity: (sanity.proxima_data ?? "").slice(0, 10),
-      programacao_texto: prog || "(vazio)",
-      sugestao,
-    });
-  }
+  const expiradasSemFonte = processarExpiradasSemFonte(fichasExpiradasSemFonte, hoje);
+  const expiradas: FichaExpirada[] = [...expiradasEmComum, ...expiradasSemFonte];
 
   // ── Seção 1: Fichas expiradas ──────────────────────────────────────────────
   console.log("\n" + "═".repeat(80));
