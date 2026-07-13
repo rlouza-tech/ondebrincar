@@ -81,7 +81,7 @@ export const atracao = defineType({
       title: "Duração (min)",
       type: "number",
       description: "Duração aproximada em minutos. Ex.: 60.",
-      validation: (Rule) => Rule.integer().min(0).max(600),
+      validation: (Rule) => Rule.integer().min(0).max(990),
     }),
     defineField({
       name: "preco",
