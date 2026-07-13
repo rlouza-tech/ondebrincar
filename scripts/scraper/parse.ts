@@ -11,18 +11,20 @@ export function stripHtml(html: string): string {
 
 /**
  * Retorna true se o trecho de texto em torno do matchIndex contiver linguagem
- * de meia-entrada ou desconto — indicando que a faixa etária menciona um
- * critério de preço, não a classificação indicativa do espetáculo.
+ * de meia-entrada, desconto ou gratuidade — indicando que a faixa etária
+ * menciona um critério de preço, não a classificação indicativa do espetáculo.
  *
  * Exemplos de contexto que disparam o guard:
  *   "Meia-entrada: Crianças de 0 a 12 anos"
  *   "Paga meia de 3 a 12 anos"
  *   "Ingresso meia para crianças de 2 a 12 anos"
+ *   "Gratuidade: Crianças de 0 a 12 anos"
+ *   "Crianças de 0 a 13 anos não pagam entrada"
  */
-function hasMeiaEntradaContext(text: string, matchIndex: number): boolean {
+function hasRegraDePrecoContext(text: string, matchIndex: number): boolean {
   const start = Math.max(0, matchIndex - 120);
   const context = text.slice(start, matchIndex + 60).toLowerCase();
-  return /meia[- ]?entrada|paga[m]?\s+meia|ingresso\s+meia|meia\s+ingresso|meia[- ]?valor/.test(context);
+  return /meia[- ]?entrada|paga[m]?\s+meia|ingresso\s+meia|meia\s+ingresso|meia[- ]?valor|gratuidade|gr[aá]tis|cortesia|entrada\s+franca|n[aã]o\s+pagam?|isen[cç][aã]o|isent[oa]s?/.test(context);
 }
 
 export interface FaixaEtaria {
@@ -40,7 +42,7 @@ export function extractFaixaEtaria(text: string): FaixaEtaria {
   const deAte = normalized.match(
     /crian[cç]as?\s+de\s+(\d{1,2})\s+a\s+(\d{1,2})\s+anos?/i,
   );
-  if (deAte && !hasMeiaEntradaContext(normalized, deAte.index ?? 0)) {
+  if (deAte && !hasRegraDePrecoContext(normalized, deAte.index ?? 0)) {
     return { idade_minima: deAte[1], idade_maxima: deAte[2] };
   }
 
@@ -103,7 +105,7 @@ export function extractIdadeMinima(text: string): string {
   }
   if (!isGratuidadeCriancaAte(text)) {
     const entre = normalized.match(/(\d{1,2})\s*a\s*(\d{1,2})\s*anos/);
-    if (entre && !hasMeiaEntradaContext(normalized, entre.index ?? 0)) {
+    if (entre && !hasRegraDePrecoContext(normalized, entre.index ?? 0)) {
       return entre[1];
     }
   }
@@ -137,7 +139,7 @@ export function extractIdadeMaxima(text: string): string {
   }
 
   const entre = normalized.match(/(\d{1,2})\s*a\s*(\d{1,2})\s*anos/);
-  if (entre && !hasMeiaEntradaContext(normalized, entre.index ?? 0)) {
+  if (entre && !hasRegraDePrecoContext(normalized, entre.index ?? 0)) {
     return entre[2];
   }
 

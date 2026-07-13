@@ -15,7 +15,7 @@ import {
 
 describe("scraper parse", () => {
   it("extrai faixa etária Crianças de X a Y anos", () => {
-    const text = "Gratuidade: Crianças de 3 a 12 anos. Crianças até 3 anos não pagam.";
+    const text = "Crianças de 3 a 12 anos. Consulte o site para mais informações.";
     expect(extractFaixaEtaria(text)).toEqual({
       idade_minima: "3",
       idade_maxima: "12",
@@ -57,6 +57,44 @@ describe("scraper parse", () => {
       const text = "Indicado para crianças de 3 a 8 anos. Duração: 50 minutos.";
       expect(extractIdadeMinima(text)).toBe("3");
       expect(extractIdadeMaxima(text)).toBe("8");
+    });
+  });
+
+  describe("guard gratuidade por idade (US-S33, extensão do bug 0–12)", () => {
+    it("ignora 'Gratuidade: Crianças de X a Y anos' — extractFaixaEtaria", () => {
+      const text = "Gratuidade: Crianças de 0 a 12 anos.";
+      expect(extractFaixaEtaria(text)).toEqual({ idade_minima: "", idade_maxima: "" });
+    });
+
+    it("ignora 'Crianças de X a Y anos não pagam' — extractIdadeMinima e extractIdadeMaxima", () => {
+      const text = "Crianças de 0 a 13 anos não pagam entrada. Demais público paga ingresso.";
+      expect(extractIdadeMinima(text)).toBe("");
+      expect(extractIdadeMaxima(text)).toBe("");
+    });
+
+    it("ignora 'Crianças de X a Y anos entram grátis'", () => {
+      const text = "Crianças de 0 a 6 anos entram grátis. Espetáculo indicado para toda família.";
+      expect(extractIdadeMaxima(text)).toBe("");
+    });
+
+    it("ignora 'Crianças até X anos não pagam' (ficha real — manual-raw.csv, Klimt e Gaudí)", () => {
+      const text =
+        "Exposição imersiva com projeções gigantes de até 7 metros de altura. Crianças até 4 anos não pagam.";
+      expect(extractIdadeMinima(text)).toBe("");
+      expect(extractIdadeMaxima(text)).toBe("");
+    });
+
+    it("não confunde 'Menores de X anos não pagam' com faixa etária (ficha real — whatsapp-triagem.csv, Acampamento Vagalume)", () => {
+      const text =
+        "Para crianças de todas as idades — bebês que ainda não andam vão de canguru ou sling. Menores de 3 anos não pagam. Horário: 9h às 12h.";
+      expect(extractIdadeMinima(text)).toBe("");
+      expect(extractIdadeMaxima(text)).toBe("");
+    });
+
+    it("não ignora faixa etária legítima sem contexto de gratuidade", () => {
+      const text = "Recomendado para crianças de 5 a 10 anos. Sessões aos sábados.";
+      expect(extractIdadeMinima(text)).toBe("5");
+      expect(extractIdadeMaxima(text)).toBe("10");
     });
   });
 
