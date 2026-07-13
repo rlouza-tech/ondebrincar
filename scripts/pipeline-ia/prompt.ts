@@ -6,7 +6,7 @@ import { getReferenceDateIso } from "./reference-date";
 import type { LinhaInput } from "./types";
 
 /** Incrementar manualmente ao mudar o prompt (US-S6). */
-export const PROMPT_VERSION = "v1.0.5";
+export const PROMPT_VERSION = "v1.0.6";
 
 function buildScraperV2Block(linha: LinhaInput): string {
   const hasV2 =
@@ -38,6 +38,14 @@ Exceção — classificação etária:
   - use idade_min: 0, independente do valor de idade_minima (que reflete regra de meia-entrada, não classificação do espetáculo)
   - use idade_max: 18, independente do valor de idade_maxima quando este vier de meia-entrada; se idade_maxima já chegar como 18, mantenha
 - Exemplo: idade_minima: 2 + idade_maxima: 18 + sinopse "Classificação: Livre" → idade_min: 0, idade_max: 18 (o 2 é faixa de meia-entrada; 18 é o teto editorial para Classificação Livre).
+
+Exceção — regra de documento/identificação (US-S45):
+- Menções a "documento", "identidade", "RG", "identificação" ou "obrigatório apresentar" junto a uma idade NÃO são faixa etária de público.
+  São regras operacionais de acesso (ex.: criança a partir de 6 anos precisa apresentar documento na bilheteria).
+- Nesses casos: NÃO use o número em idade_min nem idade_max — mesmo se idade_minima/idade_maxima do scraper V2 estiver preenchido com esse valor.
+- Trate idade_minima/idade_maxima do scraper como suspeitos quando a única pista de idade no texto for regra de documento/identificação (análogo à REGRA ANTI-MEIA-ENTRADA).
+- Faixa etária (idade_min/idade_max) só vem de classificação indicativa ou recomendação de público (ex.: "Classificação: Livre", "indicado para 3 a 8 anos", "para crianças de 4 a 10 anos").
+- Exemplo real (Museu do Flamengo): sinopse com "Classificação: Livre" + regra "obrigatória apresentação de documento para crianças a partir de 6 anos" + idade_minima: 6 → idade_min: 0, idade_max: 18 (o 6 é regra de identificação, não público mínimo).
 
 Exceção — duração suspeita:
 - Se duracao_minutos for ≤ 5, descarte esse valor (provavelmente veio de "X minutos de caminhada" ou outro contexto errado). Trate duracao_min como null, marque em abstain_fields e adicione note_for_editor: "duracao_minutos no input (Xmin) parece dado de distância/caminhada, não duração do espetáculo."`;
@@ -188,10 +196,11 @@ Gere exclusivamente um JSON com os campos definidos no schema da resposta. Quand
 - mini_review: 50-400 caracteres, voz autoral com ressalva franca
 
 REGRAS DE EXTRAÇÃO (revisão editorial — siga à risca):
-- idade_max: extraia o número exato mencionado no texto de entrada (nome, dias_apresentacao, categoria_origem, preco_bruto, url_origem) ou use idade_maxima do scraper v2 quando preenchido. Nunca infira nem arredonde.
+- idade_min / idade_max: extraia apenas de classificação indicativa ou recomendação de público no texto (ou de idade_minima/idade_maxima do scraper v2 quando esses campos refletirem classificação/recomendação — não regra operacional). Nunca infira nem arredonde.
   Se o texto diz "até 12 anos" ou "12+", retorne idade_max: 12 — nunca 8 ou outro valor por suposição de faixa etária.
   Se não houver menção clara de idade máxima, marque idade_max em abstain_fields e use o menor valor plausível só se idade_min exigir coerência.
   REGRA ANTI-MEIA-ENTRADA: se a única menção de faixa etária no texto for em contexto de meia-entrada ou desconto (ex: "meia-entrada: crianças de 0 a 12 anos", "paga meia de 3 a 12 anos"), NÃO infira idade_max a partir desse número — marque em abstain_fields com nota "faixa etária inferida de regra de meia-entrada, não de classificação indicativa".
+  REGRA ANTI-DOCUMENTO/IDENTIFICAÇÃO (US-S45): se a menção de idade estiver em contexto de "documento", "identidade", "RG", "identificação" ou "obrigatório apresentar" (ex: "obrigatória apresentação de documento para crianças a partir de 6 anos", "identificação idade de crianças entre 6 e 12 anos"), NÃO popule idade_min nem idade_max com esse número — marque em abstain_fields (ou use Classificação: Livre → 0–18 quando presente) com nota "idade citada em regra de documento/identificação, não de público mínimo".
 - tipo_programacao: classifique assim:
   * "permanente": atração sem data de encerramento definida, aberta regularmente por tempo indeterminado (ex.: parques, museus, aquários com funcionamento contínuo).
   * "evento_pontual": datas de apresentação específicas listadas, temporada com fim previsto, espetáculo com sessões marcadas ou exposição temporária (ex.: peças de teatro, shows, Patrulha Canina com dias fixos).
