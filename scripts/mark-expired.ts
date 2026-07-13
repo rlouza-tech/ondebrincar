@@ -48,17 +48,16 @@ interface AtracaoVencida {
   status: string;
 }
 
-export function isFichaFechada(status?: string | null): boolean {
-  return status === "encerrada" || status === "rejeitado";
-}
-
 // Dado o conjunto de atrações com proxima_data vencida, retorna só as que
-// ainda devem ser marcadas como "encerrada" (fichas já fechadas — encerrada
-// ou rejeitado — não são reclassificadas, preservando o motivo original).
+// devem ser marcadas como "encerrada": somente status "operando" — mesmo
+// critério já usado pelo Studio (sanity/structure.ts, aba ⚠️ Expiradas).
+// Qualquer outro status (rejeitado, em_obras, esgotada, etc.) é allowlist,
+// não blocklist: não reclassificamos por exclusão, só por inclusão
+// explícita, pra não repetir o mesmo tipo de bug se um novo status surgir.
 export function selecionarParaEncerrar(
   docs: AtracaoVencida[],
 ): AtracaoVencida[] {
-  return docs.filter((doc) => !isFichaFechada(doc.status));
+  return docs.filter((doc) => doc.status === "operando");
 }
 
 async function patchBothVersions(
@@ -185,15 +184,17 @@ async function main() {
   }
 
   const paraEncerrar = selecionarParaEncerrar(docs);
+  const jaEncerradas = docs.filter((d) => d.status === "encerrada").length;
+  const outrosIgnorados = docs.length - paraEncerrar.length - jaEncerradas;
 
   if (DRY_RUN) {
     console.log(`\n[DRY RUN] Seriam marcadas como "encerrada":`);
     for (const doc of paraEncerrar) {
       console.log(`  • ${doc._id}  (${doc.nome})`);
     }
-    const jaFechadas = docs.length - paraEncerrar.length;
     console.log(`\n  Seriam atualizadas: ${paraEncerrar.length}`);
-    console.log(`  Já encerradas/rejeitadas (ignoradas): ${jaFechadas}`);
+    console.log(`  Já encerradas (ignoradas): ${jaEncerradas}`);
+    console.log(`  Outros status ignorados: ${outrosIgnorados}`);
     console.log("\nRemova --dry-run para aplicar.");
     return;
   }
@@ -202,7 +203,6 @@ async function main() {
   console.log(`\nMarcando como "encerrada"...\n`);
 
   let totalPatched = 0;
-  const totalIgnoradas = docs.length - paraEncerrar.length;
 
   for (const doc of paraEncerrar) {
     // Remove prefixo "drafts." se presente para obter o ID base
@@ -214,8 +214,9 @@ async function main() {
   }
 
   console.log("\n─── Resultado ───────────────────────────────────────────────");
-  console.log(`  Versões atualizadas no Sanity       : ${totalPatched}`);
-  console.log(`  Ignoradas (já encerradas/rejeitadas): ${totalIgnoradas}`);
+  console.log(`  Versões atualizadas no Sanity : ${totalPatched}`);
+  console.log(`  Já encerradas (ignoradas)     : ${jaEncerradas}`);
+  console.log(`  Outros status ignorados       : ${outrosIgnorados}`);
 }
 
 main().catch((err) => {
