@@ -27,6 +27,7 @@
     "fill-missing-images": "dotenv -e .env.local -- tsx scripts/fill-missing-images/index.ts",
     "retroativo-enderecos": "dotenv -e .env.local -- tsx scripts/retroativo-enderecos/index.ts",
     "newsletter-draft": "dotenv -e .env.local -- tsx scripts/newsletter-draft/index.ts",
+    "raindrop-process": "dotenv -e .env.local -- tsx scripts/raindrop-process/index.ts",
     "mark-expired": "dotenv -e .env.local -- tsx scripts/mark-expired.ts",
     "cleanup-proxima-data": "dotenv -e .env.local -- tsx scripts/cleanup-proxima-data.ts",
     "test": "vitest run",

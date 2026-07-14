@@ -258,7 +258,7 @@ export function resolveCategoria(linha: LinhaInput, respostaCategoria: RespostaG
   return { categoria: respostaCategoria, inferida: false };
 }
 
-function buildLinhaEnriquecida(
+export function buildLinhaEnriquecida(
   linha: LinhaInput,
   resposta: RespostaGemini,
   status: LinhaEnriquecida["review_status"],
