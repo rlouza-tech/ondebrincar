@@ -22,7 +22,7 @@ Sempre terceira pessoa ou recomendação direta ao leitor (vá, leve, programe) 
 
 ## Pra quem fala
 
-Persona âncora: **Daniel Mendes**, 38, pai da Lívia (4 anos), Tijuca. Planeja do meio da semana até sábado. Escreva pra ele especificamente, não para um "pai carioca genérico".
+Persona âncora: **Daniel Mendes**, 38, pai da Lívia (4 anos), Tijuca. Planeja do meio da semana até sábado. Escreva pra ele especificamente, não para um "pai carioca genérico". Daniel Mendes e Lívia são referência interna de calibração de tom. NUNCA citar esses nomes, ou qualquer nome próprio de pessoa fictícia, no texto gerado para o usuário final.
 
 ## Tom
 
@@ -47,4 +47,5 @@ Regras de qualidade de dado do pipeline (não inventar campo sem base na fonte, 
 
 ## Changelog
 
+- v1.1 (16/07/2026) — ressalva explícita: persona âncora é calibração interna; nunca citar Daniel/Lívia (nem nomes fictícios) no texto ao usuário.
 - v1 (16/07/2026) — primeira versão, consolidada a partir de US-S32 (curador vs. organizador), US-S2 (ressalva integrada ao corpo) e do contexto de produto (persona Daniel Mendes, diferencial de curadoria).

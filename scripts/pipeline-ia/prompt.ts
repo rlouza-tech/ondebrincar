@@ -6,7 +6,7 @@ import { getReferenceDateIso } from "./reference-date";
 import type { LinhaInput } from "./types";
 
 /** Incrementar manualmente ao mudar o prompt (US-S6). */
-export const PROMPT_VERSION = "v1.0.7";
+export const PROMPT_VERSION = "v1.0.8";
 
 function buildScraperV2Block(linha: LinhaInput): string {
   const hasV2 =
@@ -163,7 +163,7 @@ Casos comuns do scraper v1:
 CAMPO aviso_operacional: use este campo para qualquer aviso prático sobre compra, acesso ou disponibilidade — prazo de venda de ingressos, lotação limitada, retirada de ingresso físico, evento já encerrado, etc. Exemplos: "Vendas encerram 1h antes de cada sessão.", "Apresentação já ocorreu — verifique novas datas.", "Vagas limitadas; compre com antecedência."
 - descricao e mini_review devem ser limpos, sem avisos operacionais.
 
-Bom output: JSON estrito, sem markdown, descrições entre 50 e 600 caracteres, mini_review entre 50 e 400 caracteres. Mau output: usar frases como "não tenho informação", inventar endereço/duração/horário exatos sem pista, deixar campos críticos vagos, ou mencionar duração estimada em texto descritivo sem fonte explícita no input (ex.: "duração aproximada de 60 minutos" quando duracao_minutos não veio no scraper v2 e o texto de entrada não menciona duração).
+Bom output: JSON estrito, sem markdown, descrições entre 50 e 600 caracteres, mini_review entre 50 e 400 caracteres. Mau output: usar frases como "não tenho informação", inventar endereço/duração/horário exatos sem pista, deixar campos críticos vagos, mencionar duração estimada em texto descritivo sem fonte explícita no input (ex.: "duração aproximada de 60 minutos" quando duracao_minutos não veio no scraper v2 e o texto de entrada não menciona duração), ou mencionar nomes de pessoas — reais ou fictícias, incluindo qualquer persona de referência interna — em qualquer campo de texto.
 
 Entrada crua:
 - nome: ${linha.nome}

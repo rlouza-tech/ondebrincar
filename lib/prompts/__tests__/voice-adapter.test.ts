@@ -79,6 +79,7 @@ Regra de schema — não deve ir pro prompt.
     expect(prompt).toContain("Lívia (4");
     expect(prompt).toContain("Tijuca");
     expect(prompt).toContain('nunca como bloco "Ressalva:" separado');
+    expect(prompt).toContain("NUNCA citar esses nomes");
     expect(prompt).not.toContain("Fora de escopo deste arquivo");
     expect(prompt).not.toContain("## Changelog");
     // Conteúdo dos exemplos canônicos
