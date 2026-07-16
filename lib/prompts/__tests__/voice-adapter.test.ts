@@ -4,6 +4,7 @@ import {
   buildIncertezaInstruction,
   buildVoiceSystemPrompt,
   CANONICAL_EXAMPLES,
+  extractVoiceInstructionSections,
 } from "../voice-adapter";
 
 describe("voice-adapter", () => {
@@ -23,12 +24,64 @@ describe("voice-adapter", () => {
     }
   });
 
-  it("system prompt referencia persona Daniel Mendes e exemplos canônicos reais", () => {
+  it("extrai só seções de instrução — sem changelog nem fora de escopo", () => {
+    const markdown = `# Voz Editorial — Onde Brincar
+
+Intro ruído.
+
+## Quem fala
+
+Curador, não organizador.
+
+## Pra quem fala
+
+Daniel Mendes.
+
+## Tom
+
+Ressalva integrada ao corpo.
+
+## Diferencial que a voz precisa carregar
+
+Curadoria humana.
+
+## O que nunca fazer (voz, não dado)
+
+- Primeira pessoa do plural
+
+---
+
+## Fora de escopo deste arquivo
+
+Regra de schema — não deve ir pro prompt.
+
+## Changelog
+
+- v1 — não deve ir pro prompt.
+`;
+    const extracted = extractVoiceInstructionSections(markdown);
+    expect(extracted).toContain("## Quem fala");
+    expect(extracted).toContain("Curador, não organizador");
+    expect(extracted).toContain("## Pra quem fala");
+    expect(extracted).toContain("## Tom");
+    expect(extracted).toContain("## Diferencial que a voz precisa carregar");
+    expect(extracted).toContain("## O que nunca fazer (voz, não dado)");
+    expect(extracted).not.toContain("Fora de escopo");
+    expect(extracted).not.toContain("Changelog");
+    expect(extracted).not.toContain("Intro ruído");
+    expect(extracted).not.toContain("# Voz Editorial");
+  });
+
+  it("system prompt lê docs/voice/onde-brincar.md e inclui persona + exemplos", () => {
     const prompt = buildVoiceSystemPrompt();
+    expect(prompt).toContain("Curador, não organizador");
     expect(prompt).toContain("Daniel Mendes");
-    expect(prompt).toContain("Lívia (4)");
+    expect(prompt).toContain("Lívia (4");
     expect(prompt).toContain("Tijuca");
-    // Conteúdo dos novos exemplos canônicos
+    expect(prompt).toContain('nunca como bloco "Ressalva:" separado');
+    expect(prompt).not.toContain("Fora de escopo deste arquivo");
+    expect(prompt).not.toContain("## Changelog");
+    // Conteúdo dos exemplos canônicos
     expect(prompt).toContain("primeira ida ao teatro");
     expect(prompt).toContain("elenco infantil");
     expect(prompt).toContain("garanta");

@@ -47,8 +47,9 @@ describe("buildPrompt", () => {
     expect(prompt).toContain("priorize-os sobre qualquer inferência");
   });
 
-  it("inclui voz editorial e política de incerteza do voice-adapter", () => {
+  it("inclui voz editorial do guia e política de incerteza do voice-adapter", () => {
     const prompt = buildPrompt(baseInput());
+    expect(prompt).toContain("Curador, não organizador");
     expect(prompt).toContain("VOZ EDITORIAL");
     expect(prompt).toContain("POLÍTICA DE INCERTEZA");
     expect(prompt).toContain("[INCERTO]");
@@ -166,7 +167,7 @@ describe("buildPrompt", () => {
     );
 
     // Depois: versão bumped + instrução negativa + exemplo real
-    expect(PROMPT_VERSION).toBe("v1.0.6");
+    expect(PROMPT_VERSION).toBe("v1.0.7");
     expect(prompt).toContain("Exceção — regra de documento/identificação (US-S45)");
     expect(prompt).toContain("REGRA ANTI-DOCUMENTO/IDENTIFICAÇÃO (US-S45)");
     expect(prompt).toContain("Museu do Flamengo");
