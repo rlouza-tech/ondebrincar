@@ -21,12 +21,17 @@ export interface LinhaEnriquecida {
   endereco?: string;
   /**
    * Diagnóstico — US-S36 (instrumentação, 06/07/2026).
-   * Status HTTP retornado por fetchProductApi() para esta ficha. Não faz parte
-   * do CSV de saída (fora de CSV_COLUMNS, é ignorado por writeScrapedCsv).
-   * Serve só pra correlacionar, no log da rodada, quais fichas caíram em
-   * mapPreviewFallback() (sem endereço) por falha silenciosa da API do produto.
+   * Status HTTP retornado por fetchProductApi() para esta ficha (da última
+   * tentativa, se houve retry — ver _apiOutcome). Não faz parte do CSV de
+   * saída (fora de CSV_COLUMNS, é ignorado por writeScrapedCsv).
    */
   _apiStatus?: number;
+  /**
+   * Diagnóstico — US-S39 (retry por item, 16/07/2026).
+   * Em qual tentativa o fetchProductApi() desta ficha teve sucesso (ou não).
+   * Não faz parte do CSV de saída (fora de CSV_COLUMNS).
+   */
+  _apiOutcome?: "primeira-tentativa" | "recuperada-via-retry" | "falhou-apos-retry";
 }
 
 export interface ListingPreview {

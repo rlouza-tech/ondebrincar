@@ -36,7 +36,7 @@ async function main() {
   console.log(`Preço esperado: ${PRECO_ESPERADO} centavos (R$${(PRECO_ESPERADO / 100).toFixed(2)})`);
   console.log(`Preço bug:      ${PRECO_INCORRETO} centavos (R$${(PRECO_INCORRETO / 100).toFixed(2)})\n`);
 
-  const { browser, page } = await createBrowserSession(headed);
+  let session = await createBrowserSession(headed);
   const resultados: object[] = [];
   let passou = 0;
   let falhou = 0;
@@ -58,8 +58,10 @@ async function main() {
       process.stdout.write(`[${i + 1}/${URLS.length}] ${slug}... `);
 
       try {
-        await gotoWithRetry(page, "about:blank");
-        const row = await scrapeAtracao(page, preview);
+        await gotoWithRetry(session.page, "about:blank");
+        const result = await scrapeAtracao(session, preview);
+        session = result.session;
+        const row = result.row;
 
         const precoNum = Number(row.preco_inteira_centavos);
         const ok = precoNum === PRECO_ESPERADO;
@@ -91,7 +93,7 @@ async function main() {
       }
     }
   } finally {
-    await browser.close();
+    await session.browser.close();
   }
 
   mkdirSync(join(process.cwd(), "data", "output"), { recursive: true });

@@ -1,7 +1,11 @@
-import type { Page } from "playwright";
 import type { ClubinhoProductApi } from "./clubinho-api";
 import { getMetaValue } from "./clubinho-api";
-import { fetchProductApi, gotoWithRetry } from "./browser";
+import {
+  createBrowserSession,
+  fetchProductApi,
+  gotoWithRetry,
+  type BrowserSession,
+} from "./browser";
 import {
   extractBairroFromVenue,
   extractDuracaoMinutos,
@@ -112,28 +116,90 @@ function mapPreviewFallback(
   return mapToLinha(preview, preview.url, pageData, null);
 }
 
+// US-S39 (16/07/2026): retry por item quando fetchProductApi falhar — espera
+// antes de tentar de novo pra dar tempo de um eventual bloqueio anti-bot
+// esporádico (Cloudflare/rate limiting) passar. Ver
+// docs/discovery/DISCOVERY-2026-07-06-endereco-clubinho.md (causa raiz).
+const RETRY_DELAY_MS = 2_500;
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** status !== 200 (inclui status 0 = timeout/erro de rede) ou corpo vazio/inválido — ver AC3 de US-S39. */
+function isApiFailure(result: { status: number; data: unknown }): boolean {
+  return result.status !== 200 || result.data === null;
+}
+
+export interface ScrapeAtracaoResult {
+  row: LinhaEnriquecida;
+  session: BrowserSession;
+}
+
 export async function scrapeAtracao(
-  page: Page,
+  session: BrowserSession,
   preview: ListingPreview,
-): Promise<LinhaEnriquecida> {
+): Promise<ScrapeAtracaoResult> {
   const productUrl = preview.url;
   const apiPath = productApiPathFromUrl(productUrl);
 
-  await gotoWithRetry(page, productUrl);
-  await waitForRenderedProductPage(page);
-  const pageData = await extractPageRenderedData(page);
+  await gotoWithRetry(session.page, productUrl);
+  await waitForRenderedProductPage(session.page);
+  const pageData = await extractPageRenderedData(session.page);
 
-  const { status, data } = await fetchProductApi<ClubinhoProductApi>(page, apiPath);
-  if (status === 200 && data) {
-    return { ...mapToLinha(preview, productUrl, pageData, data), _apiStatus: status };
+  const first = await fetchProductApi<ClubinhoProductApi>(session.page, apiPath);
+  if (!isApiFailure(first)) {
+    return {
+      session,
+      row: {
+        ...mapToLinha(preview, productUrl, pageData, first.data),
+        _apiStatus: first.status,
+        _apiOutcome: "primeira-tentativa",
+      },
+    };
   }
 
-  // Diagnóstico US-S36 (06/07/2026): fetchProductApi falhou sem lançar exceção —
-  // cai em fallback silencioso (sem endereço, sem os demais campos vindos da API
-  // de produto). Log aqui pra correlacionar com fichas de endereço vazio na
-  // rodada de quinta. Ver docs/discovery/DISCOVERY-2026-07-06-endereco-clubinho.md.
   console.warn(
-    `[scrape-atracao] fetchProductApi falhou (status ${status}) — ${apiPath} — "${preview.nome}". Fallback sem dados de API (sem endereço).`,
+    `[scrape-atracao] fetchProductApi falhou (status ${first.status}) — ${apiPath} — "${preview.nome}". Retentando em ${RETRY_DELAY_MS / 1000}s…`,
   );
-  return { ...mapPreviewFallback(preview, pageData), _apiStatus: status };
+  await delay(RETRY_DELAY_MS);
+
+  // Padrão de ensureApiAccess() (scripts/scraper/index.ts): se ainda em
+  // headless, reabre em modo visível pra contornar bloqueio anti-bot antes da
+  // retentativa. Se já está headed, tenta de novo na mesma sessão.
+  let retrySession = session;
+  if (session.headless) {
+    console.warn(
+      `[scrape-atracao] Reabrindo navegador visível para a retentativa — "${preview.nome}".`,
+    );
+    await session.browser.close();
+    retrySession = await createBrowserSession(true);
+    await gotoWithRetry(retrySession.page, productUrl);
+  }
+
+  const retry = await fetchProductApi<ClubinhoProductApi>(retrySession.page, apiPath);
+  if (!isApiFailure(retry)) {
+    return {
+      session: retrySession,
+      row: {
+        ...mapToLinha(preview, productUrl, pageData, retry.data),
+        _apiStatus: retry.status,
+        _apiOutcome: "recuperada-via-retry",
+      },
+    };
+  }
+
+  // Retentativa também falhou — mesmo fallback silencioso de US-S36/PR #110
+  // (sem endereço, sem os demais campos vindos da API de produto).
+  console.warn(
+    `[scrape-atracao] Retentativa também falhou (status ${retry.status}) — ${apiPath} — "${preview.nome}". Fallback sem dados de API (sem endereço).`,
+  );
+  return {
+    session: retrySession,
+    row: {
+      ...mapPreviewFallback(preview, pageData),
+      _apiStatus: retry.status,
+      _apiOutcome: "falhou-apos-retry",
+    },
+  };
 }

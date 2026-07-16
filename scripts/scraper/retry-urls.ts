@@ -42,7 +42,7 @@ function parseArgs(argv: string[]): { outputPath: string; headed: boolean } {
 
 async function main() {
   const { outputPath, headed } = parseArgs(process.argv);
-  const session = await createBrowserSession(headed);
+  let session = await createBrowserSession(headed);
 
   console.log(`Retry de ${RETRY_URLS.length} URLs → append em ${outputPath}${headed ? " [headed]" : ""}`);
 
@@ -58,7 +58,9 @@ async function main() {
     let row;
     try {
       await gotoWithRetry(session.page, "about:blank");
-      row = await scrapeAtracao(session.page, preview);
+      const result = await scrapeAtracao(session, preview);
+      session = result.session;
+      row = result.row;
     } catch (err) {
       const msg = err instanceof Error ? err.message.split("\n")[0] : String(err);
       console.warn(`[${i + 1}/${RETRY_URLS.length}] ERRO — ${slug} — ${msg}`);
