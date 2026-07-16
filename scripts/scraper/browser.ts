@@ -47,16 +47,44 @@ export async function gotoWithRetry(
   }
 }
 
+const API_FETCH_TIMEOUT_MS = 10_000;
+
+/**
+ * status 0 sinaliza falha antes de qualquer resposta HTTP (timeout ou erro de
+ * rede) — nunca vem de um fetch() que completou, então não colide com status
+ * HTTP reais. Corpo vazio/inválido (JSON parse falhou) preserva o status HTTP
+ * recebido, mas data vem null — trata-se como falha igual (US-S39, AC3).
+ */
 export async function fetchProductApi<T>(
   page: Page,
   apiPath: string,
 ): Promise<{ status: number; data: T | null }> {
-  return page.evaluate(async (path) => {
-    const response = await fetch(path, { credentials: "include" });
-    if (!response.ok) {
-      return { status: response.status, data: null };
-    }
-    const data = (await response.json()) as T;
-    return { status: response.status, data };
-  }, apiPath);
+  try {
+    return await page.evaluate(
+      async ({ path, timeoutMs }) => {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+        try {
+          const response = await fetch(path, {
+            credentials: "include",
+            signal: controller.signal,
+          });
+          if (!response.ok) {
+            return { status: response.status, data: null };
+          }
+          try {
+            const data = await response.json();
+            return { status: response.status, data };
+          } catch {
+            return { status: response.status, data: null };
+          }
+        } finally {
+          clearTimeout(timeoutId);
+        }
+      },
+      { path: apiPath, timeoutMs: API_FETCH_TIMEOUT_MS },
+    );
+  } catch {
+    return { status: 0, data: null };
+  }
 }

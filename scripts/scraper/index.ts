@@ -112,7 +112,9 @@ async function main() {
     const preview = selected[index];
     let row;
     try {
-      row = await scrapeAtracao(session.page, preview);
+      const result = await scrapeAtracao(session, preview);
+      session = result.session;
+      row = result.row;
     } catch (err) {
       const msg = err instanceof Error ? err.message.split("\n")[0] : String(err);
       console.warn(
@@ -144,18 +146,26 @@ async function main() {
 
   console.log(`\n${aceitas} eventos aceitos / ${descartadas} descartados (fora do município do RJ)`);
 
-  // Diagnóstico US-S36 (06/07/2026): agrega quantas fichas caíram em fallback
-  // sem dados de API (sem endereço) por fetchProductApi não ter retornado 200.
-  // Ver docs/discovery/DISCOVERY-2026-07-06-endereco-clubinho.md.
-  const apiFailures = rows.filter((r) => r._apiStatus !== 200);
-  if (apiFailures.length > 0) {
+  // Diagnóstico US-S36/US-S39: agrega em que tentativa cada ficha conseguiu
+  // dados da API do produto (ou não). Ver
+  // docs/discovery/DISCOVERY-2026-07-06-endereco-clubinho.md.
+  const primeiraTentativa = rows.filter((r) => r._apiOutcome === "primeira-tentativa").length;
+  const recuperadasViaRetry = rows.filter((r) => r._apiOutcome === "recuperada-via-retry").length;
+  const falharamAposRetry = rows.filter((r) => r._apiOutcome === "falhou-apos-retry");
+
+  if (recuperadasViaRetry > 0 || falharamAposRetry.length > 0) {
     console.warn(
-      `\n⚠️  ${apiFailures.length}/${rows.length} fichas com fetchProductApi falhando (sem endereço/dados de API) — status: ${apiFailures
-        .map((r) => r._apiStatus ?? "sem status")
-        .join(", ")}. Ver warnings [scrape-atracao] acima para URL de cada uma.`,
+      `\n📊 fetchProductApi — ${primeiraTentativa} na 1ª tentativa, ${recuperadasViaRetry} recuperadas via retry, ${falharamAposRetry.length} falharam mesmo após retry.`,
     );
+    if (falharamAposRetry.length > 0) {
+      console.warn(
+        `⚠️  Fichas sem endereço/dados de API mesmo após retry: ${falharamAposRetry
+          .map((r) => `"${r.nome}" (status ${r._apiStatus ?? "sem status"})`)
+          .join(", ")}. Ver warnings [scrape-atracao] acima.`,
+      );
+    }
   } else {
-    console.log(`\n✅ fetchProductApi retornou 200 para todas as ${rows.length} fichas aceitas.`);
+    console.log(`\n✅ fetchProductApi retornou 200 na 1ª tentativa para todas as ${rows.length} fichas aceitas.`);
   }
 
   await writeScrapedCsv(options.outputPath, rows);
