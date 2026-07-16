@@ -1,10 +1,24 @@
 /**
  * Voz editorial Onde Brincar — US-S4.5
- * Tom honesto, ressalvas francas, foco em pais cariocas planejando fim de semana.
+ * Fonte canônica de tom: docs/voice/onde-brincar.md
  * Persona âncora: Daniel Mendes, 38, pai da Lívia (4), Tijuca.
  */
 
+import fs from "fs";
+import path from "path";
+
 export const AI_MODEL_LABEL = "gemini-flash-2.5";
+
+const VOICE_GUIDE_PATH = path.join(process.cwd(), "docs/voice/onde-brincar.md");
+
+/** Seções de instrução de voz injetadas no prompt — não inclui título, changelog nem fora de escopo. */
+const VOICE_INSTRUCTION_HEADINGS = [
+  "Quem fala",
+  "Pra quem fala",
+  "Tom",
+  "Diferencial que a voz precisa carregar",
+  "O que nunca fazer (voz, não dado)",
+] as const;
 
 /**
  * Exemplos canônicos extraídos de fichas reais aprovadas (batch 2026-05-26, auto_ok, confidence 5).
@@ -52,7 +66,46 @@ LIMITES DE CARACTERES (obrigatórios — o quality gate rejeita se violados):
 - programacao_texto: entre 5 e 200 caracteres. Para programações com muitas datas, use formato compacto (ex.: "Sáb e dom, 16h e 18h" em vez de listar cada dia individualmente).`;
 }
 
+function loadVoiceGuideMarkdown(): string {
+  try {
+    return fs.readFileSync(VOICE_GUIDE_PATH, "utf-8");
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      `Fonte de voz editorial não encontrada ou ilegível em ${VOICE_GUIDE_PATH}. ` +
+        `O pipeline não pode rodar sem docs/voice/onde-brincar.md. Detalhe: ${detail}`,
+    );
+  }
+}
+
+/**
+ * Extrai só as seções de instrução de voz do guia canônico.
+ * Ignora título do documento, intro, "Fora de escopo" e Changelog.
+ */
+export function extractVoiceInstructionSections(markdown: string): string {
+  const sections: string[] = [];
+
+  for (const heading of VOICE_INSTRUCTION_HEADINGS) {
+    const escaped = heading.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const pattern = new RegExp(
+      `## ${escaped}\\n([\\s\\S]*?)(?=\\n## |$)`,
+    );
+    const match = markdown.match(pattern);
+    if (!match) {
+      throw new Error(
+        `Seção "## ${heading}" ausente em ${VOICE_GUIDE_PATH}. ` +
+          `Atualize docs/voice/onde-brincar.md ou VOICE_INSTRUCTION_HEADINGS.`,
+      );
+    }
+    sections.push(`## ${heading}\n${match[1].trim()}`);
+  }
+
+  return sections.join("\n\n");
+}
+
 export function buildVoiceSystemPrompt(): string {
+  const voiceGuide = extractVoiceInstructionSections(loadVoiceGuideMarkdown());
+
   const examplesBlock = CANONICAL_EXAMPLES.map(
     (exemplo, index) =>
       `Exemplo ${index + 1} — ${exemplo.titulo}:
@@ -60,19 +113,11 @@ descricao: "${exemplo.descricao}"
 mini_review: "${exemplo.mini_review}"`,
   ).join("\n\n");
 
-  return `Você é editor do Onde Brincar, hub de curadoria de atrações infantis no Rio de Janeiro.
-Escreve para pais cariocas planejando programas de fim de semana com filhos pequenos.
-Persona âncora: Daniel Mendes, 38 anos, pai da Lívia (4), na Tijuca, planejando do meio da semana até sábado.
+  return `${voiceGuide}
 
-VOZ EDITORIAL (siga estes exemplos canônicos como referência de tom e estrutura):
+VOZ EDITORIAL — exemplos canônicos (referência de tom e estrutura):
 
 ${examplesBlock}
-
-Regras de voz:
-- Tom acolhedor, objetivo e honesto. Anti-genérico: evite "experiência inesquecível" e superlativos vazios.
-- Mini reviews soam como curadoria humana: úteis, específicas, com ressalva prática quando fizer sentido.
-- Mencione o bairro ou deslocamento quando ajudar o pai/mãe carioca a planejar.
-- Quando houver incerteza, prefira ressalva franca em vez de preencher com chute.
 
 Política de abstenção: se o dado não estiver claro no input, ainda gere o melhor valor estrutural possível, mas liste o campo em abstain_fields e reduza confidence. Campos críticos são categoria, bairro, idade_min e idade_max; se você não tiver segurança neles, marque em abstain_fields.`;
 }
