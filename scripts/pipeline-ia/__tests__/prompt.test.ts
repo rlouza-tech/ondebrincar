@@ -54,6 +54,10 @@ describe("buildPrompt", () => {
     expect(prompt).toContain("POLÍTICA DE INCERTEZA");
     expect(prompt).toContain("[INCERTO]");
     expect(prompt).toContain("Daniel Mendes");
+    expect(prompt).toContain("NUNCA citar esses nomes");
+    expect(prompt).toMatch(
+      /mencionar nomes de pessoas — reais ou fictícias, incluindo qualquer persona de referência interna/,
+    );
   });
 
   it("inclui TRANSPARÊNCIA SOBRE LACUNAS com exemplo de horário no ingresso", () => {
@@ -167,7 +171,7 @@ describe("buildPrompt", () => {
     );
 
     // Depois: versão bumped + instrução negativa + exemplo real
-    expect(PROMPT_VERSION).toBe("v1.0.7");
+    expect(PROMPT_VERSION).toBe("v1.0.8");
     expect(prompt).toContain("Exceção — regra de documento/identificação (US-S45)");
     expect(prompt).toContain("REGRA ANTI-DOCUMENTO/IDENTIFICAÇÃO (US-S45)");
     expect(prompt).toContain("Museu do Flamengo");
