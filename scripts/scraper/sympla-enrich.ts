@@ -27,6 +27,15 @@ const INPUT_PATH    = join(process.cwd(), "data", "input", "sympla-raw-pre-filte
 const OUTPUT_PATH   = join(process.cwd(), "data", "input", "sympla-raw-enriquecido.json");
 export const PENDENTE_PATH = join(process.cwd(), "data", "input", "sympla-revisao-pendente.json");
 
+/**
+ * Cache de eventos já classificados como não-infantil com confiança (US-O23):
+ * evita revisitar a página de um evento recorrente que já vimos e descartamos
+ * antes. Só entra aqui o descarte "confiante" (descrição completa extraída e
+ * sem keyword infantil) — o descarte por falha de extração ("sem descrição")
+ * nunca é cacheado, porque nesse caso não vimos o conteúdo real da página.
+ */
+export const DESCARTADOS_PATH = join(process.cwd(), "data", "input", "sympla-descartados.json");
+
 /** Mínimo de chars para considerar a descrição extraída "útil" */
 export const MIN_DESCRICAO_CHARS = 150;
 
@@ -491,6 +500,41 @@ export interface SymplarRawEvent {
   endereco?: string;
 }
 
+// ---------------------------------------------------------------------------
+// Cache de descartados (US-O23) — separado do Playwright para testabilidade
+// ---------------------------------------------------------------------------
+
+export interface DescartadoEntry {
+  link: string;
+  nome: string;
+  descartado_em: string;
+}
+
+/** Faz parse do JSON do cache de descartados. Retorna [] se o arquivo não existir ou vier inválido. */
+export function parseDescartadosCache(raw: string | null): DescartadoEntry[] {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Funde os descartados carregados do disco com os novos descartes confiantes
+ * desta rodada, deduplicando por link (novo entra, mantém 1 entrada por link).
+ */
+export function mergeDescartados(
+  existentes: DescartadoEntry[],
+  novos: DescartadoEntry[],
+): DescartadoEntry[] {
+  const porLink = new Map<string, DescartadoEntry>();
+  for (const e of existentes) porLink.set(e.link, e);
+  for (const n of novos) porLink.set(n.link, n);
+  return [...porLink.values()];
+}
+
 async function main() {
   const opts = parseArgs();
 
@@ -506,9 +550,21 @@ async function main() {
 
   const alvo = opts.limit ? eventos.slice(0, opts.limit) : eventos;
 
+  // Carrega cache de descartados confiantes (US-O23) — evita revisitar página
+  // de evento recorrente já classificado como não-infantil em rodada anterior.
+  let descartadosSalvos: DescartadoEntry[] = [];
+  try {
+    descartadosSalvos = parseDescartadosCache(readFileSync(DESCARTADOS_PATH, "utf-8"));
+  } catch {
+    descartadosSalvos = [];
+  }
+  const linksDescartados = new Set(descartadosSalvos.map((d) => d.link));
+  const novosDescartados: DescartadoEntry[] = [];
+
   console.log("\n=== Sympla Enricher ===");
   console.log(`Input:   ${INPUT_PATH} (${eventos.length} eventos)`);
   console.log(`Alvo:    ${alvo.length} eventos`);
+  console.log(`Cache:   ${DESCARTADOS_PATH} (${linksDescartados.size} descartados conhecidos)`);
   console.log(`Delay:   ${opts.delay}s entre requisições`);
   console.log(`Output:  ${OUTPUT_PATH}\n`);
 
@@ -520,6 +576,7 @@ async function main() {
   let nSemMelhora = 0;
   let nDescartados = 0;
   let nRevisao = 0;
+  let nPulados = 0;
 
   const resultados: SymplarRawEvent[] = [];
 
@@ -527,6 +584,12 @@ async function main() {
     for (let i = 0; i < alvo.length; i++) {
       const ev = alvo[i];
       process.stdout.write(`[${i + 1}/${alvo.length}] ${ev.nome.substring(0, 60)}... `);
+
+      if (linksDescartados.has(ev.link)) {
+        process.stdout.write("⏭ pulado (já descartado antes, não-infantil)\n");
+        nPulados++;
+        continue;
+      }
 
       try {
         await gotoWithRetry(page, ev.link, 25_000);
@@ -551,6 +614,11 @@ async function main() {
           if (!isConteudoInfantil(evEnriquecido.nome, evEnriquecido.descricao_raw)) {
             process.stdout.write(`🚫 descartado (não infantil)\n`);
             nDescartados++;
+            novosDescartados.push({
+              link: ev.link,
+              nome: ev.nome,
+              descartado_em: new Date().toISOString(),
+            });
           } else {
             const revisao = precisaRevisaoManual(
               evEnriquecido.nome,
@@ -612,10 +680,19 @@ async function main() {
       writeFileSync(PENDENTE_PATH, JSON.stringify(pendentes, null, 2), "utf-8");
     }
 
+    // Persiste cache de descartados (US-O23) — funde com o que já existia no disco.
+    if (novosDescartados.length > 0) {
+      const descartadosFinal = mergeDescartados(descartadosSalvos, novosDescartados);
+      writeFileSync(DESCARTADOS_PATH, JSON.stringify(descartadosFinal, null, 2), "utf-8");
+    }
+
     // Log final
     console.log(`\n${"─".repeat(50)}`);
-    console.log(`✅  ${nEnriquecidos} enriquecidos / ${nSemMelhora} sem melhora / ${nFalhas} falhas / ${nDescartados} descartados (não infantil) / ${nRevisao} para revisão manual`);
+    console.log(`✅  ${nEnriquecidos} enriquecidos / ${nSemMelhora} sem melhora / ${nFalhas} falhas / ${nDescartados} descartados (não infantil) / ${nPulados} pulados (cache) / ${nRevisao} para revisão manual`);
     console.log(`📄  Aprovados: ${OUTPUT_PATH} (${aprovados.length} eventos)`);
+    if (novosDescartados.length > 0) {
+      console.log(`🗑️  Cache de descartados: ${DESCARTADOS_PATH} (+${novosDescartados.length} novo(s), ${linksDescartados.size + novosDescartados.length} total)`);
+    }
     if (pendentes.length > 0) {
       console.log(`🔍  Revisão pendente: ${PENDENTE_PATH} (${pendentes.length} eventos)`);
       console.log(`    → rode pnpm sympla-aprovar para revisar e aprovar`);

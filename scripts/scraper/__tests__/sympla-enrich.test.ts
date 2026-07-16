@@ -6,7 +6,10 @@ import {
   isBiletoUrl,
   precisaRevisaoManual,
   parseEnderecoBileto,
+  parseDescartadosCache,
+  mergeDescartados,
   MIN_DESCRICAO_CHARS,
+  type DescartadoEntry,
 } from "../sympla-enrich";
 
 // ---------------------------------------------------------------------------
@@ -303,6 +306,65 @@ describe("parseEnderecoBileto", () => {
     expect(parseEnderecoBileto(raw)).toBe(
       "Parque Poeta Manuel Bandeira, 0, Rio de Janeiro - Rio de Janeiro",
     );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// parseDescartadosCache + mergeDescartados (US-O23)
+// ---------------------------------------------------------------------------
+
+describe("parseDescartadosCache", () => {
+  it("retorna [] para null", () => {
+    expect(parseDescartadosCache(null)).toEqual([]);
+  });
+
+  it("retorna [] para JSON inválido", () => {
+    expect(parseDescartadosCache("{ isso não é um array")).toEqual([]);
+  });
+
+  it("retorna [] se o JSON válido não for um array", () => {
+    expect(parseDescartadosCache('{"link": "x"}')).toEqual([]);
+  });
+
+  it("faz parse de um array válido de descartados", () => {
+    const raw = JSON.stringify([
+      { link: "https://sympla.com.br/a", nome: "Show A", descartado_em: "2026-07-16T00:00:00.000Z" },
+    ]);
+    expect(parseDescartadosCache(raw)).toEqual([
+      { link: "https://sympla.com.br/a", nome: "Show A", descartado_em: "2026-07-16T00:00:00.000Z" },
+    ]);
+  });
+});
+
+describe("mergeDescartados", () => {
+  const entry = (link: string, nome: string, data = "2026-07-16T00:00:00.000Z"): DescartadoEntry => ({
+    link,
+    nome,
+    descartado_em: data,
+  });
+
+  it("retorna só os existentes quando não há novos", () => {
+    const existentes = [entry("https://sympla.com.br/a", "Show A")];
+    expect(mergeDescartados(existentes, [])).toEqual(existentes);
+  });
+
+  it("adiciona novos descartados que não existiam", () => {
+    const existentes = [entry("https://sympla.com.br/a", "Show A")];
+    const novos = [entry("https://sympla.com.br/b", "Show B")];
+    const resultado = mergeDescartados(existentes, novos);
+    expect(resultado).toHaveLength(2);
+    expect(resultado.map((r) => r.link)).toEqual(
+      expect.arrayContaining(["https://sympla.com.br/a", "https://sympla.com.br/b"]),
+    );
+  });
+
+  it("deduplica por link — novo substitui existente com mesmo link", () => {
+    const existentes = [entry("https://sympla.com.br/a", "Show A", "2026-07-01T00:00:00.000Z")];
+    const novos = [entry("https://sympla.com.br/a", "Show A (nome atualizado)", "2026-07-16T00:00:00.000Z")];
+    const resultado = mergeDescartados(existentes, novos);
+    expect(resultado).toHaveLength(1);
+    expect(resultado[0].nome).toBe("Show A (nome atualizado)");
+    expect(resultado[0].descartado_em).toBe("2026-07-16T00:00:00.000Z");
   });
 });
 
