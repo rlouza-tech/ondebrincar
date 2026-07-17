@@ -314,7 +314,7 @@ export const BAIRROS_RIO: readonly string[] = [
   "cachambi", "cacuia", "caju", "camorim", "campinho", "cascadura", "catete",
   "catumbi", "cavalcanti", "centro", "cidade de deus", "cidade nova", "cidade universitária",
   "cocotá", "coelho neto", "colégio", "complexo do alemão", "complexo da maré",
-  "copacabana", "cordovil", "costa barros", "cosmos", "covanca",
+  "copacabana", "cordovil", "cosme velho", "costa barros", "cosmos", "covanca",
   "del castilho", "deodoro", "encantado", "engenho da rainha", "engenho de dentro",
   "engenho novo", "estácio", "fallet", "flamengo", "freguesia",
   "galeão", "gamboa", "gardênia azul", "gávea", "glória", "grajaú", "grumari",
