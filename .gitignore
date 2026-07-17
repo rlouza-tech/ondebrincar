@@ -40,3 +40,10 @@ next-env.d.ts
 # imagens locais nomeadas por slug (não versionar binários)
 /data/input/imagens/*
 !/data/input/imagens/.gitkeep
+# snapshots de scrape — sobrescritos por completo a cada rodada do pipeline,
+# não têm valor de histórico (pipeline-runs.json continua versionado, esse é log real)
+/data/input/planilha-origem.csv
+/data/input/sympla-raw.json
+/data/input/sympla-raw-pre-filter.json
+/data/input/sympla-raw-enriquecido.json
+/data/input/sympla-descartados.json
