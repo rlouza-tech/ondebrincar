@@ -1,6 +1,6 @@
 ---
 name: clubinho
-description: Roda o fluxo do Clubinho de Ofertas no pipeline editorial do Onde Brincar (scrape → check-novidades → pipeline-ia → checkpoint → import-sanity). Use quando o Rafa pedir para "puxar novidades do Clubinho", "rodar o Clubinho" ou equivalente, ou quando for o primeiro passo da rotina completa (chamado pela futura skill Orquestradora). Só funciona no Claude Code, rodando no terminal local do projeto — não funciona no Cowork (sandbox não roda pnpm nem git deste repo).
+description: Roda o fluxo do Clubinho de Ofertas no pipeline editorial do Onde Brincar (scrape → check-novidades → pipeline-ia → checkpoint → import-sanity). Use quando o Rafa pedir para "puxar novidades do Clubinho", "rodar o Clubinho" ou equivalente, ou quando for o primeiro passo da rotina completa (chamado pela skill Orquestradora). Só funciona no Claude Code, rodando no terminal local do projeto — não funciona no Cowork (sandbox não roda pnpm nem git deste repo).
 ---
 
 # Skill Clubinho — Pipeline editorial (Onde Brincar)
@@ -24,13 +24,12 @@ Orquestradora); Rafa pediu essa posição porque é o fluxo que hoje demora mais
 
 ## Protocolo de cores desta skill
 
-- 🟢 **Roda direto, sem perguntar**: `scrape`, `check-novidades`, `pipeline-ia`. Nada disso
-  escreve no Sanity nem gasta crédito de imagem.
-- 🔴 **Pausa e pede confirmação explícita antes de rodar**: `import-sanity --execute` —
-  escreve no Sanity (dado real) e gasta crédito de geração de imagem (gasto real). Regra do
-  projeto (protocolo de cores do CLAUDE.md), não invenção desta skill.
-- Nunca clique em "Publicar" no Studio nem peça pra automatizar isso — publicar é sempre
-  decisão manual do Rafa, fora do escopo de qualquer script.
+Definição geral de 🟢/🔴 (e o aviso de nunca publicar) mora na skill `orquestradora`, seção
+"Protocolo de cores compartilhado" — não repetida aqui (AC3 de US-E5). Mapeamento específico
+desta skill:
+
+- 🟢 `scrape`, `check-novidades`, `pipeline-ia`.
+- 🔴 `import-sanity --execute`.
 
 ## Rotina
 
@@ -63,6 +62,6 @@ fica para ele, manualmente.
 ## Ao terminar
 
 Feche com uma linha de contagem final clara — ex.: "Clubinho: N fichas novas, M criadas como
-draft (K em needs_human)". Esse é o formato que a futura skill Orquestradora (US-E5) vai
-consolidar no relatório do pacote completo; até ela existir, é só o resumo que o Rafa vê no
-fim desta rotina.
+draft (K em needs_human)". Esse é o formato que a skill `orquestradora` consolida no relatório
+do pacote completo quando ela chama esta skill; ao rodar esta skill isolada (fora do pacote
+completo), é só o resumo que o Rafa vê no fim desta rotina.

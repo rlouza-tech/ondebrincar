@@ -1,6 +1,6 @@
 ---
 name: avancar-datas
-description: Roda o fluxo de avançar datas de fichas expiradas no pipeline editorial do Onde Brincar (auto-avancar-datas → revisão manual → mark-expired). Use quando o Rafa pedir para "avançar datas", "resolver fichas vencidas", "rodar o avançar-datas" ou equivalente, ou quando for a vez do avançar-datas na rotina completa (chamado pela futura skill Orquestradora, 4ª da ordem, depois do Raindrop). Não inclui check-atualizacoes — isso é da futura skill Vigilância de Conteúdo (Fase 2, bloqueada até US-O20 fechar). Só funciona no Claude Code, rodando no terminal local do projeto — não funciona no Cowork (sandbox não roda pnpm nem git deste repo).
+description: Roda o fluxo de avançar datas de fichas expiradas no pipeline editorial do Onde Brincar (auto-avancar-datas → revisão manual → mark-expired). Use quando o Rafa pedir para "avançar datas", "resolver fichas vencidas", "rodar o avançar-datas" ou equivalente, ou quando for a vez do avançar-datas na rotina completa (chamado pela skill Orquestradora, 4ª da ordem, depois do Raindrop). Não inclui check-atualizacoes — isso é da futura skill Vigilância de Conteúdo (Fase 2, bloqueada até US-O20 fechar). Só funciona no Claude Code, rodando no terminal local do projeto — não funciona no Cowork (sandbox não roda pnpm nem git deste repo).
 ---
 
 # Skill Avançar-datas — Pipeline editorial (Onde Brincar)
@@ -34,14 +34,14 @@ sessão, combinando US-S53 + US-E9).
 
 ## Protocolo de cores desta skill
 
-- 🟢 **Roda direto, sem perguntar**: `auto-avancar-datas` (dry-run, sem `--execute`),
-  `mark-expired --dry-run` (com ou sem `--reactivate`/`--mark-expired`). Nada disso escreve
-  no Sanity.
-- 🔴 **Pausa e pede confirmação explícita antes de rodar**: `auto-avancar-datas --execute`,
-  `mark-expired --reactivate`, `mark-expired --mark-expired` — todos escrevem no Sanity (dado
-  real). Regra do projeto (protocolo de cores do CLAUDE.md), não invenção desta skill.
-- Nunca clique em "Publicar" no Studio nem peça pra automatizar isso — publicar é sempre
-  decisão manual do Rafa, fora do escopo de qualquer script.
+Definição geral de 🟢/🔴 (e o aviso de nunca publicar) mora na skill `orquestradora`, seção
+"Protocolo de cores compartilhado" — não repetida aqui (AC3 de US-E5). Mapeamento específico
+desta skill:
+
+- 🟢 `auto-avancar-datas` (dry-run, sem `--execute`), `mark-expired --dry-run` (com ou sem
+  `--reactivate`/`--mark-expired`).
+- 🔴 `auto-avancar-datas --execute`, `mark-expired --reactivate`, `mark-expired
+  --mark-expired`.
 
 ## Rotina
 
@@ -104,6 +104,6 @@ pnpm mark-expired --mark-expired
 
 Feche com uma linha de contagem final clara — ex.: "Avançar-datas: N fichas com sugestão (M da
 fonte viva, K do texto salvo), P avançadas, Q sem sugestão (revisão manual pendente), R
-reativadas, S marcadas encerradas". Esse é o formato que a futura skill Orquestradora (US-E5)
-vai consolidar no relatório do pacote completo; até ela existir, é só o resumo que o Rafa vê no
-fim desta rotina.
+reativadas, S marcadas encerradas". Esse é o formato que a skill `orquestradora` consolida no
+relatório do pacote completo quando ela chama esta skill; ao rodar esta skill isolada (fora do
+pacote completo), é só o resumo que o Rafa vê no fim desta rotina.
