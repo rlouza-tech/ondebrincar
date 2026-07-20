@@ -76,6 +76,12 @@ interface FichaExpirada {
   data_sanity: string;
   programacao_texto: string;
   sugestao: string | null;
+  /**
+   * US-S53: de onde veio a sugestão de data — "fonte viva" (re-raspada no
+   * mesmo run, mais confiável) ou "texto salvo" (programacao_texto do
+   * Sanity, pode estar desatualizado). null quando não há sugestão.
+   */
+  origem_sugestao: "fonte viva" | "texto salvo" | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -421,7 +427,19 @@ export function processarEmComum(
       if (isFichaFechada(sanity.status)) continue;
 
       const prog = sanity.programacao_texto ?? "";
-      const sugestao = extrairDataFutura(prog, hoje);
+      // US-S53: tenta a fonte viva (re-raspada neste mesmo run) antes de cair
+      // no fallback de reler o programacao_texto já salvo no Sanity — que
+      // nunca vai ter uma data nova depois que o evento já passou daquele
+      // texto (causa raiz do incidente "A Casa da Gabi", spike US-S50).
+      const sugestaoFonte = extrairDataFutura(input.dias_apresentacao ?? "", hoje);
+      const sugestaoTexto = sugestaoFonte ? null : extrairDataFutura(prog, hoje);
+      const sugestao = sugestaoFonte ?? sugestaoTexto;
+      const origem_sugestao: FichaExpirada["origem_sugestao"] = sugestaoFonte
+        ? "fonte viva"
+        : sugestaoTexto
+          ? "texto salvo"
+          : null;
+
       expiradas.push({
         slug,
         _id: sanity._id,
@@ -430,6 +448,7 @@ export function processarEmComum(
         data_sanity: sanity.proxima_data.slice(0, 10),
         programacao_texto: prog || "(vazio)",
         sugestao,
+        origem_sugestao,
       });
     } else {
       const divs = compararFicha(slug, input, sanity, hoje);
@@ -454,6 +473,8 @@ export function processarExpiradasSemFonte(
     if (isFichaFechada(sanity.status)) continue;
 
     const prog = sanity.programacao_texto ?? "";
+    // Sem fonte viva pra cruzar (não está no CSV/JSON desta rodada) — só o
+    // texto salvo está disponível.
     const sugestao = extrairDataFutura(prog, hoje);
     expiradas.push({
       slug: sanity.slug,
@@ -463,6 +484,7 @@ export function processarExpiradasSemFonte(
       data_sanity: (sanity.proxima_data ?? "").slice(0, 10),
       programacao_texto: prog || "(vazio)",
       sugestao,
+      origem_sugestao: sugestao ? "texto salvo" : null,
     });
   }
 
@@ -552,7 +574,7 @@ async function main() {
       console.log(`data_sanity:  ${f.data_sanity}  ← expirada`);
       console.log(`programação:  "${f.programacao_texto}"`);
       if (f.sugestao) {
-        console.log(`sugestão:     → atualizar proxima_data para ${f.sugestao}`);
+        console.log(`sugestão:     → atualizar proxima_data para ${f.sugestao}  (origem: ${f.origem_sugestao})`);
       } else {
         console.log(`sugestão:     → nenhuma data futura encontrada — revisar manualmente`);
       }
@@ -576,8 +598,8 @@ async function main() {
           await patch.commit();
 
           const detalhe = textoMudou
-            ? `→ ${f.sugestao}  +  programacao_texto atualizado`
-            : `→ ${f.sugestao}`;
+            ? `→ ${f.sugestao}  (origem: ${f.origem_sugestao})  +  programacao_texto atualizado`
+            : `→ ${f.sugestao}  (origem: ${f.origem_sugestao})`;
           console.log(`  ✅ ${f.slug}  ${detalhe}`);
           if (textoMudou) {
             console.log(`     antes: "${progOriginal}"`);

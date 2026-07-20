@@ -13,6 +13,10 @@
 
 import { fileURLToPath } from "node:url";
 import { hasSanityConfig, sanityWriteClient } from "@/lib/sanity/client";
+import { buildSlugFromParts } from "@/scripts/lib/slug";
+import { normalizeClubinho } from "@/scripts/normalizer/clubinho";
+import { normalizeSympla } from "@/scripts/normalizer/sympla";
+import type { PipelineInput } from "@/lib/pipeline/types";
 
 // ---------------------------------------------------------------------------
 // Tipos
@@ -29,8 +33,14 @@ interface FichaExpirada {
 interface DataExtraida {
   /** Data futura mais próxima encontrada — formato YYYY-MM-DD */
   data: string;
-  /** Trecho do programacao_texto que originou a extração */
+  /** Trecho do texto (fonte viva ou programacao_texto) que originou a extração */
   trecho: string;
+  /**
+   * US-S53: de onde veio a extração — "fonte viva" (dias_apresentacao
+   * re-raspado no mesmo run, mais confiável) ou "texto salvo"
+   * (programacao_texto do Sanity, pode estar desatualizado).
+   */
+  origem: "fonte viva" | "texto salvo";
 }
 
 // ---------------------------------------------------------------------------
@@ -84,6 +94,7 @@ function toISO(dia: number, mes: number, ano: number): string | null {
 function extrairDataFuturaComTrecho(
   texto: string,
   hoje: string,
+  origem: DataExtraida["origem"],
 ): DataExtraida | null {
   if (!texto) return null;
   const ano = new Date().getFullYear();
@@ -131,7 +142,50 @@ function extrairDataFuturaComTrecho(
     .filter((c) => c.data >= hoje)
     .sort((a, b) => a.data.localeCompare(b.data));
 
-  return futuras[0] ?? null;
+  return futuras[0] ? { ...futuras[0], origem } : null;
+}
+
+// ---------------------------------------------------------------------------
+// Fonte viva (US-S53) — Clubinho + Sympla, cruzados por slug
+// ---------------------------------------------------------------------------
+
+/**
+ * Carrega a fonte viva (Clubinho + Sympla, mesmas fontes de check-atualizacoes)
+ * e monta um mapa slug → PipelineInput. Global, sem `--source`, porque este
+ * script varre todas as fichas expiradas de uma vez (Fluxo 3, passo 1).
+ */
+export async function buildFonteVivaMap(): Promise<Map<string, PipelineInput>> {
+  const [clubinho, sympla] = await Promise.all([
+    normalizeClubinho().catch(() => [] as PipelineInput[]),
+    normalizeSympla().catch(() => [] as PipelineInput[]),
+  ]);
+
+  const mapa = new Map<string, PipelineInput>();
+  for (const row of [...clubinho, ...sympla]) {
+    const slug = buildSlugFromParts(row.nome, row.venue, row.bairro);
+    mapa.set(slug, row);
+  }
+  return mapa;
+}
+
+/**
+ * US-S53: para uma ficha vencida, tenta extrair a data futura primeiro da
+ * fonte viva (input re-raspado, se a ficha estiver no mapa) e só cai no
+ * fallback de reler o programacao_texto salvo no Sanity se a fonte viva não
+ * tiver (ou não tiver ficha correspondente).
+ */
+export function extrairSugestaoParaFicha(
+  ficha: Pick<FichaExpirada, "slug" | "programacao_texto">,
+  fonteViva: Map<string, PipelineInput>,
+  hoje: string,
+): DataExtraida | null {
+  const fonteInput = fonteViva.get(ficha.slug);
+  const daFonte = fonteInput
+    ? extrairDataFuturaComTrecho(fonteInput.dias_apresentacao ?? "", hoje, "fonte viva")
+    : null;
+  if (daFonte) return daFonte;
+
+  return extrairDataFuturaComTrecho(ficha.programacao_texto ?? "", hoje, "texto salvo");
 }
 
 // ---------------------------------------------------------------------------
@@ -196,6 +250,14 @@ async function main(): Promise<void> {
     process.exit(0);
   }
 
+  // US-S53: carrega a fonte viva (Clubinho + Sympla) pra cruzar por slug —
+  // antes deste fix, este script só relia o programacao_texto já salvo no
+  // Sanity, que nunca tem data nova depois que o evento já passou daquele
+  // texto.
+  console.log("\nCarregando fonte viva (Clubinho + Sympla)...");
+  const fonteViva = await buildFonteVivaMap();
+  console.log(`Fonte viva carregada: ${fonteViva.size} ficha(s).`);
+
   // Classifica
   const comSugestao: Array<{
     ficha: FichaExpirada;
@@ -204,8 +266,7 @@ async function main(): Promise<void> {
   const semSugestao: FichaExpirada[] = [];
 
   for (const ficha of fichas) {
-    const prog = ficha.programacao_texto ?? "";
-    const extraida = extrairDataFuturaComTrecho(prog, hoje);
+    const extraida = extrairSugestaoParaFicha(ficha, fonteViva, hoje);
     if (extraida) {
       comSugestao.push({ ficha, extraida });
     } else {
@@ -222,6 +283,7 @@ async function main(): Promise<void> {
     console.log(`\nslug:           ${ficha.slug}`);
     console.log(`data_anterior:  ${ficha.proxima_data.slice(0, 10)}`);
     console.log(`data_nova:      ${extraida.data}`);
+    console.log(`origem:         ${extraida.origem}`);
     console.log(`trecho:         "${extraida.trecho}"`);
     if (ficha.link_compra) console.log(`link_compra:    ${ficha.link_compra}`);
   }
@@ -231,7 +293,7 @@ async function main(): Promise<void> {
   if (semSugestao.length === 0) {
     console.log("✅ Todas as fichas expiradas têm data futura detectável.");
   } else {
-    console.log(`⚠️  ${semSugestao.length} ficha(s) sem data futura no programacao_texto — REVISÃO MANUAL:`);
+    console.log(`⚠️  ${semSugestao.length} ficha(s) sem data futura na fonte viva nem no programacao_texto — REVISÃO MANUAL:`);
     console.log(`${"─".repeat(70)}`);
     for (const ficha of semSugestao) {
       console.log(`\nslug:           ${ficha.slug}`);
@@ -265,7 +327,7 @@ async function main(): Promise<void> {
       await aplicarPatch(ficha._id, extraida.data);
       console.log(
         `  ✅ ${ficha.slug}\n` +
-        `     ${ficha.proxima_data.slice(0, 10)} → ${extraida.data}\n` +
+        `     ${ficha.proxima_data.slice(0, 10)} → ${extraida.data}  (origem: ${extraida.origem})\n` +
         `     trecho: "${extraida.trecho}"`,
       );
       corrigidas++;
