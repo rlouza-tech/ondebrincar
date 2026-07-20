@@ -1,6 +1,6 @@
 ---
 name: raindrop
-description: Roda o fluxo do Raindrop no pipeline editorial do Onde Brincar (--list → ler cada item → decidir método de extração por domínio → montar lote JSON → dry-run → execute → mover para "Processados"). Use quando o Rafa pedir para "puxar novidades do Raindrop", "rodar o Raindrop" ou equivalente, ou quando for a vez do Raindrop na rotina completa (chamado pela futura skill Orquestradora, 3ª da ordem, depois do Sympla). Só funciona no Claude Code, rodando no terminal local do projeto — não funciona no Cowork (sandbox não roda pnpm nem git deste repo).
+description: Roda o fluxo do Raindrop no pipeline editorial do Onde Brincar (--list → ler cada item → decidir método de extração por domínio → montar lote JSON → dry-run → execute → mover para "Processados"). Use quando o Rafa pedir para "puxar novidades do Raindrop", "rodar o Raindrop" ou equivalente, ou quando for a vez do Raindrop na rotina completa (chamado pela skill Orquestradora, 3ª da ordem, depois do Sympla). Só funciona no Claude Code, rodando no terminal local do projeto — não funciona no Cowork (sandbox não roda pnpm nem git deste repo).
 ---
 
 # Skill Raindrop — Pipeline editorial (Onde Brincar)
@@ -32,15 +32,14 @@ evento sem scraper próprio).
 
 ## Protocolo de cores desta skill
 
-- 🟢 **Roda direto, sem perguntar**: `--list`, leitura de cada item (API/WebFetch/Chrome
-  conforme domínio), montagem do lote em JSON, `--dry-run`. Nada disso escreve no Sanity
-  nem gasta crédito de imagem, nem move nada no Raindrop.
-- 🔴 **Pausa e pede confirmação explícita antes de rodar**: `--execute` — escreve no Sanity
-  (dado real), gasta crédito de geração de imagem (gasto real) e move os itens processados
-  para "Processados" no Raindrop (ação real, não reversível por este script). Regra do
-  projeto (protocolo de cores do CLAUDE.md), não invenção desta skill.
-- Nunca clique em "Publicar" no Studio nem peça pra automatizar isso — publicar é sempre
-  decisão manual do Rafa, fora do escopo de qualquer script.
+Definição geral de 🟢/🔴 (e o aviso de nunca publicar) mora na skill `orquestradora`, seção
+"Protocolo de cores compartilhado" — não repetida aqui (AC3 de US-E5). Mapeamento específico
+desta skill:
+
+- 🟢 `--list`, leitura de cada item (API/WebFetch/Chrome conforme domínio), montagem do lote
+  em JSON, `--dry-run`.
+- 🔴 `--execute` — além de escrever no Sanity e gastar crédito de imagem, move os itens
+  processados para "Processados" no Raindrop (ação real, não reversível por este script).
 
 ## Rotina
 
@@ -104,5 +103,6 @@ fica para ele, manualmente.
 
 Feche com uma linha de contagem final clara — ex.: "Raindrop: N itens processados, M
 criados/atualizados como draft (K em needs_human), P rejeitados (dedup/geo/link/expirado)".
-Esse é o formato que a futura skill Orquestradora (US-E5) vai consolidar no relatório do
-pacote completo; até ela existir, é só o resumo que o Rafa vê no fim desta rotina.
+Esse é o formato que a skill `orquestradora` consolida no relatório do pacote completo quando
+ela chama esta skill; ao rodar esta skill isolada (fora do pacote completo), é só o resumo que
+o Rafa vê no fim desta rotina.
