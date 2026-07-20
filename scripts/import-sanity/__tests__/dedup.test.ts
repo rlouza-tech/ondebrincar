@@ -14,7 +14,7 @@ function baseLinha(slug: string): LinhaEnriquecida {
     duracao_min: 60,
     preco_centavos: 2000,
     link_compra: "https://www.sympla.com.br/exemplo",
-    partner: "sympla",
+    origem: "sympla",
     bairro: "Tijuca",
     indoor_outdoor: "indoor",
     status: "operando",

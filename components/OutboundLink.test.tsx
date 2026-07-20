@@ -25,7 +25,7 @@ const mockAtracao: Atracao = {
   indoorOutdoor: "outdoor",
   idadeMin: 3,
   idadeMax: 10,
-  partner: "sympla",
+  origem: "sympla",
   tipoProgramacao: "evento_pontual",
 } as unknown as Atracao;
 
@@ -38,7 +38,7 @@ const mockAtracaoPermanente: Atracao = {
   indoorOutdoor: "outdoor",
   idadeMin: 0,
   idadeMax: 18,
-  partner: undefined,
+  origem: undefined,
   tipoProgramacao: "permanente",
 } as unknown as Atracao;
 
@@ -107,7 +107,7 @@ describe("OutboundLink — US-I8.4", () => {
         category: mockAtracao.categoria,
         destination_url: mockHref,
         cta_label: "Ver ingresso",
-        partner: mockAtracao.partner,
+        partner: mockAtracao.origem,
       }));
     });
 
@@ -143,7 +143,7 @@ describe("OutboundLink — US-I8.4", () => {
         category: mockAtracao.categoria,
         destination_url: mockHref,
         cta_label: "Ver ingresso",
-        partner: mockAtracao.partner,
+        partner: mockAtracao.origem,
       }));
     });
 

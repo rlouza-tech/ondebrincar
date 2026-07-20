@@ -26,7 +26,7 @@ export type Categoria = (typeof CATEGORIAS_VALIDAS)[number];
 export type IndoorOutdoor = (typeof INDOOR_OUTDOOR_VALIDOS)[number];
 export type TipoProgramacao = (typeof TIPOS_PROGRAMACAO_VALIDOS)[number];
 export type ReviewStatus = "auto_ok" | "needs_human";
-export type Partner = "sympla" | "eventim" | "outro";
+export type Origem = "sympla" | "eventim" | "clubinho" | "raindrop" | "outro";
 
 export interface LinhaInput {
   nome: string;
@@ -85,7 +85,7 @@ export interface LinhaEnriquecida {
   duracao_min: number | null;
   preco_centavos: number | null;
   link_compra: string;
-  partner: Partner;
+  origem: Origem;
   bairro: string;
   indoor_outdoor: IndoorOutdoor;
   status: "operando";

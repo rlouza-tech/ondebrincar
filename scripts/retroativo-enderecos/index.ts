@@ -8,7 +8,7 @@
  *      (ex: slug "a-bela-e-a-fera-norte-shopping" → match em "norte shopping" → endereço).
  *   2. Clubinho — visita a página do produto via Playwright headed e chama a API
  *      interna do Clubinho (/api/rio-de-janeiro/<slug>) para extrair venues[0].address.
- *      Roda para todas as fichas (Clubinho não tem partner=clubinho consistente).
+ *      Roda para todas as fichas (Clubinho não tem origem=clubinho consistente).
  *   3. Sympla   — se url_origem for do Sympla, abre a página via Playwright headed
  *      e extrai o endereço do __NEXT_DATA__ (fonte autoritativa — antes do Gemini).
  *   4. Gemini   — fallback: consulta direcionada por nome + bairro
@@ -158,7 +158,7 @@ interface SanityFichaSemEndereco {
   nome: string;
   bairro: string;
   url_origem?: string;
-  partner?: string;
+  origem?: string;
 }
 
 interface GeminiAddressResponse {
@@ -217,7 +217,7 @@ export function tryVenueEndereco(nome: string, slug: string): string | null {
 //   - Buscamos por nome e derivamos a URL do hit
 //
 // Ativação: url_origem contém "clubinhodeofertas.com.br"
-//   OU partner é "clubinho" | "outro" (proxy temporário até migração no Studio)
+//   OU origem é "clubinho" | "outro" (proxy temporário até migração no Studio)
 // ---------------------------------------------------------------------------
 
 const CLUBINHO_ALGOLIA_APP_ID = "CUM4V9330E";
@@ -416,7 +416,7 @@ async function fetchFichasSemEndereco(
     nome,
     bairro,
     "url_origem": link_compra,
-    partner
+    origem
   }${limit !== undefined ? `[0...${limit}]` : ""}`;
 
   return sanityWriteClient.fetch<SanityFichaSemEndereco[]>(groqQuery);

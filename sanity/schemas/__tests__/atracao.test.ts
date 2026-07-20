@@ -85,3 +85,34 @@ describe("atracao schema — duracao_min (US-S48)", () => {
     expect(rule.validate(991)).not.toBe(true);
   });
 });
+
+describe("atracao schema — origem (US-S54: renomeado de partner)", () => {
+  it("não tem mais campo partner", () => {
+    const field = atracao.fields.find((f) => f.name === "partner");
+    expect(field).toBeUndefined();
+  });
+
+  it("tem campo origem com title 'Origem'", () => {
+    const field = atracao.fields.find((f) => f.name === "origem");
+    expect(field).toBeDefined();
+    expect(field?.title).toBe("Origem");
+  });
+
+  it("inclui a opção Raindrop na lista de valores", () => {
+    const field = atracao.fields.find((f) => f.name === "origem") as
+      | { options?: { list?: Array<{ title: string; value: string }> } }
+      | undefined;
+    const values = field?.options?.list?.map((option) => option.value) ?? [];
+
+    expect(values).toContain("raindrop");
+  });
+
+  it("mantém as demais opções históricas (sympla, eventim, clubinho, outro)", () => {
+    const field = atracao.fields.find((f) => f.name === "origem") as
+      | { options?: { list?: Array<{ title: string; value: string }> } }
+      | undefined;
+    const values = field?.options?.list?.map((option) => option.value) ?? [];
+
+    expect(values).toEqual(["sympla", "eventim", "clubinho", "raindrop", "outro"]);
+  });
+});

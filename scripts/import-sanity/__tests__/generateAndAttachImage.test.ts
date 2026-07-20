@@ -50,7 +50,7 @@ function baseLinha(overrides: Partial<LinhaEnriquecida> = {}): LinhaEnriquecida 
     duracao_min: 60,
     preco_centavos: 5000,
     link_compra: "https://www.sympla.com.br/exemplo",
-    partner: "sympla",
+    origem: "sympla",
     bairro: "Centro",
     indoor_outdoor: "indoor",
     status: "operando",

@@ -236,7 +236,15 @@ async function runProcess(options: CliOptions): Promise<void> {
       gate.status,
       gate.reasons,
       new Date().toISOString(),
-      { ai_generated: enrich.ai_generated, ai_model: enrich.ai_model, pipeline_failed: enrich.pipeline_failed },
+      {
+        ai_generated: enrich.ai_generated,
+        ai_model: enrich.ai_model,
+        pipeline_failed: enrich.pipeline_failed,
+        // AC4 (US-S54): itens do Raindrop sempre gravam origem="raindrop",
+        // independente do domínio do link de compra (que pode ser o site
+        // oficial do local, não um canal de venda como sympla/eventim).
+        origem: "raindrop",
+      },
     );
 
     let outcome: RaindropOutcome = gate.status === "needs_human" ? "needs_human" : "created";

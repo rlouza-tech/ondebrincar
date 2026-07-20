@@ -1,28 +1,28 @@
 import { describe, expect, it } from "vitest";
-import { inferPartner, buildSlugFromRow } from "../patch-link-compra";
+import { inferOrigem, buildSlugFromRow } from "../patch-link-compra";
 
 // US-S35: mesma correção do pipeline-ia/index.ts aplicada aqui, já que esta
 // função é uma cópia duplicada usada só para o patch retroativo de link_compra.
 
-describe("inferPartner (patch-link-compra)", () => {
+describe("inferOrigem (patch-link-compra)", () => {
   it("reconhece sympla", () => {
-    expect(inferPartner("https://www.sympla.com.br/evento/123")).toBe("sympla");
+    expect(inferOrigem("https://www.sympla.com.br/evento/123")).toBe("sympla");
   });
 
   it("reconhece eventim", () => {
-    expect(inferPartner("https://www.eventim.com.br/event/nome")).toBe("eventim");
+    expect(inferOrigem("https://www.eventim.com.br/event/nome")).toBe("eventim");
   });
 
   it("reconhece clubinho na URL real (Colônia de Férias Gecrear – Laranjeiras)", () => {
     expect(
-      inferPartner(
+      inferOrigem(
         "https://clubinhodeofertas.com.br/rio-de-janeiro/colonia-de-ferias-gecrear-laranjeiras-1786",
       ),
     ).toBe("clubinho");
   });
 
   it("cai em outro para domínio desconhecido", () => {
-    expect(inferPartner("https://www.ingresso.com/evento/123")).toBe("outro");
+    expect(inferOrigem("https://www.ingresso.com/evento/123")).toBe("outro");
   });
 });
 

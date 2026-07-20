@@ -63,7 +63,7 @@ export interface OutboundClickParams {
   destination_type: "sympla" | "eventim" | "official_site" | "instagram" | "clubinho" | "other";
   cta_label: string;
   view_source: "detail_page" | "listing_card";
-  /** Canal de venda registrado no Sanity (sympla | eventim | outro). Útil para medir conversão por canal. */
+  /** Canal de venda (campo "origem" no Sanity: sympla | eventim | clubinho | raindrop | outro). Nome do parâmetro mantido como "partner" para não quebrar comparabilidade histórica no GA4. */
   partner?: string;
 }
 

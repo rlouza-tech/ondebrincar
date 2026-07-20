@@ -15,7 +15,7 @@ import type {
   Categoria,
   LinhaEnriquecida,
   LinhaInput,
-  Partner,
+  Origem,
   PipelineReport,
   RespostaGemini,
 } from "./types";
@@ -137,7 +137,7 @@ function slugify(value: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-export function inferPartner(url: string): Partner {
+export function inferOrigem(url: string): Origem {
   const normalized = url.toLowerCase();
   if (normalized.includes("sympla")) {
     return "sympla";
@@ -264,7 +264,10 @@ export function buildLinhaEnriquecida(
   status: LinhaEnriquecida["review_status"],
   reasons: string[],
   processedAt: string,
-  meta: Pick<LinhaEnriquecida, "ai_generated" | "ai_model" | "pipeline_failed">,
+  meta: Pick<LinhaEnriquecida, "ai_generated" | "ai_model" | "pipeline_failed"> & {
+    /** Override explícito da origem (ex.: "raindrop" — não é inferível pela URL do link de compra). */
+    origem?: Origem;
+  },
 ): LinhaEnriquecida {
   const { categoria } = resolveCategoria(linha, resposta.categoria);
   return {
@@ -278,7 +281,7 @@ export function buildLinhaEnriquecida(
     // url_ingresso é o link de compra/ingresso direto; url_origem é proveniência dos dados.
     // Para fontes sem ingresso (curadoria manual, parques, museus gratuitos), url_ingresso fica vazio.
     link_compra: linha.url_ingresso ?? linha.url_origem ?? "",
-    partner: inferPartner(linha.url_ingresso ?? linha.url_origem ?? ""),
+    origem: meta.origem ?? inferOrigem(linha.url_ingresso ?? linha.url_origem ?? ""),
     // US-S16: se bairro ainda vazio após pré-processamento, usa fallback do Gemini
     bairro: linha.bairro || resposta.bairro_inferido || "",
     endereco: linha.endereco,

@@ -9,7 +9,7 @@
  *  1. Busca todos os docs `atracao` com link_compra inválido no Sanity.
  *  2. Carrega planilha-origem.csv (scraper v2) para montar mapa slug → url_origem.
  *  3. Para cada doc inválido, tenta cruzar pelo slug.
- *  4. Encontrado: patch link_compra + partner. Não encontrado: imprime para revisão manual.
+ *  4. Encontrado: patch link_compra + origem. Não encontrado: imprime para revisão manual.
  *
  * Uso (na raiz do projeto Cursor):
  *   pnpm tsx scripts/patch-link-compra.ts
@@ -38,7 +38,7 @@ const PRODUCT_URL_PATTERN =
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-export function inferPartner(url: string): "sympla" | "eventim" | "clubinho" | "outro" {
+export function inferOrigem(url: string): "sympla" | "eventim" | "clubinho" | "outro" {
   if (/sympla\.com\.br/i.test(url)) return "sympla";
   if (/eventim\.com\.br/i.test(url)) return "eventim";
   if (/clubinhodeofertas\.com\.br/i.test(url)) return "clubinho";
@@ -146,17 +146,17 @@ async function main() {
       continue;
     }
 
-    const partner = inferPartner(novaUrl);
+    const origem = inferOrigem(novaUrl);
     console.log(
       `${DRY_RUN ? "[DRY]" : "PATCH"} ${doc._id}\n` +
         `  de: ${doc.link_compra}\n` +
-        `  para: ${novaUrl}  (partner: ${partner})\n`,
+        `  para: ${novaUrl}  (origem: ${origem})\n`,
     );
 
     if (!DRY_RUN) {
       await sanityWriteClient
         .patch(doc._id)
-        .set({ link_compra: novaUrl, partner })
+        .set({ link_compra: novaUrl, origem })
         .commit();
     }
     patched++;
