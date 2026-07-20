@@ -104,7 +104,8 @@ Ordem importa — cada passo depende do anterior ter rodado antes:
    ```
    pnpm auto-avancar-datas
    ```
-   Mostre o resultado (quantas fichas com sugestão de data). Pergunte se aplica.
+   Mostre o resultado (quantas fichas com sugestão de data, e a origem — fonte viva ou texto
+   salvo). Pergunte se aplica.
    ```
    pnpm auto-avancar-datas --execute
    ```
@@ -118,20 +119,31 @@ Ordem importa — cada passo depende do anterior ter rodado antes:
    Esse relatório costuma vir grande (dezenas de fichas expiradas + divergências de preço/
    descrição) — nunca jogue a lista crua no chat. Salve as fichas "sem sugestão de data" num
    arquivo (`data/output/revisao-manual-datas-<data>.md`, com slug, data expirada, programação
-   da fonte e link) e resuma no chat só a contagem + os poucos casos de divergência de preço
-   genuína (ignore `descricao [sinopse vs AI-enriched]` — é o Gemini reescrevendo texto, não é
-   divergência real). Se houver sugestão de data válida sobrando, pergunte e rode com
-   `--fix-dates` por fonte.
+   da fonte, link **e a origem da sugestão quando houver uma**) e resuma no chat só a contagem +
+   os poucos casos de divergência de preço genuína (ignore `descricao [sinopse vs AI-enriched]` —
+   é o Gemini reescrevendo texto, não é divergência real). Se houver sugestão de data válida
+   sobrando, pergunte e rode com `--fix-dates` por fonte.
 
-   Lembrete: a sugestão de data (nas duas listagens do `check-atualizacoes`) vem sempre de
-   reler o `programacao_texto` já salvo no Sanity — nunca é re-checada contra a fonte viva.
-   Fichas com status `encerrada` ou `rejeitado` não têm nada de novo a ganhar desse relatório
-   (o texto relido é o mesmo de quando foram fechadas); se o Rafa perguntar, pode dizer que dá
-   pra ignorar essas com segurança — só vale atenção em fichas ainda `operando` com data vencida.
+   **US-S53 (20/07/2026):** tanto `auto-avancar-datas` quanto `check-atualizacoes` agora tentam
+   a fonte viva (`dias_apresentacao` re-raspado no mesmo run) **antes** de cair no fallback de
+   reler o `programacao_texto` já salvo no Sanity — corrige a causa raiz do incidente "A Casa da
+   Gabi" (fichas com relistagem recorrente, comum no Clubinho, ficavam irresgatáveis depois de
+   vencidas porque o dado fresco re-raspado era descartado). Cada sugestão vem marcada com a
+   origem (`fonte viva` ou `texto salvo`) — priorize confiança na fonte viva ao decidir. Fichas
+   com status `encerrada` ou `rejeitado` continuam sem nada de novo a ganhar desse relatório; se
+   o Rafa perguntar, pode dizer que dá pra ignorar essas com segurança — só vale atenção em
+   fichas ainda `operando` com data vencida.
 
 3. **Revisão manual**: o que sobrou sem sugestão em nenhum dos dois passos acima — liste slug e
    link de origem, e peça pro Rafa decidir ficha por ficha no Studio (atualizar ou desistir).
    Não invente uma data.
+
+   🔴 **Nunca vire `--mark-expired` sem abrir o link de origem individualmente** — mesmo com
+   volume alto (13+ fichas numa rodada só, como aconteceu em 13/07). Foi exatamente pular esse
+   passo sob volume que causou 2 despublicações indevidas reais ("A Casa da Gabi", 13/07; "Chaves
+   — Foi sem querer querendo", 20/07) — ver `Handoffs/Handoffs de Execução/Handoff-US-S50-spike-
+   mark-expired-casa-da-gabi.md`. Se o Rafa pedir pra acelerar em volume alto, isso é sinal pra
+   parar e alinhar com ele, não pra pular a checagem individual.
 
 4. **Fechar o ciclo de status**:
    ```
