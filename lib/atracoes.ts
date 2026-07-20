@@ -66,7 +66,7 @@ function mapSanityAtracao(document: SanityAtracaoDocument): Atracao {
     descricaoCurta: document.mini_review || document.descricao,
     imagemUrl: document.foto?.asset?.url || "/placeholder-atracao.svg",
     linkExterno: document.link_compra || "",
-    partner: document.partner,
+    origem: document.origem,
   };
 
   if (document.proxima_data) {

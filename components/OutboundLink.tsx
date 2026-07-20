@@ -43,7 +43,7 @@ export function OutboundLink({
           destination_type: detectDestinationType(href),
           cta_label: ctaLabel,
           view_source: source,
-          partner: atracao.partner,
+          partner: atracao.origem,
         };
 
         trackEvent("outbound_click", params);

@@ -11,7 +11,7 @@ const atracaoProjection = groq`
   preco,
   preco_a_partir,
   link_compra,
-  partner,
+  origem,
   bairro,
   endereco,
   indoor_outdoor,

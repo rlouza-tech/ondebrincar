@@ -107,24 +107,25 @@ export const atracao = defineType({
       validation: (Rule) => Rule.uri({ scheme: ["http", "https"] }),
     }),
     defineField({
-      name: "partner",
-      title: "Partner",
+      name: "origem",
+      title: "Origem",
       type: "string",
-      description: "Parceiro do link de compra. Ex.: sympla, eventim, clubinho ou outro.",
+      description: "Origem do link de compra. Ex.: sympla, eventim, clubinho, raindrop ou outro.",
       options: {
         list: [
           { title: "Sympla", value: "sympla" },
           { title: "Eventim", value: "eventim" },
           { title: "Clubinho de Ofertas", value: "clubinho" },
+          { title: "Raindrop", value: "raindrop" },
           { title: "Outro", value: "outro" },
         ],
         layout: "radio",
       },
       validation: (Rule) =>
-        Rule.custom((partner, context) => {
+        Rule.custom((origem, context) => {
           const parent = context.parent as { status?: string; link_compra?: string } | undefined;
-          if (parent?.status === "operando" && parent.link_compra && !partner) {
-            return "Partner é recomendado quando há link de compra.";
+          if (parent?.status === "operando" && parent.link_compra && !origem) {
+            return "Origem é recomendada quando há link de compra.";
           }
           return true;
         }),

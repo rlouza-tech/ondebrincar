@@ -1,18 +1,19 @@
 #!/usr/bin/env tsx
 /**
- * backfill-partner-clubinho.ts
- * US-O21 — Backfill retroativo do campo `partner` para fichas Clubinho já
- * publicadas antes do fix de US-S35 (inferPartner() não reconhecia URLs do
- * Clubinho de Ofertas e gravava partner: "outro"), distorcendo o histórico
- * dos eventos GA4 outbound_click/buy_ticket_click por partner.
+ * backfill-origem-clubinho.ts (renomeado de backfill-partner-clubinho.ts em US-S54)
+ * US-O21 — Backfill retroativo do campo `origem` (à época `partner`, renomeado
+ * em US-S54) para fichas Clubinho já publicadas antes do fix de US-S35
+ * (inferOrigem() não reconhecia URLs do Clubinho de Ofertas e gravava
+ * origem: "outro"), distorcendo o histórico dos eventos GA4
+ * outbound_click/buy_ticket_click por canal de venda.
  *
  * Estratégia (reaproveita o padrão de scripts/patch-link-compra.ts, sem
  * decisão de arquitetura nova — conforme assumption da story):
  *  1. Busca docs `atracao` no Sanity com link_compra contendo
- *     clubinhodeofertas.com.br e partner != "clubinho".
+ *     clubinhodeofertas.com.br e origem != "clubinho".
  *  2. --dry-run: lista quantidade + slugs (publicadas e drafts separados),
  *     sem escrever nada.
- *  3. --execute: corrige partner -> "clubinho" apenas nas fichas PUBLICADAS
+ *  3. --execute: corrige origem -> "clubinho" apenas nas fichas PUBLICADAS
  *     (escopo declarado no título da story). Drafts são listadas à parte
  *     para o Rafa decidir manualmente se quer incluir.
  *  4. Pós-execução: reconfirma que não sobra nenhuma ficha publicada
@@ -21,8 +22,8 @@
  * Uso (na raiz do projeto Cursor — precisa do dotenv-cli pra carregar
  * NEXT_PUBLIC_SANITY_PROJECT_ID/SANITY_API_TOKEN de .env.local, mesmo padrão
  * dos outros scripts do package.json):
- *   pnpm dotenv -e .env.local -- tsx scripts/backfill-partner-clubinho.ts --dry-run
- *   pnpm dotenv -e .env.local -- tsx scripts/backfill-partner-clubinho.ts --execute
+ *   pnpm dotenv -e .env.local -- tsx scripts/backfill-origem-clubinho.ts --dry-run
+ *   pnpm dotenv -e .env.local -- tsx scripts/backfill-origem-clubinho.ts --execute
  */
 
 import { fileURLToPath } from "node:url";
@@ -39,13 +40,13 @@ export type AtracaoDoc = {
   slug: string | null;
   nome: string;
   link_compra: string | null;
-  partner: string | null;
+  origem: string | null;
 };
 
 export async function fetchAfetadas(): Promise<AtracaoDoc[]> {
   return sanityWriteClient.fetch(
-    `*[_type == "atracao" && link_compra match $pattern && partner != "clubinho"]{
-      _id, "slug": slug.current, nome, link_compra, partner
+    `*[_type == "atracao" && link_compra match $pattern && origem != "clubinho"]{
+      _id, "slug": slug.current, nome, link_compra, origem
     }`,
     { pattern: CLUBINHO_LINK_PATTERN },
   );
@@ -59,7 +60,7 @@ function printLista(label: string, docs: AtracaoDoc[]) {
   console.log(`${label}:`);
   docs.forEach((d) =>
     console.log(
-      `  • ${d._id}  slug: ${d.slug ?? "(sem slug)"}  partner atual: ${d.partner ?? "(vazio)"}  nome: ${d.nome}`,
+      `  • ${d._id}  slug: ${d.slug ?? "(sem slug)"}  origem atual: ${d.origem ?? "(vazio)"}  nome: ${d.nome}`,
     ),
   );
 }
@@ -102,8 +103,8 @@ async function main() {
   // EXECUTE: só corrige as publicadas — escopo declarado no título da story.
   let patched = 0;
   for (const doc of publicadas) {
-    await sanityWriteClient.patch(doc._id).set({ partner: "clubinho" }).commit();
-    console.log(`PATCH ${doc._id} -> partner: "clubinho"`);
+    await sanityWriteClient.patch(doc._id).set({ origem: "clubinho" }).commit();
+    console.log(`PATCH ${doc._id} -> origem: "clubinho"`);
     patched++;
   }
   console.log(`\nCorrigidas: ${patched}`);
@@ -111,7 +112,7 @@ async function main() {
   // AC4: pós-execução, reconfirma que não sobra ficha publicada divergente.
   const restantes = (await fetchAfetadas()).filter((d) => !isDraft(d._id));
   if (restantes.length === 0) {
-    console.log('Pós-execução: nenhuma ficha Clubinho publicada com partner != "clubinho". OK.');
+    console.log('Pós-execução: nenhuma ficha Clubinho publicada com origem != "clubinho". OK.');
   } else {
     console.error(`Pós-execução: ainda restam ${restantes.length} fichas publicadas divergentes!`);
     printLista("Restantes", restantes);

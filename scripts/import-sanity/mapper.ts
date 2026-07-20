@@ -14,7 +14,7 @@ export function toSanityDoc(linha: LinhaEnriquecida): SanityAtracaoDocInput {
     idade_min: linha.idade_min,
     idade_max: linha.idade_max,
     link_compra: linha.link_compra,
-    partner: linha.partner,
+    origem: linha.origem,
     bairro: linha.bairro,
     indoor_outdoor: linha.indoor_outdoor,
     status: "operando",

@@ -22,8 +22,8 @@ export interface Atracao {
   descricaoCurta: string;
   imagemUrl: string;
   linkExterno: string;
-  /** Canal de venda: "sympla" | "eventim" | "outro". Usado em analytics de conversão. */
-  partner?: "sympla" | "eventim" | "outro";
+  /** Origem do link de compra: "sympla" | "eventim" | "clubinho" | "raindrop" | "outro". Usado em analytics de conversão. */
+  origem?: "sympla" | "eventim" | "clubinho" | "raindrop" | "outro";
 }
 
 export interface SanityAtracaoDocument {
@@ -37,7 +37,7 @@ export interface SanityAtracaoDocument {
   preco?: number | null;
   preco_a_partir?: boolean;
   link_compra?: string;
-  partner?: "sympla" | "eventim" | "outro";
+  origem?: "sympla" | "eventim" | "clubinho" | "raindrop" | "outro";
   bairro: string;
   endereco?: string;
   indoor_outdoor: IndoorOutdoor;

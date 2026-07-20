@@ -15,7 +15,7 @@ vi.mock("@/lib/sanity/client", () => ({
 }));
 
 const { fetchAfetadas, isDraft, CLUBINHO_LINK_PATTERN } = await import(
-  "../backfill-partner-clubinho"
+  "../backfill-origem-clubinho"
 );
 
 describe("isDraft", () => {
@@ -29,14 +29,14 @@ describe("isDraft", () => {
 });
 
 describe("fetchAfetadas", () => {
-  it("passa o pattern glob do Clubinho e filtra partner != clubinho na query GROQ", async () => {
+  it("passa o pattern glob do Clubinho e filtra origem != clubinho na query GROQ", async () => {
     mockFetch.mockResolvedValueOnce([
       {
         _id: "atracao-1",
         slug: "colonia-de-ferias-gecrear-laranjeiras-1786",
         nome: "Colônia de Férias Gecrear – Laranjeiras",
         link_compra: "https://clubinhodeofertas.com.br/rio-de-janeiro/colonia-de-ferias-gecrear-laranjeiras-1786",
-        partner: "outro",
+        origem: "outro",
       },
     ]);
 
@@ -47,7 +47,7 @@ describe("fetchAfetadas", () => {
       { pattern: CLUBINHO_LINK_PATTERN },
     );
     expect(docs).toHaveLength(1);
-    expect(docs[0].partner).toBe("outro");
+    expect(docs[0].origem).toBe("outro");
   });
 });
 
@@ -57,9 +57,9 @@ describe("fetchAfetadas", () => {
 describe("integração — execução real só corrige publicadas", () => {
   it("separa publicadas de drafts e só chama patch/commit para publicadas", async () => {
     const afetadas = [
-      { _id: "atracao-1", slug: "arraia-do-sitio", nome: "Arraiá do Sítio", link_compra: "x", partner: "outro" },
-      { _id: "atracao-2", slug: "familia-adams", nome: "Família Adams", link_compra: "x", partner: "evento" },
-      { _id: "drafts.atracao-3", slug: "colonia-gracie-kore", nome: "Colônia Gracie Kore", link_compra: "x", partner: "outro" },
+      { _id: "atracao-1", slug: "arraia-do-sitio", nome: "Arraiá do Sítio", link_compra: "x", origem: "outro" },
+      { _id: "atracao-2", slug: "familia-adams", nome: "Família Adams", link_compra: "x", origem: "evento" },
+      { _id: "drafts.atracao-3", slug: "colonia-gracie-kore", nome: "Colônia Gracie Kore", link_compra: "x", origem: "outro" },
     ];
 
     const publicadas = afetadas.filter((d) => !isDraft(d._id));

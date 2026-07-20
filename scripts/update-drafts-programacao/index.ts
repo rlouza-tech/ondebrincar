@@ -123,7 +123,7 @@ async function readEnrichedCSV(path: string): Promise<LinhaEnriquecida[]> {
           duracao_min: parseNullableInt(record.duracao_min ?? ""),
           preco_centavos: parseNullableInt(record.preco_centavos ?? ""),
           link_compra: record.link_compra ?? "",
-          partner: record.partner as LinhaEnriquecida["partner"],
+          origem: record.origem as LinhaEnriquecida["origem"],
           bairro: record.bairro ?? "",
           indoor_outdoor: record.indoor_outdoor as LinhaEnriquecida["indoor_outdoor"],
           status: "operando",

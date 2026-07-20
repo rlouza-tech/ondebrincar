@@ -2,7 +2,7 @@ export type {
   Categoria,
   IndoorOutdoor,
   LinhaEnriquecida,
-  Partner,
+  Origem,
   ReviewStatus,
   TipoProgramacao,
 } from "../pipeline-ia/types";
@@ -24,7 +24,7 @@ export interface SanityAtracaoDocInput {
   duracao_min?: number;
   preco?: number;
   link_compra: string;
-  partner: string;
+  origem: string;
   bairro: string;
   endereco?: string;
   indoor_outdoor: string;
