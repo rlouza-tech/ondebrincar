@@ -8,8 +8,10 @@ import {
   parseEnderecoBileto,
   parseDescartadosCache,
   mergeDescartados,
+  decidirAposFalhaDeEnrich,
   MIN_DESCRICAO_CHARS,
   type DescartadoEntry,
+  type SymplarRawEvent,
 } from "../sympla-enrich";
 
 // ---------------------------------------------------------------------------
@@ -365,6 +367,60 @@ describe("mergeDescartados", () => {
     expect(resultado).toHaveLength(1);
     expect(resultado[0].nome).toBe("Show A (nome atualizado)");
     expect(resultado[0].descartado_em).toBe("2026-07-16T00:00:00.000Z");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// decidirAposFalhaDeEnrich (fix: catch de page.goto/extração não pulava mais
+// o filtro de conteúdo infantil nem a checagem de revisão manual)
+// ---------------------------------------------------------------------------
+
+describe("decidirAposFalhaDeEnrich", () => {
+  const evBase = (overrides: Partial<SymplarRawEvent> = {}): SymplarRawEvent => ({
+    nome: "Show qualquer",
+    venue: "Local qualquer",
+    data: "20 de Jul",
+    link: "https://www.sympla.com.br/evento/show-qualquer/1",
+    descricao_raw: "Show qualquer, Local qualquer, 20 de Jul às 20:00",
+    preco_raw: "",
+    ...overrides,
+  });
+
+  it("descarta quando o stub (sem descrição real) não parece conteúdo infantil", () => {
+    const resultado = decidirAposFalhaDeEnrich(evBase());
+    expect(resultado).toEqual({ descarta: true });
+  });
+
+  it("mantém e marca revisão manual quando é bileto sem endereço e o stub sugere conteúdo infantil", () => {
+    const ev = evBase({
+      nome: "Oficina de circo em família",
+      link: "https://bileto.sympla.com.br/event/121678",
+    });
+    const resultado = decidirAposFalhaDeEnrich(ev);
+    expect(resultado.descarta).toBe(false);
+    if (!resultado.descarta) {
+      expect(resultado.revisaoManual).toBe(true);
+      expect(resultado.evFinal.revisao_manual).toBe(true);
+    }
+  });
+
+  it("mantém sem revisão manual quando não é bileto e o stub sugere conteúdo infantil", () => {
+    const ev = evBase({ nome: "Oficina de circo em família" });
+    const resultado = decidirAposFalhaDeEnrich(ev);
+    expect(resultado.descarta).toBe(false);
+    if (!resultado.descarta) {
+      expect(resultado.revisaoManual).toBe(false);
+      expect(resultado.evFinal.revisao_manual).toBeUndefined();
+    }
+  });
+
+  it("não descarta escola conhecida mesmo com stub curto — mantém e força revisão", () => {
+    const ev = evBase({ nome: "Colônia de férias Eleva Kids" });
+    const resultado = decidirAposFalhaDeEnrich(ev);
+    expect(resultado.descarta).toBe(false);
+    if (!resultado.descarta) {
+      expect(resultado.revisaoManual).toBe(true);
+    }
   });
 });
 
