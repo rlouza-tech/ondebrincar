@@ -535,6 +535,25 @@ export function mergeDescartados(
   return [...porLink.values()];
 }
 
+/**
+ * Decide o destino de um evento cuja tentativa de enrich lançou exceção (rede, timeout,
+ * bloqueio anti-bot em burst de requisições etc.) — nunca vimos a descrição real da
+ * página, só o stub do pre-filter (`ev`). Mesma regra da falha "sem seletor" (nenhuma
+ * exceção, mas texto extraído < MIN_DESCRICAO_CHARS): aplica o filtro de conteúdo
+ * infantil sobre o stub antes de aceitar, e marca revisão manual pelas mesmas regras
+ * de sempre. Sem isso, uma falha transiente aprovava o evento cru sem checagem alguma.
+ */
+export function decidirAposFalhaDeEnrich(
+  ev: SymplarRawEvent,
+): { descarta: true } | { descarta: false; evFinal: SymplarRawEvent; revisaoManual: boolean } {
+  if (!isConteudoInfantil(ev.nome, ev.descricao_raw)) {
+    return { descarta: true };
+  }
+  const revisaoManual = precisaRevisaoManual(ev.nome, ev.link, Boolean(ev.endereco));
+  const evFinal = revisaoManual ? { ...ev, revisao_manual: true } : ev;
+  return { descarta: false, evFinal, revisaoManual };
+}
+
 async function main() {
   const opts = parseArgs();
 
@@ -656,9 +675,17 @@ async function main() {
         }
       } catch (err) {
         const msg = err instanceof Error ? err.message.split("\n")[0] : String(err);
-        process.stdout.write(`❌ ${msg}\n`);
-        resultados.push(ev);
-        nFalhas++;
+        const decisao = decidirAposFalhaDeEnrich(ev);
+        if (decisao.descarta) {
+          process.stdout.write(`🚫 descartado (não infantil, falha: ${msg})\n`);
+          nDescartados++;
+        } else {
+          const biletoLog = isBiletoUrl(ev.link) ? " (bileto)" : "";
+          process.stdout.write(`❌ ${msg}${decisao.revisaoManual ? ` 🔍 revisão manual${biletoLog}` : ""}\n`);
+          resultados.push(decisao.evFinal);
+          nFalhas++;
+          if (decisao.revisaoManual) nRevisao++;
+        }
       }
 
       // Delay entre requisições (exceto na última)
