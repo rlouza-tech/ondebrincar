@@ -12,53 +12,70 @@ import { writeScrapedCsv } from "./csv";
 import { isLocalizacaoRioDeJaneiro } from "./parse";
 import { scrapeAtracao } from "./scrape-atracao";
 import { scrapeListing } from "./scrape-listing";
+import { scrapeUhuu, UHUU_CATEGORY_URL } from "./uhuu";
 
 const DEFAULT_LISTING_URL = "https://clubinhodeofertas.com.br/rio-de-janeiro";
-const DEFAULT_OUTPUT = join(process.cwd(), "data", "input", "planilha-origem.csv");
+const DEFAULT_OUTPUT_BY_SOURCE: Record<Source, string> = {
+  clubinho: join(process.cwd(), "data", "input", "planilha-origem.csv"),
+  uhuu: join(process.cwd(), "data", "input", "uhuu-raw.csv"),
+};
+
+type Source = "clubinho" | "uhuu";
 
 interface CliOptions {
-  listingUrl: string;
+  source: Source;
+  listingUrl?: string;
   outputPath: string;
   limit?: number;
   headed: boolean;
 }
 
 function parseArgs(argv: string[]): CliOptions {
-  const options: CliOptions = {
-    listingUrl: DEFAULT_LISTING_URL,
-    outputPath: DEFAULT_OUTPUT,
-    headed: false,
-  };
+  let source: Source = "clubinho";
+  let listingUrl: string | undefined;
+  let outputPath: string | undefined;
+  let limit: number | undefined;
+  let headed = false;
 
   for (let index = 2; index < argv.length; index += 1) {
     const arg = argv[index];
     const next = argv[index + 1];
 
-    if (arg === "--url" && next) {
-      options.listingUrl = next;
+    if (arg === "--source" && next) {
+      if (next !== "clubinho" && next !== "uhuu") {
+        throw new Error(`--source aceita "clubinho" ou "uhuu" — recebido: "${next}"`);
+      }
+      source = next;
+      index += 1;
+    } else if (arg === "--url" && next) {
+      listingUrl = next;
       index += 1;
     } else if (arg === "--output" && next) {
-      options.outputPath = next.startsWith("/")
-        ? next
-        : join(process.cwd(), next);
+      outputPath = next.startsWith("/") ? next : join(process.cwd(), next);
       index += 1;
     } else if (arg === "--limit") {
       const parsed = Number.parseInt(next ?? "", 10);
       if (Number.isNaN(parsed) || parsed < 1) {
         throw new Error("--limit precisa ser um número inteiro positivo");
       }
-      options.limit = parsed;
+      limit = parsed;
       index += 1;
     } else if (arg === "--headed") {
-      options.headed = true;
+      headed = true;
     } else {
       throw new Error(
-        "Uso: pnpm scrape [--url <listagem>] [--output <csv>] [--limit N] [--headed]",
+        "Uso: pnpm scrape [--source clubinho|uhuu] [--url <listagem>] [--output <csv>] [--limit N] [--headed]",
       );
     }
   }
 
-  return options;
+  return {
+    source,
+    listingUrl: listingUrl ?? (source === "clubinho" ? DEFAULT_LISTING_URL : undefined),
+    outputPath: outputPath ?? DEFAULT_OUTPUT_BY_SOURCE[source],
+    limit,
+    headed,
+  };
 }
 
 const PROBE_PRODUCT_URL =
@@ -85,21 +102,37 @@ async function ensureApiAccess(
   return createBrowserSession(true);
 }
 
-async function main() {
-  const options = parseArgs(process.argv);
+async function runUhuuScrape(options: CliOptions): Promise<void> {
+  console.log(`Scraper Uhuu: categoria ${options.listingUrl ?? UHUU_CATEGORY_URL} → ${options.outputPath}`);
+
+  const { rows, stats } = await scrapeUhuu({
+    categoryUrl: options.listingUrl,
+    limit: options.limit,
+  });
+
+  console.log(
+    `${stats.totalListados} listados / ${stats.totalRj} no município do RJ / ${stats.totalComDetalhe} enriquecidos`,
+  );
+
+  await writeScrapedCsv(options.outputPath, rows);
+  console.log(`CSV salvo: ${options.outputPath} (${rows.length} linhas)`);
+}
+
+async function runClubinhoScrape(options: CliOptions): Promise<void> {
+  const listingUrl = options.listingUrl ?? DEFAULT_LISTING_URL;
   let session = await createBrowserSession(options.headed);
 
   console.log(
-    `Scraper v2: listagem ${options.listingUrl} → ${options.outputPath}${
+    `Scraper v2: listagem ${listingUrl} → ${options.outputPath}${
       options.headed ? " [headed]" : ""
     }`,
   );
 
-  await gotoWithRetry(session.page, options.listingUrl);
+  await gotoWithRetry(session.page, listingUrl);
   session = await ensureApiAccess(session, options.headed);
 
-  await gotoWithRetry(session.page, options.listingUrl);
-  const previews = await scrapeListing(session.page, options.listingUrl);
+  await gotoWithRetry(session.page, listingUrl);
+  const previews = await scrapeListing(session.page, listingUrl);
   const selected = options.limit ? previews.slice(0, options.limit) : previews;
 
   console.log(`Encontradas ${previews.length} atrações (${selected.length} a processar)`);
@@ -172,6 +205,15 @@ async function main() {
   await session.browser.close();
 
   console.log(`CSV salvo: ${options.outputPath} (${rows.length} linhas, 15 colunas)`);
+}
+
+async function main() {
+  const options = parseArgs(process.argv);
+  if (options.source === "uhuu") {
+    await runUhuuScrape(options);
+  } else {
+    await runClubinhoScrape(options);
+  }
 }
 
 main().catch((error) => {

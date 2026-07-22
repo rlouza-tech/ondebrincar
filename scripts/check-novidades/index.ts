@@ -10,6 +10,7 @@
  *   pnpm check-novidades --source clubinho
  *   pnpm check-novidades --source sympla
  *   pnpm check-novidades --source manual
+ *   pnpm check-novidades --source uhuu
  */
 
 import { fileURLToPath } from "node:url";
@@ -27,9 +28,13 @@ import {
   normalizeManual,
   DEFAULT_INPUT_PATH as MANUAL_PATH,
 } from "@/scripts/normalizer/manual";
+import {
+  normalizeUhuu,
+  DEFAULT_INPUT_PATH as UHUU_PATH,
+} from "@/scripts/normalizer/uhuu";
 import type { PipelineInput } from "@/lib/pipeline/types";
 
-type Source = "clubinho" | "sympla" | "manual";
+type Source = "clubinho" | "sympla" | "manual" | "uhuu";
 
 // ---------------------------------------------------------------------------
 // CLI
@@ -44,9 +49,9 @@ function parseArgs(argv: string[]): { source: Source } {
     const next = args[i + 1];
 
     if (arg === "--source") {
-      if (next !== "clubinho" && next !== "sympla" && next !== "manual") {
+      if (next !== "clubinho" && next !== "sympla" && next !== "manual" && next !== "uhuu") {
         throw new Error(
-          `--source aceita "clubinho", "sympla" ou "manual" — recebido: "${next ?? ""}"\n` +
+          `--source aceita "clubinho", "sympla", "manual" ou "uhuu" — recebido: "${next ?? ""}"\n` +
           `  Exemplo: pnpm check-novidades --source clubinho`,
         );
       }
@@ -60,7 +65,7 @@ function parseArgs(argv: string[]): { source: Source } {
   if (!source) {
     throw new Error(
       "Argumento --source é obrigatório.\n" +
-      "  Uso: pnpm check-novidades --source clubinho|sympla|manual",
+      "  Uso: pnpm check-novidades --source clubinho|sympla|manual|uhuu",
     );
   }
 
@@ -89,6 +94,10 @@ async function loadCandidates(
     case "manual":
       rows = await normalizeManual();
       inputPath = MANUAL_PATH;
+      break;
+    case "uhuu":
+      rows = await normalizeUhuu();
+      inputPath = UHUU_PATH;
       break;
   }
 
