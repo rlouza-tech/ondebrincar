@@ -27,6 +27,7 @@
     "fill-missing-images": "dotenv -e .env.local -- tsx scripts/fill-missing-images/index.ts",
     "retroativo-enderecos": "dotenv -e .env.local -- tsx scripts/retroativo-enderecos/index.ts",
     "backfill-endereco": "dotenv -e .env.local -- tsx scripts/backfill-endereco.ts",
+    "check-duplicatas-cross-fonte": "dotenv -e .env.local -- tsx scripts/check-duplicatas-cross-fonte.ts",
     "newsletter-draft": "dotenv -e .env.local -- tsx scripts/newsletter-draft/index.ts",
     "raindrop-process": "dotenv -e .env.local -- tsx scripts/raindrop-process/index.ts",
     "mark-expired": "dotenv -e .env.local -- tsx scripts/mark-expired.ts",
