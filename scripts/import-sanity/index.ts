@@ -155,7 +155,7 @@ function parseIntRequired(value: string, field: string): number {
   return parsed;
 }
 
-async function readEnrichedCSV(path: string): Promise<LinhaEnriquecida[]> {
+export async function readEnrichedCSV(path: string): Promise<LinhaEnriquecida[]> {
   return new Promise((resolve, reject) => {
     const rows: LinhaEnriquecida[] = [];
 
@@ -188,6 +188,7 @@ async function readEnrichedCSV(path: string): Promise<LinhaEnriquecida[]> {
           programacao_texto: record.programacao_texto ?? "",
           proxima_data: parseNullableDate(record.proxima_data ?? ""),
           foto_url: record.foto_url ?? "",
+          endereco: record.endereco?.trim() || undefined,
           review_status: record.review_status as LinhaEnriquecida["review_status"],
           abstain_reasons: abstainRaw
             ? abstainRaw.split("|").filter(Boolean)
