@@ -15,6 +15,7 @@ import {
   formatPreco,
   getAtracaoBySlug,
   getAtracaoSlugs,
+  sanityImageUrl,
 } from "@/lib/atracoes";
 import { formatadorDeData } from "@/lib/format-date";
 
@@ -180,10 +181,11 @@ export default async function AtracaoPage({ params, searchParams }: AtracaoPageP
         <article className="grid gap-8 lg:grid-cols-2 lg:gap-10">
           <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-primary/5">
             <Image
-              src={atracao.imagemUrl}
+              src={sanityImageUrl(atracao.imagemUrl, 1200)}
               alt={`Foto: ${atracao.titulo}`}
               fill
               priority
+              unoptimized
               sizes="(max-width: 1024px) 100vw, 50vw"
               className="object-cover"
             />

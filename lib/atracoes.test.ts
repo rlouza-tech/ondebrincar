@@ -4,6 +4,7 @@ import {
   getAtracaoBySlug,
   mapSanityAtracao,
   normalizeCategoriaSlug,
+  sanityImageUrl,
   type Atracao,
 } from "./atracoes";
 import { mockAtracoes } from "./mock-atracoes";
@@ -134,5 +135,35 @@ describe("mapSanityAtracao", () => {
   it("sem foto no documento Sanity → usa placeholder local", () => {
     const atracao = mapSanityAtracao(baseDocument({ foto: undefined }));
     expect(atracao.imagemUrl).toBe("/placeholder-atracao.svg");
+  });
+});
+
+describe("sanityImageUrl", () => {
+  it("anexa largura e auto=format a uma URL do CDN Sanity", () => {
+    const url = sanityImageUrl(
+      "https://cdn.sanity.io/images/projeto/production/foto.jpg",
+      800,
+    );
+    expect(url).toBe(
+      "https://cdn.sanity.io/images/projeto/production/foto.jpg?w=800&auto=format",
+    );
+  });
+
+  it("aplica a largura pedida (1200px no detalhe)", () => {
+    const url = sanityImageUrl(
+      "https://cdn.sanity.io/images/projeto/production/foto.jpg",
+      1200,
+    );
+    expect(url).toContain("w=1200");
+  });
+
+  it("URL local (placeholder) retorna sem alteração", () => {
+    expect(sanityImageUrl("/placeholder-atracao.svg", 800)).toBe(
+      "/placeholder-atracao.svg",
+    );
+  });
+
+  it("string vazia retorna sem alteração", () => {
+    expect(sanityImageUrl("", 800)).toBe("");
   });
 });
