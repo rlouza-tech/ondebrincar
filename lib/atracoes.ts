@@ -78,6 +78,18 @@ function mapSanityAtracao(document: SanityAtracaoDocument): Atracao {
 
 export { mapSanityAtracao };
 
+/**
+ * Pré-dimensiona uma URL de imagem via Sanity Image API (?w=...&auto=format),
+ * evitando que a Vercel baixe o asset original e gere cada variante do zero
+ * (US-O24). URLs locais (ex.: placeholder) são retornadas sem alteração.
+ */
+export function sanityImageUrl(url: string, width: number): string {
+  if (!url || url.startsWith("/")) {
+    return url;
+  }
+  return `${url}?w=${width}&auto=format`;
+}
+
 async function fetchSanityAtracoes(): Promise<Atracao[]> {
   if (!hasSanityConfig()) {
     return [];

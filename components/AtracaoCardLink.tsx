@@ -6,6 +6,7 @@ import { AtracaoCard } from "@/components/AtracaoCard";
 import {
   formatFaixaEtaria,
   formatPreco,
+  sanityImageUrl,
 } from "@/lib/atracoes";
 import { buildShareUrl, trackEvent, trackShareClick, type SaveClickParams } from "@/lib/analytics";
 import { useAttractionView } from "@/hooks/useAttractionView";
@@ -57,7 +58,7 @@ export function AtracaoCardLink({ atracao, className, filterRef, sempreDisponive
           name={atracao.titulo}
           ageRange={formatFaixaEtaria(atracao.idadeMin, atracao.idadeMax)}
           price={formatPreco(atracao)}
-          imageUrl={atracao.imagemUrl}
+          imageUrl={sanityImageUrl(atracao.imagemUrl, 800)}
           imageAlt={`Foto: ${atracao.titulo}`}
           bairro={atracao.bairro}
           proximaData={atracao.proximaData}
