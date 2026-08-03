@@ -73,6 +73,18 @@ pular a checagem individual.
 pnpm mark-expired --reactivate --dry-run
 ```
 Pra qualquer ficha que o Rafa resgatou no passo 2 mas que ainda estava marcada "encerrada".
+
+⚠️ **Risco identificado (US-S69, análise pós-US-S63, sem sobreposição funcional direta com o
+dedup cross-fonte):** reativar uma ficha aqui pode reviver uma duplicata cross-fonte de outra
+ficha já publicada — transforma um problema de "duas drafts" em "duas fichas publicadas", pior
+que o estado original. Antes de confirmar o `--reactivate` de verdade, dê uma olhada rápida se
+o slug (ou nome/venue) que está sendo reativado não bate com nenhum candidato já conhecido de
+duplicata cross-fonte (relatório da US-S65/check-duplicatas-cross-fonte, se tiver rodado
+recentemente). **Isso é lembrete, não passo obrigatório** — decisão consciente do Kickoff da
+Sprint 15 de não travar o fluxo com uma checagem automática pra um risco ainda hipotético, não
+observado na prática até agora. Se acontecer de verdade, reabrir e reavaliar como passo
+obrigatório.
+
 Confirme, depois:
 ```
 pnpm mark-expired --reactivate

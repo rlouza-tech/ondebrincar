@@ -15,8 +15,14 @@ agregação do relatório final. Substitui a pergunta "o que rodar hoje?" da ant
 **Atualizada na US-E15 (Sprint 15)** pra incluir a **Uhuu** como 5ª fonte automatizada —
 mesmo mecanismo de dispatch, sem mudança na lógica de coordenação.
 
+**Atualizada na US-S65 (Sprint 15)** pra incorporar a checagem de duplicata cross-fonte
+(`check-duplicatas-cross-fonte`, fix da US-S63) como último passo da rotina, depois do
+Avançar-datas — ver seções "Rotina" e "Ao terminar" abaixo.
+
 Não roda nenhum comando por conta própria: direciona sequencialmente para as 5 skills-filhas
-(`clubinho`, `sympla`, `uhuu`, `raindrop`, `avancar-datas`), na ordem descrita abaixo.
+(`clubinho`, `sympla`, `uhuu`, `raindrop`, `avancar-datas`), na ordem descrita abaixo, e depois
+roda diretamente a checagem de duplicata cross-fonte — não é uma skill-filha própria, é um
+script único, read-only, sem custo de Gemini/imagem.
 
 **Mecanismo de coordenação (ADR de US-E4):** skills não se chamam entre si — não têm agência
 própria. Quem tem agência é você, nesta sessão com o Rafa. Esta skill é o roteiro que define a
@@ -70,8 +76,18 @@ skill e siga a rotina dela até o fim, respeitando os checkpoints 🔴 que ela m
 3. **Uhuu** (skill `uhuu`) — entra logo depois do Sympla: mesma natureza de scraper
    automatizado, sem dependência de ordem em relação às outras fontes.
 4. **Raindrop** (skill `raindrop`).
-5. **Avançar-datas** (skill `avancar-datas`) — por último, já que resolve fichas vencidas das
-   fontes que acabaram de rodar (inclui as que Clubinho/Sympla/Uhuu acabaram de trazer).
+5. **Avançar-datas** (skill `avancar-datas`) — por último entre as skills-filhas, já que
+   resolve fichas vencidas das fontes que acabaram de rodar (inclui as que
+   Clubinho/Sympla/Uhuu acabaram de trazer).
+6. **Checagem de duplicata cross-fonte** (US-S65) — depois do Avançar-datas, rode
+   `pnpm check-duplicatas-cross-fonte` diretamente (🟢, read-only, sem custo de Gemini/imagem;
+   não é uma skill-filha, é um script único). Esse comando só funciona no terminal do Rafa
+   (Claude Code), nunca no Cowork. Guarde do output: quantidade de pares candidatos e o
+   caminho do relatório `.md` gerado (`data/output/duplicatas-cross-fonte-*.md`). O script
+   nunca aplica nada sozinho — só diagnostica (Opção A da US-S63, travada). Se achar pelo
+   menos 1 candidato, avise o Rafa explicitamente no resumo final, sem esperar ele perguntar,
+   e lembre que a decisão de qual ficha marcar como `duplicada` (via
+   `pnpm apply-duplicatas --slug <slug> --execute`, US-S64) é sempre manual dele.
 
 Se uma skill parar cedo por falta de novidade (ex.: Clubinho, Sympla ou Uhuu reportando 0
 fichas novas — "pare aqui" no roteiro dela), isso encerra só aquele passo — continue para a
@@ -93,8 +109,13 @@ Pacote completo:
 - Raindrop: N itens processados, M draft (K needs_human, P rejeitados)
 - Avançar-datas: N com sugestão (M fonte viva, K texto salvo), P avançadas, Q revisão
   manual pendente, R reativadas, S encerradas
+- Duplicata cross-fonte: N pares candidatos encontrados (relatório: <caminho do .md>)
 Total de fichas criadas/atualizadas como draft: <soma de Clubinho + Sympla + Uhuu + Raindrop>
 ```
+
+Se a checagem de duplicata encontrar candidatos (N > 0), destaque isso fora da lista também —
+não deixe só como mais uma linha do resumo, é um alerta que pode precisar de ação manual do
+Rafa (`apply-duplicatas`) antes da próxima rodada.
 
 Se alguma skill foi pulada a pedido do Rafa, mencione explicitamente que ficou de fora do
 resumo — não finja que rodou.
@@ -103,9 +124,11 @@ resumo — não finja que rodou.
 
 - **Vigilância de Conteúdo** (`check-atualizacoes`, curadoria pré-import): Fase 2 da ADR de
   US-E4, bloqueada até US-O20 fechar. Não é chamada por esta orquestração.
-- **Checagem de duplicata cross-fonte**: ainda não incorporada a esta rotina — story própria
-  (US-S65), pendente de execução separada. Quando fechar, este arquivo ganha um passo novo
-  depois do Avançar-datas.
+- **Checagem de duplicata cross-fonte como gate de escrita**: o passo 6 da rotina só
+  diagnostica e avisa — nunca bloqueia, pausa ou condiciona os passos anteriores (Clubinho,
+  Sympla, Uhuu, Raindrop, Avançar-datas) à ausência de duplicatas. Aplicar o status
+  `duplicada` continua sendo decisão manual do Rafa via `apply-duplicatas` (US-S64), sempre
+  fora desta orquestração (decisão de Opção A da US-S63, travada — nunca vira gate).
 - **Decidir se roda ou não**: esta skill não pergunta "o que rodar" — parte do princípio que a
   resposta é sempre "tudo" (confirmado pelo Rafa em 15/07). Se o Rafa quiser rodar só uma fonte
   isolada, é mais direto chamar a skill dela (`clubinho`, `sympla`, `uhuu`, `raindrop` ou
