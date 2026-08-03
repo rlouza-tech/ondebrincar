@@ -154,7 +154,10 @@ export function findCandidatePairs(
 // I/O — Sanity
 // ---------------------------------------------------------------------------
 
-const QUERY = `*[_type == "atracao" && status != "rejeitado"]{
+// US-S64: exclui também "duplicada" — sem isso, um par já resolvido pelo
+// apply-duplicatas.ts continuaria aparecendo como candidato pra sempre nas
+// próximas auditorias, poluindo o relatório com decisões já tomadas.
+export const QUERY = `*[_type == "atracao" && status != "rejeitado" && status != "duplicada"]{
   _id,
   "slug": slug.current,
   nome,

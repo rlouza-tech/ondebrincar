@@ -11,9 +11,22 @@ import {
   findCandidatePairs,
   normalizeBairro,
   normalizeTokens,
+  QUERY,
   THRESHOLD_DEFAULT,
   type AtracaoDoc,
 } from "../check-duplicatas-cross-fonte";
+
+// US-S64: sem excluir "duplicada" da query, um par já resolvido pelo
+// apply-duplicatas.ts voltaria a aparecer como candidato pra sempre.
+describe("QUERY — exclui rejeitado e duplicada (US-S64)", () => {
+  it('exclui status "rejeitado"', () => {
+    expect(QUERY).toContain('status != "rejeitado"');
+  });
+
+  it('exclui status "duplicada"', () => {
+    expect(QUERY).toContain('status != "duplicada"');
+  });
+});
 
 describe("normalizeTokens", () => {
   it("remove acentos, pontuação e stopwords", () => {
