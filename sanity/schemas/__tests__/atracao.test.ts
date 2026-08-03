@@ -125,3 +125,30 @@ describe("atracao schema — origem (US-S54: renomeado de partner)", () => {
     expect(values).toEqual(["sympla", "eventim", "clubinho", "raindrop", "uhuu", "outro"]);
   });
 });
+
+describe("atracao schema — status duplicada (US-S64)", () => {
+  it("inclui a opção duplicada na lista de valores de status", () => {
+    const field = atracao.fields.find((f) => f.name === "status") as
+      | { options?: { list?: Array<{ title: string; value: string }> } }
+      | undefined;
+    const values = field?.options?.list?.map((option) => option.value) ?? [];
+
+    expect(values).toContain("duplicada");
+  });
+
+  it("mantém as demais opções históricas de status", () => {
+    const field = atracao.fields.find((f) => f.name === "status") as
+      | { options?: { list?: Array<{ title: string; value: string }> } }
+      | undefined;
+    const values = field?.options?.list?.map((option) => option.value) ?? [];
+
+    expect(values).toEqual([
+      "operando",
+      "encerrada",
+      "em_obras",
+      "esgotada",
+      "rejeitado",
+      "duplicada",
+    ]);
+  });
+});
