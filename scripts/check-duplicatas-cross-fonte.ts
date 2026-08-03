@@ -49,12 +49,22 @@ export interface AtracaoDoc {
   nome: string;
   bairro: string;
   origem: string | null;
+  linkCompra: string | null;
+  status: string | null;
 }
 
 export interface CandidatoDuplicata {
   a: AtracaoDoc;
   b: AtracaoDoc;
   score: number;
+}
+
+// US-S64: quando as duas fichas do par já estão "encerrada", a peça já
+// acabou de verdade — não há "sobrevivente" a escolher, as duas podem ser
+// descartadas sem decisão manual. Achado real: par "Ana e o Mar" (03/08) já
+// tinha as duas encerradas pelo mark-expired antes de qualquer revisão.
+export function ambasEncerradas(a: AtracaoDoc, b: AtracaoDoc): boolean {
+  return a.status === "encerrada" && b.status === "encerrada";
 }
 
 // Validado empiricamente contra os 5 casos reais confirmados (AC3) — ver
@@ -162,7 +172,9 @@ export const QUERY = `*[_type == "atracao" && status != "rejeitado" && status !=
   "slug": slug.current,
   nome,
   bairro,
-  origem
+  origem,
+  "linkCompra": link_compra,
+  status
 }`;
 
 export async function fetchAtracoes(): Promise<AtracaoDoc[]> {
@@ -190,18 +202,20 @@ function printTable(candidatos: CandidatoDuplicata[]): void {
   );
   console.log(SEP);
   for (const c of candidatos) {
+    const nota = ambasEncerradas(c.a, c.b) ? "  ✅ ambas encerradas — pode descartar as duas" : "";
     console.log(
       padRight(c.score.toFixed(2), 8) +
         padRight(c.a.origem ?? "(sem origem)", 12) +
         padRight(c.b.origem ?? "(sem origem)", 12) +
         padRight(c.a.nome, 55) +
-        c.b.nome,
+        c.b.nome +
+        nota,
     );
   }
   console.log(SEP);
 }
 
-function buildMarkdownReport(candidatos: CandidatoDuplicata[], threshold: number): string {
+export function buildMarkdownReport(candidatos: CandidatoDuplicata[], threshold: number): string {
   const linhas: string[] = [];
   linhas.push(`# Relatório — duplicatas cross-fonte`);
   linhas.push("");
@@ -219,11 +233,18 @@ function buildMarkdownReport(candidatos: CandidatoDuplicata[], threshold: number
     return linhas.join("\n") + "\n";
   }
 
-  linhas.push("| score | origem A | nome A | slug A | origem B | nome B | slug B |");
-  linhas.push("|---|---|---|---|---|---|---|");
+  linhas.push(
+    "| score | origem A | nome A | slug A | link A | origem B | nome B | slug B | link B | observação |",
+  );
+  linhas.push("|---|---|---|---|---|---|---|---|---|---|");
   for (const c of candidatos) {
+    // US-S64: peça já encerrada nos dois lados = nada a decidir, as duas já
+    // saíram de circulação de verdade (não é só dedup, é fato editorial).
+    const observacao = ambasEncerradas(c.a, c.b)
+      ? "✅ ambas encerradas — pode descartar as duas, sem escolher sobrevivente"
+      : "";
     linhas.push(
-      `| ${c.score.toFixed(2)} | ${c.a.origem ?? "—"} | ${c.a.nome} | ${c.a.slug} | ${c.b.origem ?? "—"} | ${c.b.nome} | ${c.b.slug} |`,
+      `| ${c.score.toFixed(2)} | ${c.a.origem ?? "—"} | ${c.a.nome} | ${c.a.slug} | ${c.a.linkCompra ?? "—"} | ${c.b.origem ?? "—"} | ${c.b.nome} | ${c.b.slug} | ${c.b.linkCompra ?? "—"} | ${observacao} |`,
     );
   }
 
