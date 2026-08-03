@@ -102,3 +102,49 @@ describe("evaluate — incerteza", () => {
     expect(result.reasons).toContain("marcador_incerto");
   });
 });
+
+describe("evaluate — persona interna (US-S71)", () => {
+  it("menção a 'Daniel' na mini_review → needs_human", () => {
+    const result = evaluate(
+      baseInput(),
+      baseResposta({
+        mini_review:
+          "É um programa cultural divertido para o fim de semana, ideal para Daniel levar a filha e curtir juntos.",
+      }),
+    );
+
+    expect(result.status).toBe("needs_human");
+    expect(result.reasons).toContain("mencao_persona_interna");
+  });
+
+  it("menção a 'Lívia' (com acento) na descricao → needs_human", () => {
+    const result = evaluate(
+      baseInput(),
+      baseResposta({
+        descricao:
+          "Peça musical infantil ideal para crianças como a Lívia, de 4 anos, que adoram figurinos coloridos e música ao vivo.",
+      }),
+    );
+
+    expect(result.status).toBe("needs_human");
+    expect(result.reasons).toContain("mencao_persona_interna");
+  });
+
+  it("menção a 'Livia' (sem acento) na programacao_texto → needs_human", () => {
+    const result = evaluate(
+      baseInput(),
+      baseResposta({
+        programacao_texto: "Leve a Livia para aproveitar sábados e domingos às 16h.",
+      }),
+    );
+
+    expect(result.status).toBe("needs_human");
+    expect(result.reasons).toContain("mencao_persona_interna");
+  });
+
+  it("texto sem menção à persona → não sinaliza mencao_persona_interna", () => {
+    const result = evaluate(baseInput(), baseResposta());
+
+    expect(result.reasons).not.toContain("mencao_persona_interna");
+  });
+});

@@ -33,11 +33,20 @@ const LOW_CONFIDENCE_SUBSTRINGS = [
 
 const CRITICAL_ABSTAIN_FIELDS = ["categoria", "bairro", "idade_min", "idade_max"];
 
+// US-S71: persona interna (docs/voice/onde-brincar.md) nunca pode aparecer no texto pro usuário final.
+// O prompt já instrui o Gemini a não citar os nomes, mas isso não é rede de segurança — é só
+// texto livre. Esta é a checagem de código que faltava (PR #132 bloqueava só via prompt).
+const PERSONA_NAME_PATTERNS = [/\bdaniel\b/i, /\bl[íi]via\b/i];
+
 function hasLowConfidenceText(value: string): boolean {
   const normalized = value.toLowerCase();
   return LOW_CONFIDENCE_SUBSTRINGS.some((substring) =>
     normalized.includes(substring),
   );
+}
+
+function mencionaPersonaInterna(value: string): boolean {
+  return PERSONA_NAME_PATTERNS.some((pattern) => pattern.test(value));
 }
 
 export function evaluate(
@@ -57,6 +66,14 @@ export function evaluate(
     resposta.mini_review.includes("[INCERTO]")
   ) {
     reasons.push("marcador_incerto");
+  }
+
+  if (
+    mencionaPersonaInterna(resposta.descricao) ||
+    mencionaPersonaInterna(resposta.mini_review) ||
+    mencionaPersonaInterna(resposta.programacao_texto)
+  ) {
+    reasons.push("mencao_persona_interna");
   }
 
   if (resposta.descricao.length < 50 || resposta.descricao.length > 600) {

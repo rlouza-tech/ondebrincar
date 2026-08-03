@@ -5,7 +5,17 @@ import {
 import { getReferenceDateIso } from "./reference-date";
 import type { LinhaInput } from "./types";
 
-/** Incrementar manualmente ao mudar o prompt (US-S6). */
+/**
+ * Incrementar manualmente ao mudar o texto do prompt (US-S6).
+ *
+ * US-S71 (03/08/2026): o bloqueio de menção à persona interna (Daniel/Lívia), adicionado
+ * em v1.0.8 (PR #132) como instrução de prompt, não tinha nenhuma checagem de código —
+ * dependia 100% do Gemini obedecer texto livre. Auditoria encontrou 11 fichas publicadas
+ * com vazamento; 10 das 11 foram criadas DEPOIS do PR #132 (gap de enforcement real, não
+ * dado histórico pré-fix). Fix: checagem de palavra-chave em descricao/mini_review/
+ * programacao_texto no quality-gate.ts (reason "mencao_persona_interna"). Não incrementa
+ * PROMPT_VERSION porque o texto do prompt em si não mudou — o gap era no código.
+ */
 export const PROMPT_VERSION = "v1.0.8";
 
 function buildScraperV2Block(linha: LinhaInput): string {
