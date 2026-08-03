@@ -41,6 +41,7 @@ import { fetchExistingSlugs } from "@/scripts/import-sanity/index";
 import { filterGeo, appendGeoRejections, GEO_REJECTED_LOG_PATH } from "./geo-filter";
 import { filterLinkCompra, appendLinkRejections, LINK_REJECTED_LOG_PATH } from "./link-validator";
 import { extractBairroFromVenue } from "./bairro-extractor";
+import { normalizeAllCapsTitle } from "@/scripts/lib/title-case";
 
 type Source = "clubinho" | "sympla" | "whatsapp" | "manual";
 
@@ -271,7 +272,7 @@ export function buildLinhaEnriquecida(
 ): LinhaEnriquecida {
   const { categoria } = resolveCategoria(linha, resposta.categoria);
   return {
-    nome: linha.nome,
+    nome: normalizeAllCapsTitle(linha.nome),
     slug: buildSlug(linha),
     categoria,
     idade_min: resposta.idade_min,
