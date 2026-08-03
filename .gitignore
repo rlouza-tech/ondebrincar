@@ -48,3 +48,4 @@ next-env.d.ts
 /data/input/sympla-raw-enriquecido.json
 /data/input/sympla-descartados.json
 /data/input/uhuu-raw.csv
+/data/input/ecovilla-raw.csv

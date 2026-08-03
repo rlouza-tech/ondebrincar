@@ -13,14 +13,16 @@ import { isLocalizacaoRioDeJaneiro } from "./parse";
 import { scrapeAtracao } from "./scrape-atracao";
 import { scrapeListing } from "./scrape-listing";
 import { scrapeUhuu, UHUU_CATEGORY_URL } from "./uhuu";
+import { scrapeEcovilla, ECOVILLA_PROGRAMACAO_URL } from "./ecovilla";
 
 const DEFAULT_LISTING_URL = "https://clubinhodeofertas.com.br/rio-de-janeiro";
 const DEFAULT_OUTPUT_BY_SOURCE: Record<Source, string> = {
   clubinho: join(process.cwd(), "data", "input", "planilha-origem.csv"),
   uhuu: join(process.cwd(), "data", "input", "uhuu-raw.csv"),
+  ecovilla: join(process.cwd(), "data", "input", "ecovilla-raw.csv"),
 };
 
-type Source = "clubinho" | "uhuu";
+type Source = "clubinho" | "uhuu" | "ecovilla";
 
 interface CliOptions {
   source: Source;
@@ -42,8 +44,8 @@ function parseArgs(argv: string[]): CliOptions {
     const next = argv[index + 1];
 
     if (arg === "--source" && next) {
-      if (next !== "clubinho" && next !== "uhuu") {
-        throw new Error(`--source aceita "clubinho" ou "uhuu" — recebido: "${next}"`);
+      if (next !== "clubinho" && next !== "uhuu" && next !== "ecovilla") {
+        throw new Error(`--source aceita "clubinho", "uhuu" ou "ecovilla" — recebido: "${next}"`);
       }
       source = next;
       index += 1;
@@ -64,7 +66,7 @@ function parseArgs(argv: string[]): CliOptions {
       headed = true;
     } else {
       throw new Error(
-        "Uso: pnpm scrape [--source clubinho|uhuu] [--url <listagem>] [--output <csv>] [--limit N] [--headed]",
+        "Uso: pnpm scrape [--source clubinho|uhuu|ecovilla] [--url <listagem>] [--output <csv>] [--limit N] [--headed]",
       );
     }
   }
@@ -113,6 +115,22 @@ async function runUhuuScrape(options: CliOptions): Promise<void> {
   console.log(
     `${stats.totalListados} listados / ${stats.totalRj} no município do RJ / ${stats.totalComDetalhe} enriquecidos`,
   );
+
+  await writeScrapedCsv(options.outputPath, rows);
+  console.log(`CSV salvo: ${options.outputPath} (${rows.length} linhas)`);
+}
+
+async function runEcovillaScrape(options: CliOptions): Promise<void> {
+  console.log(
+    `Scraper EcoVilla: ${options.listingUrl ?? ECOVILLA_PROGRAMACAO_URL} → ${options.outputPath}`,
+  );
+
+  const { rows, stats } = await scrapeEcovilla({
+    listingUrl: options.listingUrl,
+    limit: options.limit,
+  });
+
+  console.log(`${stats.totalListados} eventos listados / ${rows.length} exportados`);
 
   await writeScrapedCsv(options.outputPath, rows);
   console.log(`CSV salvo: ${options.outputPath} (${rows.length} linhas)`);
@@ -211,6 +229,8 @@ async function main() {
   const options = parseArgs(process.argv);
   if (options.source === "uhuu") {
     await runUhuuScrape(options);
+  } else if (options.source === "ecovilla") {
+    await runEcovillaScrape(options);
   } else {
     await runClubinhoScrape(options);
   }

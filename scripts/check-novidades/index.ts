@@ -11,6 +11,7 @@
  *   pnpm check-novidades --source sympla
  *   pnpm check-novidades --source manual
  *   pnpm check-novidades --source uhuu
+ *   pnpm check-novidades --source ecovilla
  */
 
 import { fileURLToPath } from "node:url";
@@ -32,9 +33,13 @@ import {
   normalizeUhuu,
   DEFAULT_INPUT_PATH as UHUU_PATH,
 } from "@/scripts/normalizer/uhuu";
+import {
+  normalizeEcovilla,
+  DEFAULT_INPUT_PATH as ECOVILLA_PATH,
+} from "@/scripts/normalizer/ecovilla";
 import type { PipelineInput } from "@/lib/pipeline/types";
 
-type Source = "clubinho" | "sympla" | "manual" | "uhuu";
+type Source = "clubinho" | "sympla" | "manual" | "uhuu" | "ecovilla";
 
 // ---------------------------------------------------------------------------
 // CLI
@@ -49,9 +54,15 @@ function parseArgs(argv: string[]): { source: Source } {
     const next = args[i + 1];
 
     if (arg === "--source") {
-      if (next !== "clubinho" && next !== "sympla" && next !== "manual" && next !== "uhuu") {
+      if (
+        next !== "clubinho" &&
+        next !== "sympla" &&
+        next !== "manual" &&
+        next !== "uhuu" &&
+        next !== "ecovilla"
+      ) {
         throw new Error(
-          `--source aceita "clubinho", "sympla", "manual" ou "uhuu" — recebido: "${next ?? ""}"\n` +
+          `--source aceita "clubinho", "sympla", "manual", "uhuu" ou "ecovilla" — recebido: "${next ?? ""}"\n` +
           `  Exemplo: pnpm check-novidades --source clubinho`,
         );
       }
@@ -65,7 +76,7 @@ function parseArgs(argv: string[]): { source: Source } {
   if (!source) {
     throw new Error(
       "Argumento --source é obrigatório.\n" +
-      "  Uso: pnpm check-novidades --source clubinho|sympla|manual|uhuu",
+      "  Uso: pnpm check-novidades --source clubinho|sympla|manual|uhuu|ecovilla",
     );
   }
 
@@ -98,6 +109,10 @@ async function loadCandidates(
     case "uhuu":
       rows = await normalizeUhuu();
       inputPath = UHUU_PATH;
+      break;
+    case "ecovilla":
+      rows = await normalizeEcovilla();
+      inputPath = ECOVILLA_PATH;
       break;
   }
 
