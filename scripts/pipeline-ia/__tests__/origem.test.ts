@@ -19,6 +19,10 @@ describe("inferOrigem", () => {
     );
   });
 
+  it("reconhece uhuu (US-E13)", () => {
+    expect(inferOrigem("https://www.uhuu.com/rio-de-janeiro/evento/exemplo")).toBe("uhuu");
+  });
+
   it("cai em outro para domínio desconhecido", () => {
     expect(inferOrigem("https://www.ingresso.com/evento/123")).toBe("outro");
   });

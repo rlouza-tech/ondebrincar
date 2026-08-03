@@ -37,12 +37,16 @@ import {
   normalizeManual,
   DEFAULT_INPUT_PATH as MANUAL_DEFAULT_PATH,
 } from "@/scripts/normalizer/manual";
+import {
+  normalizeUhuu,
+  DEFAULT_INPUT_PATH as UHUU_DEFAULT_PATH,
+} from "@/scripts/normalizer/uhuu";
 import { fetchExistingSlugs } from "@/scripts/import-sanity/index";
 import { filterGeo, appendGeoRejections, GEO_REJECTED_LOG_PATH } from "./geo-filter";
 import { filterLinkCompra, appendLinkRejections, LINK_REJECTED_LOG_PATH } from "./link-validator";
 import { extractBairroFromVenue } from "./bairro-extractor";
 
-type Source = "clubinho" | "sympla" | "whatsapp" | "manual";
+type Source = "clubinho" | "sympla" | "whatsapp" | "manual" | "uhuu";
 
 interface CliOptions {
   inputPath?: string;
@@ -51,7 +55,7 @@ interface CliOptions {
   model: string;
 }
 
-function parseArgs(argv: string[]): CliOptions {
+export function parseArgs(argv: string[]): CliOptions {
   const args = argv.slice(2);
   const options: CliOptions = { model: "gemini-2.5-flash" };
   const positional: string[] = [];
@@ -74,8 +78,14 @@ function parseArgs(argv: string[]): CliOptions {
       options.model = next;
       index += 1;
     } else if (arg === "--source") {
-      if (next !== "clubinho" && next !== "sympla" && next !== "whatsapp" && next !== "manual") {
-        throw new Error("--source precisa ser 'clubinho', 'sympla', 'whatsapp' ou 'manual'");
+      if (
+        next !== "clubinho" &&
+        next !== "sympla" &&
+        next !== "whatsapp" &&
+        next !== "manual" &&
+        next !== "uhuu"
+      ) {
+        throw new Error("--source precisa ser 'clubinho', 'sympla', 'whatsapp', 'manual' ou 'uhuu'");
       }
       options.source = next as Source;
       index += 1;
@@ -93,14 +103,14 @@ function parseArgs(argv: string[]): CliOptions {
   if (!options.source && !options.inputPath) {
     throw new Error(
       "Uso: pnpm pipeline-ia <caminho.csv> [--limit N] [--model gemini-2.5-flash]\n" +
-      "  ou: pnpm pipeline-ia --source clubinho|sympla|whatsapp|manual [--limit N] [--model gemini-2.5-flash]",
+      "  ou: pnpm pipeline-ia --source clubinho|sympla|whatsapp|manual|uhuu [--limit N] [--model gemini-2.5-flash]",
     );
   }
 
   return options;
 }
 
-async function loadInput(options: CliOptions): Promise<{ rows: LinhaInput[]; label: string }> {
+export async function loadInput(options: CliOptions): Promise<{ rows: LinhaInput[]; label: string }> {
   if (options.source === "clubinho") {
     const path = options.inputPath ?? CLUBINHO_DEFAULT_PATH;
     const rows = await normalizeClubinho(path);
@@ -120,6 +130,11 @@ async function loadInput(options: CliOptions): Promise<{ rows: LinhaInput[]; lab
     const path = options.inputPath ?? MANUAL_DEFAULT_PATH;
     const rows = await normalizeManual(path);
     return { rows, label: `manual:${path}` };
+  }
+  if (options.source === "uhuu") {
+    const path = options.inputPath ?? UHUU_DEFAULT_PATH;
+    const rows = await normalizeUhuu(path);
+    return { rows, label: `uhuu:${path}` };
   }
   // Retrocompatibilidade: inputPath direto sem --source usa readCSV
   const path = options.inputPath!;
@@ -147,6 +162,9 @@ export function inferOrigem(url: string): Origem {
   }
   if (normalized.includes("clubinhodeofertas")) {
     return "clubinho";
+  }
+  if (normalized.includes("uhuu.com")) {
+    return "uhuu";
   }
   return "outro";
 }

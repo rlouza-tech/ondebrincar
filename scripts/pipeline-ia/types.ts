@@ -26,7 +26,7 @@ export type Categoria = (typeof CATEGORIAS_VALIDAS)[number];
 export type IndoorOutdoor = (typeof INDOOR_OUTDOOR_VALIDOS)[number];
 export type TipoProgramacao = (typeof TIPOS_PROGRAMACAO_VALIDOS)[number];
 export type ReviewStatus = "auto_ok" | "needs_human";
-export type Origem = "sympla" | "eventim" | "clubinho" | "raindrop" | "outro";
+export type Origem = "sympla" | "eventim" | "clubinho" | "raindrop" | "uhuu" | "outro";
 
 export interface LinhaInput {
   nome: string;
