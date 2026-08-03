@@ -7,6 +7,7 @@
 
 import { describe, expect, it } from "vitest";
 import {
+  ambasEncerradas,
   buildMarkdownReport,
   diceSimilarity,
   findCandidatePairs,
@@ -32,6 +33,44 @@ describe("QUERY — exclui rejeitado e duplicada (US-S64)", () => {
   it("busca link_compra (aliasado como linkCompra)", () => {
     expect(QUERY).toContain('"linkCompra": link_compra');
   });
+
+  it("busca status", () => {
+    expect(QUERY).toContain("status");
+  });
+});
+
+// US-S64: achado real do par "Ana e o Mar" (03/08) — as duas fichas já
+// estavam "encerrada" (mark-expired já tinha rodado), então não havia
+// sobrevivente a escolher. ambasEncerradas() dá o sinal certo pro relatório
+// sem precisar de decisão manual nesses casos.
+describe("ambasEncerradas (US-S64)", () => {
+  function docComStatus(status: string | null): AtracaoDoc {
+    return {
+      _id: "atracao-x",
+      slug: "x",
+      nome: "Nome",
+      bairro: "Tijuca",
+      origem: "sympla",
+      linkCompra: null,
+      status,
+    };
+  }
+
+  it("true quando os dois lados estão encerrada", () => {
+    expect(ambasEncerradas(docComStatus("encerrada"), docComStatus("encerrada"))).toBe(true);
+  });
+
+  it("false quando só um lado está encerrada", () => {
+    expect(ambasEncerradas(docComStatus("encerrada"), docComStatus("operando"))).toBe(false);
+  });
+
+  it("false quando nenhum lado está encerrada", () => {
+    expect(ambasEncerradas(docComStatus("operando"), docComStatus("esgotada"))).toBe(false);
+  });
+
+  it("false quando status é null (sem operando nem encerrada) — não presume", () => {
+    expect(ambasEncerradas(docComStatus(null), docComStatus("encerrada"))).toBe(false);
+  });
 });
 
 // US-S64: o Rafa pediu os links de compra no relatório pra conseguir
@@ -48,6 +87,7 @@ describe("buildMarkdownReport — links de compra (US-S64)", () => {
         bairro: "Tijuca",
         origem: "clubinho",
         linkCompra: "https://clubinho.example/ana-e-o-mar",
+        status: "operando",
       },
       b: {
         _id: "atracao-b",
@@ -56,6 +96,7 @@ describe("buildMarkdownReport — links de compra (US-S64)", () => {
         bairro: "Tijuca",
         origem: "sympla",
         linkCompra: "https://sympla.example/ana-e-o-mar",
+        status: "operando",
       },
     };
     return { ...base, ...over };
@@ -79,6 +120,7 @@ describe("buildMarkdownReport — links de compra (US-S64)", () => {
         bairro: "Tijuca",
         origem: "outro",
         linkCompra: null,
+        status: "operando",
       },
     });
 
@@ -86,6 +128,51 @@ describe("buildMarkdownReport — links de compra (US-S64)", () => {
     const linha = md.split("\n").find((l) => l.includes("Sem Link"));
 
     expect(linha).toContain("| — |");
+  });
+});
+
+// US-S64: quando as duas fichas do par já estão encerradas de verdade, o
+// relatório precisa avisar isso — evita o Rafa gastar tempo decidindo
+// "qual eu mantenho" numa hora em que a resposta é "nenhuma das duas".
+describe("buildMarkdownReport — observação de ambas encerradas (US-S64)", () => {
+  function candidato(over: Partial<CandidatoDuplicata> = {}): CandidatoDuplicata {
+    const base: CandidatoDuplicata = {
+      score: 0.67,
+      a: {
+        _id: "atracao-a",
+        slug: "ana-e-o-mar-a",
+        nome: "Ana e o Mar",
+        bairro: "Tijuca",
+        origem: "clubinho",
+        linkCompra: null,
+        status: "encerrada",
+      },
+      b: {
+        _id: "atracao-b",
+        slug: "ana-e-o-mar-b",
+        nome: "Ana e o Mar: Um musical Infantil",
+        bairro: "Tijuca",
+        origem: "sympla",
+        linkCompra: null,
+        status: "encerrada",
+      },
+    };
+    return { ...base, ...over };
+  }
+
+  it("marca observação quando as duas estão encerrada", () => {
+    const md = buildMarkdownReport([candidato()], THRESHOLD_DEFAULT);
+    const linha = md.split("\n").find((l) => l.includes("Ana e o Mar"));
+
+    expect(linha).toContain("✅ ambas encerradas — pode descartar as duas");
+  });
+
+  it("não marca observação quando só um lado está encerrada", () => {
+    const c = candidato({ b: { ...candidato().b, status: "operando" } });
+    const md = buildMarkdownReport([c], THRESHOLD_DEFAULT);
+    const linha = md.split("\n").find((l) => l.includes("Ana e o Mar"));
+
+    expect(linha).not.toContain("ambas encerradas");
   });
 });
 
@@ -138,6 +225,7 @@ describe("findCandidatePairs", () => {
       bairro: "Tijuca",
       origem: "sympla",
       linkCompra: null,
+      status: "operando",
       ...over,
     };
   }
