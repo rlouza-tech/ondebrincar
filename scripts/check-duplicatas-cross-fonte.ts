@@ -49,6 +49,7 @@ export interface AtracaoDoc {
   nome: string;
   bairro: string;
   origem: string | null;
+  linkCompra: string | null;
 }
 
 export interface CandidatoDuplicata {
@@ -162,7 +163,8 @@ export const QUERY = `*[_type == "atracao" && status != "rejeitado" && status !=
   "slug": slug.current,
   nome,
   bairro,
-  origem
+  origem,
+  "linkCompra": link_compra
 }`;
 
 export async function fetchAtracoes(): Promise<AtracaoDoc[]> {
@@ -201,7 +203,7 @@ function printTable(candidatos: CandidatoDuplicata[]): void {
   console.log(SEP);
 }
 
-function buildMarkdownReport(candidatos: CandidatoDuplicata[], threshold: number): string {
+export function buildMarkdownReport(candidatos: CandidatoDuplicata[], threshold: number): string {
   const linhas: string[] = [];
   linhas.push(`# Relatório — duplicatas cross-fonte`);
   linhas.push("");
@@ -219,11 +221,13 @@ function buildMarkdownReport(candidatos: CandidatoDuplicata[], threshold: number
     return linhas.join("\n") + "\n";
   }
 
-  linhas.push("| score | origem A | nome A | slug A | origem B | nome B | slug B |");
-  linhas.push("|---|---|---|---|---|---|---|");
+  linhas.push(
+    "| score | origem A | nome A | slug A | link A | origem B | nome B | slug B | link B |",
+  );
+  linhas.push("|---|---|---|---|---|---|---|---|---|");
   for (const c of candidatos) {
     linhas.push(
-      `| ${c.score.toFixed(2)} | ${c.a.origem ?? "—"} | ${c.a.nome} | ${c.a.slug} | ${c.b.origem ?? "—"} | ${c.b.nome} | ${c.b.slug} |`,
+      `| ${c.score.toFixed(2)} | ${c.a.origem ?? "—"} | ${c.a.nome} | ${c.a.slug} | ${c.a.linkCompra ?? "—"} | ${c.b.origem ?? "—"} | ${c.b.nome} | ${c.b.slug} | ${c.b.linkCompra ?? "—"} |`,
     );
   }
 

@@ -7,6 +7,7 @@
 
 import { describe, expect, it } from "vitest";
 import {
+  buildMarkdownReport,
   diceSimilarity,
   findCandidatePairs,
   normalizeBairro,
@@ -14,6 +15,7 @@ import {
   QUERY,
   THRESHOLD_DEFAULT,
   type AtracaoDoc,
+  type CandidatoDuplicata,
 } from "../check-duplicatas-cross-fonte";
 
 // US-S64: sem excluir "duplicada" da query, um par já resolvido pelo
@@ -25,6 +27,65 @@ describe("QUERY — exclui rejeitado e duplicada (US-S64)", () => {
 
   it('exclui status "duplicada"', () => {
     expect(QUERY).toContain('status != "duplicada"');
+  });
+
+  it("busca link_compra (aliasado como linkCompra)", () => {
+    expect(QUERY).toContain('"linkCompra": link_compra');
+  });
+});
+
+// US-S64: o Rafa pediu os links de compra no relatório pra conseguir
+// comparar os dois eventos do par (ex.: mesma peça, venues diferentes?)
+// sem precisar abrir o Studio.
+describe("buildMarkdownReport — links de compra (US-S64)", () => {
+  function candidato(over: Partial<CandidatoDuplicata> = {}): CandidatoDuplicata {
+    const base: CandidatoDuplicata = {
+      score: 1,
+      a: {
+        _id: "atracao-a",
+        slug: "atracao-a",
+        nome: "Ana e o Mar",
+        bairro: "Tijuca",
+        origem: "clubinho",
+        linkCompra: "https://clubinho.example/ana-e-o-mar",
+      },
+      b: {
+        _id: "atracao-b",
+        slug: "atracao-b",
+        nome: "Ana e o Mar: Um musical Infantil",
+        bairro: "Tijuca",
+        origem: "sympla",
+        linkCompra: "https://sympla.example/ana-e-o-mar",
+      },
+    };
+    return { ...base, ...over };
+  }
+
+  it("inclui os links de compra de A e B na tabela", () => {
+    const md = buildMarkdownReport([candidato()], THRESHOLD_DEFAULT);
+
+    expect(md).toContain("https://clubinho.example/ana-e-o-mar");
+    expect(md).toContain("https://sympla.example/ana-e-o-mar");
+    expect(md).toContain("link A");
+    expect(md).toContain("link B");
+  });
+
+  it("usa travessão quando linkCompra é null", () => {
+    const c = candidato({
+      a: {
+        _id: "atracao-a",
+        slug: "atracao-a",
+        nome: "Sem Link",
+        bairro: "Tijuca",
+        origem: "outro",
+        linkCompra: null,
+      },
+    });
+
+    const md = buildMarkdownReport([c], THRESHOLD_DEFAULT);
+    const linha = md.split("\n").find((l) => l.includes("Sem Link"));
+
+    expect(linha).toContain("| — |");
   });
 });
 
@@ -76,6 +137,7 @@ describe("findCandidatePairs", () => {
       nome: "Nome",
       bairro: "Tijuca",
       origem: "sympla",
+      linkCompra: null,
       ...over,
     };
   }
