@@ -77,6 +77,17 @@ export interface AddressClickParams {
   address: string;
 }
 
+/** Disparado ao clicar num card do anel de recomendação (US-I33). */
+export interface RecommendationClickParams {
+  attraction_id: string;
+  attraction_name: string;
+  category: string;
+  /** Índice do card no anel, 0-based. */
+  position: number;
+  /** Eixo que gerou a recomendação: mesmo tema/categoria ou mesmo bairro/fim de semana. */
+  axis: "tema" | "bairro";
+}
+
 export function mapEnvironmentForAnalytics(
   indoorOutdoor: IndoorOutdoor,
 ): NonNullable<AttractionViewParams["environment"]> {

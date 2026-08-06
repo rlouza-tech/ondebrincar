@@ -26,6 +26,16 @@ export interface Atracao {
   origem?: "sympla" | "eventim" | "clubinho" | "raindrop" | "uhuu" | "outro";
 }
 
+/** Shape retornado por `recomendacoesPorTema`/`recomendacoesPorBairro` (US-I33). */
+export interface SanityRecomendacaoDocument {
+  slug: string;
+  titulo: string;
+  categoria: string;
+  bairro: string;
+  proximaData?: string | null;
+  imagemUrl?: string;
+}
+
 export interface SanityAtracaoDocument {
   _id: string;
   nome: string;
