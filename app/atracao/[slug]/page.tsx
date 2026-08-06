@@ -7,6 +7,7 @@ import { AttractionDetailTracker } from "@/components/AttractionDetailTracker";
 import { JsonLd } from "@/components/JsonLd";
 import { AddressLink } from "@/components/AddressLink";
 import { OutboundLink } from "@/components/OutboundLink";
+import { RecommendationRing } from "@/components/RecommendationRing";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { buttonClassName } from "@/components/Button";
@@ -18,6 +19,7 @@ import {
   sanityImageUrl,
 } from "@/lib/atracoes";
 import { formatadorDeData } from "@/lib/format-date";
+import { getRecomendacoes } from "@/lib/recomendacoes";
 
 interface AtracaoPageProps {
   params: { slug: string };
@@ -164,13 +166,14 @@ export default async function AtracaoPage({ params, searchParams }: AtracaoPageP
 
   const jsonLd = buildJsonLd(atracao);
   const backHref = searchParams?.ref ? `/?${decodeURIComponent(searchParams.ref)}` : "/";
+  const recomendacoes = await getRecomendacoes(atracao);
 
   return (
     <>
       {jsonLd && <JsonLd data={jsonLd} />}
       <AttractionDetailTracker atracao={atracao} />
       <SiteHeader />
-      <main className="mx-auto max-w-screen-lg px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+      <main className="mx-auto max-w-screen-lg px-4 pb-28 pt-8 sm:px-6 sm:pt-10 lg:pb-10 lg:px-8">
         <Link
           href={backHref}
           className="mb-6 inline-block text-sm font-medium text-secondary hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
@@ -251,22 +254,26 @@ export default async function AtracaoPage({ params, searchParams }: AtracaoPageP
             <AtracaoDetailActions atracao={atracao} />
 
             {atracao.linkExterno ? (
-              <OutboundLink
-                atracao={atracao}
-                href={atracao.linkExterno}
-                ctaLabel={atracao.tipoProgramacao === "permanente" ? "Visitar site" : "Ver ingressos"}
-                isBuyTicket={atracao.tipoProgramacao !== "permanente"}
-                className={buttonClassName({
-                  variant: "primary",
-                  size: "lg",
-                  className: "w-full sm:w-auto",
-                })}
-              >
-                {atracao.tipoProgramacao === "permanente" ? "Visitar site" : "Ver ingressos"}
-              </OutboundLink>
+              <div className="fixed inset-x-0 bottom-0 z-40 border-t border-surface-muted bg-white p-4 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] lg:static lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
+                <OutboundLink
+                  atracao={atracao}
+                  href={atracao.linkExterno}
+                  ctaLabel={atracao.tipoProgramacao === "permanente" ? "Visitar site" : "Ver ingressos"}
+                  isBuyTicket={atracao.tipoProgramacao !== "permanente"}
+                  className={buttonClassName({
+                    variant: "primary",
+                    size: "lg",
+                    className: "w-full lg:w-auto",
+                  })}
+                >
+                  {atracao.tipoProgramacao === "permanente" ? "Visitar site" : "Ver ingressos"}
+                </OutboundLink>
+              </div>
             ) : null}
           </div>
         </article>
+
+        <RecommendationRing recomendacoes={recomendacoes} />
       </main>
       <SiteFooter />
     </>

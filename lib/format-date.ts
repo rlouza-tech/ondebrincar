@@ -19,3 +19,15 @@ export function formatadorDeData(iso: string): string {
   const weekday = WEEKDAY_SHORT_PT[date.getUTCDay()] ?? "";
   return `${day} de ${monthLabel} (${weekday})`;
 }
+
+/** Formata ISO date (YYYY-MM-DD) compacto para cards. Ex.: "sáb, 23 mai". */
+export function formatDataCurta(iso: string): string {
+  const [year, month, day] = iso.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+  const weekday = WEEKDAY_SHORT_PT[date.getUTCDay()] ?? "";
+  const monthLabel = date.toLocaleDateString("pt-BR", {
+    month: "short",
+    timeZone: "UTC",
+  });
+  return `${weekday}, ${day} ${monthLabel.replace(".", "")}`;
+}
