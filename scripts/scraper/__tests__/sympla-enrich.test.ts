@@ -6,6 +6,7 @@ import {
   isBiletoUrl,
   precisaRevisaoManual,
   parseEnderecoBileto,
+  resolverEnderecoFallback,
   parseDescartadosCache,
   mergeDescartados,
   decidirAposFalhaDeEnrich,
@@ -308,6 +309,53 @@ describe("parseEnderecoBileto", () => {
     expect(parseEnderecoBileto(raw)).toBe(
       "Parque Poeta Manuel Bandeira, 0, Rio de Janeiro - Rio de Janeiro",
     );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// resolverEnderecoFallback (US-S59)
+// ---------------------------------------------------------------------------
+
+describe("resolverEnderecoFallback", () => {
+  it("caso de controle (AC3): endereço completo extraído com sucesso não muda, mesmo com venue/nomeLocal disponíveis", () => {
+    expect(
+      resolverEnderecoFallback(
+        "Shopping Nova Iguaçu, Nova Iguaçu - RJ",
+        "Avenida Abílio Augusto Távora, 1111 — Kinoplex — Centro",
+        "Shopping Nova Iguaçu",
+      ),
+    ).toBe("Avenida Abílio Augusto Távora, 1111 — Kinoplex — Centro");
+  });
+
+  it("caso real (padrão \"Oficina de Boneco Tim Tim\"): endereço e venue de listagem falharam, cai pro nome do local da página do evento", () => {
+    // Reproduz a forma dos dados do caso real reportado na revisão de 16/07: a
+    // extração de endereço completo falhou E a listagem (sympla-scrape.ts)
+    // também não capturou venue algum — mas o nome do local (eventsAddress.name,
+    // confirmado empiricamente em 11/08 em 2 eventos reais do domínio padrão)
+    // ainda está disponível na página do evento.
+    expect(resolverEnderecoFallback("", null, "Espaço Cultural Real")).toBe(
+      "Espaço Cultural Real",
+    );
+  });
+
+  it("reaproveita o venue já capturado na listagem quando o endereço completo falha", () => {
+    expect(
+      resolverEnderecoFallback("Teatro Bangu Shopping", null, "Teatro Bangu Shopping"),
+    ).toBe("Teatro Bangu Shopping");
+  });
+
+  it("prioriza venue da listagem sobre nomeLocal da página do evento quando ambos existem", () => {
+    expect(resolverEnderecoFallback("Venue da listagem", null, "Nome do evento")).toBe(
+      "Venue da listagem",
+    );
+  });
+
+  it("retorna null quando endereço, venue e nomeLocal vêm todos vazios (sem regressão vs. comportamento anterior)", () => {
+    expect(resolverEnderecoFallback("", null, null)).toBeNull();
+  });
+
+  it("trata venue/nomeLocal só com espaços como vazio", () => {
+    expect(resolverEnderecoFallback("   ", null, "   ")).toBeNull();
   });
 });
 

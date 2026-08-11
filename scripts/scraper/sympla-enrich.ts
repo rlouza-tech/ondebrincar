@@ -199,6 +199,33 @@ export function parseEnderecoBileto(raw: string | null | undefined): string | nu
 }
 
 /**
+ * Decide o valor final do campo `endereco` (US-S59): quando o endereço completo
+ * não pôde ser extraído da página do evento, cai para o nome do local como
+ * fallback — melhor a ficha mostrar "Shopping Nova Iguaçu" do que nada.
+ *
+ * Prioridade: 1) endereço completo (caminho já existente, prioritário — não
+ * muda quando funciona, AC3); 2) `venue` já capturado na listagem pelo
+ * sympla-scrape.ts, se não vier vazio; 3) `nomeLocal` capturado na página do
+ * evento (`eventsAddress.name` do `__NEXT_DATA__`, ver `extrairEndereco`).
+ *
+ * Confirmado empiricamente (11/08) em 2 eventos reais do domínio padrão
+ * (sympla.com.br/evento/...) que `eventsAddress.name` acompanha o mesmo objeto
+ * já lido para o endereço completo — não é um seletor de DOM separado/frágil.
+ * Não se aplica a bileto.sympla.com.br (US-S40/US-S51 já cobrem esse caso à parte).
+ */
+export function resolverEnderecoFallback(
+  venueAtual: string,
+  enderecoExtraido: string | null,
+  nomeLocal: string | null,
+): string | null {
+  if (enderecoExtraido) return enderecoExtraido;
+  const venue = venueAtual?.trim();
+  if (venue) return venue;
+  const nome = nomeLocal?.trim();
+  return nome || null;
+}
+
+/**
  * Dado um texto bruto (ex.: innerText de um elemento), extrai padrões "R$ X,XX"
  * e retorna o menor preço em centavos e se há múltiplas faixas de preço.
  *
@@ -381,6 +408,12 @@ export async function extrairEnderecoBileto(
   }
 }
 
+export interface EnderecoExtraido {
+  endereco: string | null;
+  /** Nome do local (US-S59), lido de eventsAddress.name — null em bileto (fora de escopo). */
+  nomeLocal: string | null;
+}
+
 /**
  * Tenta extrair o endereço do venue de uma página de evento Sympla já carregada.
  *
@@ -390,20 +423,29 @@ export async function extrairEnderecoBileto(
  * 1. window.__NEXT_DATA__ — dados de hidratação do Next.js (mais confiável, estruturado)
  * 2. DOM selectors — fallback para elementos visíveis na página
  *
- * Retorna null se não encontrar ou se o texto parecer genérico/inútil.
+ * `endereco` vem null se não encontrar ou se o texto parecer genérico/inútil.
+ * `nomeLocal` (US-S59) é o nome do local, capturado do mesmo objeto eventsAddress
+ * usado na Estratégia 1 — quem chama decide se usa como fallback do endereço
+ * (ver resolverEnderecoFallback). Não tentamos capturar nomeLocal via DOM
+ * separado: validação empírica (11/08, 2 eventos reais) achou o nome do local
+ * num <h4> sem data-testid próprio, dentro de uma seção com vários outros <h4>
+ * (políticas de cancelamento etc.) — seletor não é específico o bastante pra
+ * confiar, ao contrário do eventsAddress.name que já vem estruturado.
  */
 export async function extrairEndereco(
   page: import("playwright").Page,
   url?: string
-): Promise<string | null> {
+): Promise<EnderecoExtraido> {
   if (url && isBiletoUrl(url)) {
-    return extrairEnderecoBileto(page);
+    return { endereco: await extrairEnderecoBileto(page), nomeLocal: null };
   }
 
   return page.evaluate(() => {
+    let nomeLocal: string | null = null;
+
     // --- Estratégia 1: __NEXT_DATA__ ---
     // Caminho real confirmado via debug: props.pageProps.hydrationData.eventHydration.event.eventsAddress
-    // Campos: address (rua), addressNum (número), addressAlt (complemento), neighborhood (bairro)
+    // Campos: address (rua), addressNum (número), addressAlt (complemento), neighborhood (bairro), name (local, US-S59)
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const nd = (window as any).__NEXT_DATA__;
@@ -418,11 +460,13 @@ export async function extrairEndereco(
         const num = eventsAddress.addressNum?.trim() ?? "";
         const comp = eventsAddress.addressAlt?.trim() ?? "";
         const bairro = eventsAddress.neighborhood?.trim() ?? "";
+        const nome = eventsAddress.name?.trim() ?? "";
+        if (nome.length > 0) nomeLocal = nome;
 
         const streetPart = [rua, num].filter(Boolean).join(", ");
         const rest = [comp, bairro].filter(Boolean).join(" — ");
         const full = [streetPart, rest].filter(Boolean).join(" — ");
-        if (full.length > 5) return full;
+        if (full.length > 5) return { endereco: full, nomeLocal };
       }
 
       // Fallback: estruturas alternativas (versões antigas ou outros endpoints)
@@ -442,11 +486,11 @@ export async function extrairEndereco(
           const streetPart = [street, number].filter(Boolean).join(", ");
           const rest = [complement, neighborhood].filter(Boolean).join(" — ");
           const full = [streetPart, rest].filter(Boolean).join(" — ");
-          if (full.length > 5) return full;
+          if (full.length > 5) return { endereco: full, nomeLocal };
         }
         const locStr = altEv.location?.name ?? altEv.venue?.name ?? altEv.local;
         if (typeof locStr === "string" && locStr.length > 5 && locStr.length < 200) {
-          return locStr;
+          return { endereco: locStr, nomeLocal };
         }
       }
     } catch {
@@ -470,13 +514,13 @@ export async function extrairEndereco(
           .replace(/\s*\n\s*/g, ", ")
           .replace(/,\s*,/g, ",")
           .trim();
-        if (text && text.length > 5 && text.length < 300) return text;
+        if (text && text.length > 5 && text.length < 300) return { endereco: text, nomeLocal };
       } catch {
         // seletor inválido — próximo
       }
     }
 
-    return null;
+    return { endereco: null, nomeLocal };
   });
 }
 
@@ -496,7 +540,11 @@ export interface SymplarRawEvent {
   preco_inteira_centavos?: string;
   /** true quando há múltiplas faixas de preço (lotes, meia/inteira, etc.). */
   preco_a_partir?: boolean;
-  /** Endereço completo do venue extraído da página do evento. */
+  /**
+   * Endereço do venue extraído da página do evento. Prioritariamente o
+   * endereço completo (rua+número); quando essa extração falha, cai para o
+   * nome do local como fallback (US-S59) — ver resolverEnderecoFallback.
+   */
   endereco?: string;
 }
 
@@ -616,7 +664,12 @@ async function main() {
         const { texto, seletor } = await extrairDescricao(page);
         const descricaoLimpa = parseDescricao(texto);
         const { minPriceCents, multiplasFaixas } = await extrairPrecos(page);
-        const enderecoExtraido = await extrairEndereco(page, ev.link);
+        const { endereco: enderecoBruto, nomeLocal } = await extrairEndereco(page, ev.link);
+        // US-S59: fallback pro nome do local só fora do fluxo bileto (que já
+        // tem seu próprio protocolo de revisão manual via US-S51).
+        const enderecoExtraido = isBiletoUrl(ev.link)
+          ? enderecoBruto
+          : resolverEnderecoFallback(ev.venue, enderecoBruto, nomeLocal);
 
         // Campos extras extraídos da página do evento
         const precoExtra: Pick<SymplarRawEvent, "preco_inteira_centavos" | "preco_a_partir" | "endereco"> = {
