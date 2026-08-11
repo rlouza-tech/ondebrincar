@@ -105,8 +105,8 @@ export function buildAttractionViewParams(
     neighborhood: atracao.bairro,
     price_type: atracao.precoTipo,
     environment: mapEnvironmentForAnalytics(atracao.indoorOutdoor),
-    age_min: atracao.idadeMin,
-    age_max: atracao.idadeMax,
+    age_min: atracao.idadeMin ?? undefined,
+    age_max: atracao.idadeMax ?? undefined,
     view_source: source,
   };
 }

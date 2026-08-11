@@ -87,11 +87,18 @@ export function evaluate(
     reasons.push("mini_review_tamanho_invalido");
   }
 
-  if (resposta.idade_min > resposta.idade_max) {
+  if (
+    resposta.idade_min !== null &&
+    resposta.idade_max !== null &&
+    resposta.idade_min > resposta.idade_max
+  ) {
     reasons.push("idade_min_maior_que_idade_max");
   }
 
-  if (resposta.idade_min < 0 || resposta.idade_max > 18) {
+  if (
+    (resposta.idade_min !== null && resposta.idade_min < 0) ||
+    (resposta.idade_max !== null && resposta.idade_max > 18)
+  ) {
     reasons.push("idade_fora_do_intervalo_0_18");
   }
 

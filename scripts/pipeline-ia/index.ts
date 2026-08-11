@@ -339,6 +339,7 @@ export function buildLinhaEnriquecida(
     ai_model: meta.ai_model,
     pipeline_failed: meta.pipeline_failed,
     preco_a_partir: linha.preco_a_partir ?? false,
+    idade_inferida_por_contexto: resposta.idade_inferida_por_contexto ?? false,
   };
 }
 

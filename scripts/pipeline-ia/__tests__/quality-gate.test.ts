@@ -33,6 +33,7 @@ function baseResposta(overrides: Partial<RespostaGemini> = {}): RespostaGemini {
     proxima_data: "2026-05-23",
     confidence: 5,
     abstain_fields: [],
+    idade_inferida_por_contexto: false,
     ...overrides,
   };
 }
@@ -146,5 +147,52 @@ describe("evaluate — persona interna (US-S71)", () => {
     const result = evaluate(baseInput(), baseResposta());
 
     expect(result.reasons).not.toContain("mencao_persona_interna");
+  });
+});
+
+describe("evaluate — faixa etária null (US-S20)", () => {
+  it("idade_min e idade_max null, sem abstain_fields → não quebra e não sinaliza idade_min_maior_que_idade_max nem idade_fora_do_intervalo_0_18", () => {
+    const result = evaluate(
+      baseInput(),
+      baseResposta({ idade_min: null, idade_max: null }),
+    );
+
+    expect(result.reasons).not.toContain("idade_min_maior_que_idade_max");
+    expect(result.reasons).not.toContain("idade_fora_do_intervalo_0_18");
+  });
+
+  it("idade_min e idade_max null e marcados em abstain_fields → needs_human (abstencao_campo_critico)", () => {
+    const result = evaluate(
+      baseInput(),
+      baseResposta({
+        idade_min: null,
+        idade_max: null,
+        abstain_fields: ["idade_min", "idade_max"],
+      }),
+    );
+
+    expect(result.status).toBe("needs_human");
+    expect(
+      result.reasons.some((r) => r.startsWith("abstencao_campo_critico")),
+    ).toBe(true);
+  });
+
+  it("apenas idade_max null (idade_min preenchido) → não quebra a comparação idade_min > idade_max", () => {
+    const result = evaluate(
+      baseInput(),
+      baseResposta({ idade_min: 14, idade_max: null, abstain_fields: ["idade_max"] }),
+    );
+
+    expect(result.reasons).not.toContain("idade_min_maior_que_idade_max");
+    expect(result.reasons).not.toContain("idade_fora_do_intervalo_0_18");
+  });
+
+  it("idade_min/idade_max válidos e fora de ordem → ainda sinaliza idade_min_maior_que_idade_max", () => {
+    const result = evaluate(
+      baseInput(),
+      baseResposta({ idade_min: 10, idade_max: 4 }),
+    );
+
+    expect(result.reasons).toContain("idade_min_maior_que_idade_max");
   });
 });

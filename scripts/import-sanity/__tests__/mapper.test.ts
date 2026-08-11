@@ -78,6 +78,18 @@ describe("toSanityDoc", () => {
     expect(doc).not.toHaveProperty("duracao_min");
   });
 
+  it("omite idade_min e idade_max quando são null (US-S20 — site exibe 'A confirmar')", () => {
+    const doc = toSanityDoc(baseLinha({ idade_min: null, idade_max: null }));
+    expect(doc).not.toHaveProperty("idade_min");
+    expect(doc).not.toHaveProperty("idade_max");
+  });
+
+  it("inclui idade_min e idade_max quando preenchidos", () => {
+    const doc = toSanityDoc(baseLinha({ idade_min: 0, idade_max: 3 }));
+    expect(doc.idade_min).toBe(0);
+    expect(doc.idade_max).toBe(3);
+  });
+
   it("omite proxima_data quando é null", () => {
     const doc = toSanityDoc(baseLinha({ proxima_data: null }));
     expect(doc).not.toHaveProperty("proxima_data");

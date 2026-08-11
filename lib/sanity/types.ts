@@ -7,8 +7,9 @@ export interface Atracao {
   slug: string;
   titulo: string;
   categoria: string;
-  idadeMin: number;
-  idadeMax: number;
+  /** null quando a faixa etária não pôde ser confirmada — site exibe "A confirmar" (US-S20). */
+  idadeMin: number | null;
+  idadeMax: number | null;
   bairro: string;
   endereco?: string;
   precoTipo: PrecoTipo;
@@ -41,8 +42,8 @@ export interface SanityAtracaoDocument {
   nome: string;
   slug: { current: string };
   categoria: string;
-  idade_min: number;
-  idade_max: number;
+  idade_min?: number | null;
+  idade_max?: number | null;
   duracao_min?: number;
   preco?: number | null;
   preco_a_partir?: boolean;
