@@ -52,8 +52,8 @@ function mapSanityAtracao(document: SanityAtracaoDocument): Atracao {
     slug: document.slug.current,
     titulo: document.nome,
     categoria: document.categoria,
-    idadeMin: document.idade_min,
-    idadeMax: document.idade_max,
+    idadeMin: document.idade_min ?? null,
+    idadeMax: document.idade_max ?? null,
     bairro: document.bairro,
     endereco: document.endereco,
     precoTipo: document.preco === 0 ? "gratuito" : "pago",
@@ -194,7 +194,13 @@ export async function getAtracoesPorBairro(bairro: string): Promise<Atracao[]> {
   return filtrarAtracoes(mockAtracoes, { bairros: [bairro] });
 }
 
-export function formatFaixaEtaria(idadeMin: number, idadeMax: number): string {
+export function formatFaixaEtaria(
+  idadeMin: number | null,
+  idadeMax: number | null,
+): string {
+  if (idadeMin === null || idadeMax === null) {
+    return "A confirmar";
+  }
   if (idadeMin === 0) {
     return `Até ${idadeMax} anos`;
   }
@@ -291,6 +297,9 @@ export function filtrarAtracoes(
     }
 
     if (filtros.idade !== undefined && !Number.isNaN(filtros.idade)) {
+      if (atracao.idadeMin === null || atracao.idadeMax === null) {
+        return false;
+      }
       if (filtros.idade < atracao.idadeMin || atracao.idadeMax < filtros.idade) {
         return false;
       }

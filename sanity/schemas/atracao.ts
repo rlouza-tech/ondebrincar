@@ -51,19 +51,20 @@ export const atracao = defineType({
     }),
     defineField({
       name: "idade_min",
-      title: "Idade mínima",
+      title: "Idade recomendada mínima",
       type: "number",
-      description: "Idade mínima recomendada, em anos. Ex.: 3.",
-      validation: (Rule) => Rule.required().integer().min(0).max(18),
+      description:
+        "Idade mínima recomendada, em anos. Ex.: 3. Deixe vazio quando não for possível confirmar — o site exibe \"A confirmar\" (US-S20).",
+      validation: (Rule) => Rule.integer().min(0).max(18),
     }),
     defineField({
       name: "idade_max",
-      title: "Idade máxima",
+      title: "Idade recomendada máxima",
       type: "number",
-      description: "Idade máxima recomendada, em anos. Ex.: 8.",
+      description:
+        "Idade máxima recomendada, em anos. Ex.: 8. Deixe vazio quando não for possível confirmar — o site exibe \"A confirmar\" (US-S20).",
       validation: (Rule) =>
-        Rule.required()
-          .integer()
+        Rule.integer()
           .min(0)
           .max(18)
           .custom((idadeMax, context) => {

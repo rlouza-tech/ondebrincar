@@ -53,8 +53,9 @@ export interface LinhaInput {
 
 export interface RespostaGemini {
   categoria: Categoria;
-  idade_min: number;
-  idade_max: number;
+  /** null quando não há classificação/recomendação explícita nem inferência de contexto confiável (US-S20) — vira "A confirmar" no site. */
+  idade_min: number | null;
+  idade_max: number | null;
   duracao_min: number | null;
   preco_centavos: number | null;
   indoor_outdoor: IndoorOutdoor;
@@ -73,6 +74,8 @@ export interface RespostaGemini {
    * null = Gemini não conseguiu inferir com confiança.
    */
   bairro_inferido?: string | null;
+  /** true quando idade_min/idade_max vieram de inferência por contexto (US-S20), não de classificação/recomendação explícita no texto. */
+  idade_inferida_por_contexto: boolean;
   error?: string;
 }
 
@@ -80,8 +83,8 @@ export interface LinhaEnriquecida {
   nome: string;
   slug: string;
   categoria: Categoria;
-  idade_min: number;
-  idade_max: number;
+  idade_min: number | null;
+  idade_max: number | null;
   duracao_min: number | null;
   preco_centavos: number | null;
   link_compra: string;
@@ -107,6 +110,8 @@ export interface LinhaEnriquecida {
   pipeline_failed: boolean;
   /** true quando há múltiplas faixas de preço na fonte. Propagado sem envolver Gemini. */
   preco_a_partir: boolean;
+  /** true quando idade_min/idade_max vieram de inferência por contexto (US-S20) — não de classificação/recomendação explícita. */
+  idade_inferida_por_contexto: boolean;
 }
 
 export interface EnrichResult {

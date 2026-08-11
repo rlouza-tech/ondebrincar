@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   filtrarAtracoes,
+  formatFaixaEtaria,
   getAtracaoBySlug,
   mapSanityAtracao,
   normalizeCategoriaSlug,
@@ -61,6 +62,41 @@ describe("filtrarAtracoes", () => {
     });
     expect(resultados.length).toBeGreaterThan(0);
     expect(resultados.every((a) => a.indoorOutdoor === "outdoor")).toBe(true);
+  });
+
+  it("filtro por idade exclui atrações com faixa etária 'a confirmar' (US-S20)", () => {
+    const atracaoSemFaixa: Atracao = {
+      ...mockAtracoes[0],
+      slug: "atracao-sem-faixa-teste",
+      idadeMin: null,
+      idadeMax: null,
+    };
+    const resultados = filtrarAtracoes([atracaoSemFaixa, ...mockAtracoes], {
+      idade: 5,
+    });
+    expect(
+      resultados.some((a) => a.slug === "atracao-sem-faixa-teste"),
+    ).toBe(false);
+  });
+});
+
+describe("formatFaixaEtaria (US-S20)", () => {
+  it("retorna 'A confirmar' quando idadeMin é null", () => {
+    expect(formatFaixaEtaria(null, 12)).toBe("A confirmar");
+  });
+
+  it("retorna 'A confirmar' quando idadeMax é null", () => {
+    expect(formatFaixaEtaria(4, null)).toBe("A confirmar");
+  });
+
+  it("retorna 'A confirmar' quando ambos são null", () => {
+    expect(formatFaixaEtaria(null, null)).toBe("A confirmar");
+  });
+
+  it("mantém o comportamento numérico existente quando ambos preenchidos", () => {
+    expect(formatFaixaEtaria(0, 18)).toBe("Até 18 anos");
+    expect(formatFaixaEtaria(4, 4)).toBe("4 anos");
+    expect(formatFaixaEtaria(4, 10)).toBe("4–10 anos");
   });
 });
 
@@ -135,6 +171,14 @@ describe("mapSanityAtracao", () => {
   it("sem foto no documento Sanity → usa placeholder local", () => {
     const atracao = mapSanityAtracao(baseDocument({ foto: undefined }));
     expect(atracao.imagemUrl).toBe("/placeholder-atracao.svg");
+  });
+
+  it("idade_min/idade_max ausentes no documento Sanity → idadeMin/idadeMax null (US-S20)", () => {
+    const atracao = mapSanityAtracao(
+      baseDocument({ idade_min: undefined, idade_max: undefined }),
+    );
+    expect(atracao.idadeMin).toBeNull();
+    expect(atracao.idadeMax).toBeNull();
   });
 });
 

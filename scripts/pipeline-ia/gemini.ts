@@ -77,8 +77,8 @@ const responseSchema = {
       type: "string",
       enum: ["teatro", "parque", "museu", "atividade-extra", "evento"],
     },
-    idade_min: { type: "integer", minimum: 0, maximum: 18 },
-    idade_max: { type: "integer", minimum: 0, maximum: 18 },
+    idade_min: { type: "integer", nullable: true, minimum: 0, maximum: 18 },
+    idade_max: { type: "integer", nullable: true, minimum: 0, maximum: 18 },
     duracao_min: { type: "integer", nullable: true, minimum: 0 },
     preco_centavos: { type: "integer", nullable: true, minimum: 0 },
     indoor_outdoor: { type: "string", enum: ["indoor", "outdoor", "ambos"] },
@@ -97,6 +97,7 @@ const responseSchema = {
     },
     aviso_operacional: { type: "string", nullable: true },
     notes_for_editor: { type: "string", nullable: true },
+    idade_inferida_por_contexto: { type: "boolean" },
   },
   required: [
     "categoria",
@@ -112,14 +113,15 @@ const responseSchema = {
     "proxima_data",
     "confidence",
     "abstain_fields",
+    "idade_inferida_por_contexto",
   ],
 } as const;
 
 function errorResponse(message: string): RespostaGemini {
   return {
     categoria: "evento",
-    idade_min: 0,
-    idade_max: 18,
+    idade_min: null,
+    idade_max: null,
     duracao_min: null,
     preco_centavos: null,
     indoor_outdoor: "indoor",
@@ -139,6 +141,7 @@ function errorResponse(message: string): RespostaGemini {
     ],
     aviso_operacional: null,
     notes_for_editor: message,
+    idade_inferida_por_contexto: false,
     error: message,
   };
 }

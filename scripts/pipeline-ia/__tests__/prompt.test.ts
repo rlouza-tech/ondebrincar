@@ -171,7 +171,7 @@ describe("buildPrompt", () => {
     );
 
     // Depois: versão bumped + instrução negativa + exemplo real
-    expect(PROMPT_VERSION).toBe("v1.0.8");
+    expect(PROMPT_VERSION).toBe("v1.0.9");
     expect(prompt).toContain("Exceção — regra de documento/identificação (US-S45)");
     expect(prompt).toContain("REGRA ANTI-DOCUMENTO/IDENTIFICAÇÃO (US-S45)");
     expect(prompt).toContain("Museu do Flamengo");
@@ -204,5 +204,46 @@ describe("buildPrompt", () => {
     expect(prompt).toMatch(/duração aproximada de 60 minutos.*proibidas/is);
     expect(prompt).toMatch(/duracao_min null.*abstain_fields/is);
     expect(prompt).toMatch(/nunca compense com estimativa no texto/i);
+  });
+
+  describe("inferência de faixa etária por contexto (US-S20)", () => {
+    it("inclui as 3 regras de inferência por contexto e a instrução de null quando nenhuma se aplica", () => {
+      const prompt = buildPrompt(baseInput());
+      expect(prompt).toContain("INFERÊNCIA DE FAIXA ETÁRIA POR CONTEXTO (US-S20)");
+      expect(prompt).toMatch(/YouTuber kids.*idade_min:\s*4,\s*idade_max:\s*12/is);
+      expect(prompt).toMatch(/Teatro para bebês.*idade_min:\s*0,\s*idade_max:\s*3/is);
+      expect(prompt).toMatch(
+        /Show musical infantil genérico.*idade_min:\s*0,\s*idade_max:\s*12/is,
+      );
+      expect(prompt).toMatch(
+        /nenhuma das 3 pistas se aplicar.*idade_min:\s*null,\s*idade_max:\s*null/is,
+      );
+      expect(prompt).toContain("idade_inferida_por_contexto");
+    });
+
+    it("instrui abstenção genuína (null) em vez de forçar uma das 3 categorias", () => {
+      const prompt = buildPrompt(baseInput());
+      expect(prompt).toMatch(
+        /Não force uma dessas 3 categorias só para evitar null/i,
+      );
+      expect(prompt).toMatch(/nunca "chute" 0 e 18 só para preencher o campo/i);
+    });
+
+    it("prioriza classificação/recomendação explícita sobre inferência por contexto", () => {
+      const prompt = buildPrompt(baseInput());
+      expect(prompt).toMatch(
+        /Só se aplica quando NÃO houver classificação indicativa nem recomendação de público explícita/i,
+      );
+    });
+
+    it("inclui o exemplo Luluca: O Show calibrando idade_inferida_por_contexto true vs false", () => {
+      const prompt = buildPrompt(baseInput());
+      expect(prompt).toContain("EXEMPLO 4 — INFERÊNCIA POR CONTEXTO");
+      expect(prompt).toContain("Luluca: O Show");
+      expect(prompt).toMatch(
+        /"idade_min":4,"idade_max":12.*"idade_inferida_por_contexto":true/,
+      );
+      expect(prompt).toMatch(/Compare com o Exemplo 3.*idade_inferida_por_contexto=false/is);
+    });
   });
 });

@@ -11,8 +11,6 @@ export function toSanityDoc(linha: LinhaEnriquecida): SanityAtracaoDocInput {
       current: linha.slug,
     },
     categoria: linha.categoria,
-    idade_min: linha.idade_min,
-    idade_max: linha.idade_max,
     link_compra: linha.link_compra,
     origem: linha.origem,
     bairro: linha.bairro,
@@ -29,6 +27,14 @@ export function toSanityDoc(linha: LinhaEnriquecida): SanityAtracaoDocInput {
 
   if (linha.ai_model) {
     doc.ai_model = linha.ai_model;
+  }
+
+  if (linha.idade_min !== null) {
+    doc.idade_min = linha.idade_min;
+  }
+
+  if (linha.idade_max !== null) {
+    doc.idade_max = linha.idade_max;
   }
 
   if (linha.duracao_min !== null) {

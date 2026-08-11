@@ -84,3 +84,31 @@ describe("readEnrichedCSV — endereco (US-S61)", () => {
     expect(rows[0].endereco).toBeUndefined();
   });
 });
+
+describe("readEnrichedCSV — idade_min/idade_max null (US-S20)", () => {
+  it("idade_min e idade_max vazios no CSV → null, sem lançar erro", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "import-sanity-csv-"));
+    const path = join(dir, "idade-vazia.csv");
+    const { cols } = linhaBase();
+    // idade_min (índice 3) e idade_max (índice 4)
+    cols[3] = "";
+    cols[4] = "";
+    await writeFile(path, `${HEADER}\n${cols.join(",")}\n`, "utf8");
+
+    const rows = await readEnrichedCSV(path);
+    expect(rows).toHaveLength(1);
+    expect(rows[0].idade_min).toBeNull();
+    expect(rows[0].idade_max).toBeNull();
+  });
+
+  it("idade_min e idade_max preenchidos → propaga os números normalmente", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "import-sanity-csv-"));
+    const path = join(dir, "idade-preenchida.csv");
+    const { cols } = linhaBase();
+    await writeFile(path, `${HEADER}\n${cols.join(",")}\n`, "utf8");
+
+    const rows = await readEnrichedCSV(path);
+    expect(rows[0].idade_min).toBe(4);
+    expect(rows[0].idade_max).toBe(10);
+  });
+});
