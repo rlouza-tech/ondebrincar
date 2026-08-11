@@ -171,7 +171,7 @@ describe("buildPrompt", () => {
     );
 
     // Depois: versão bumped + instrução negativa + exemplo real
-    expect(PROMPT_VERSION).toBe("v1.0.9");
+    expect(PROMPT_VERSION).toBe("v1.1.0");
     expect(prompt).toContain("Exceção — regra de documento/identificação (US-S45)");
     expect(prompt).toContain("REGRA ANTI-DOCUMENTO/IDENTIFICAÇÃO (US-S45)");
     expect(prompt).toContain("Museu do Flamengo");
@@ -244,6 +244,27 @@ describe("buildPrompt", () => {
         /"idade_min":4,"idade_max":12.*"idade_inferida_por_contexto":true/,
       );
       expect(prompt).toMatch(/Compare com o Exemplo 3.*idade_inferida_por_contexto=false/is);
+    });
+  });
+
+  describe("CAMPO data_fim (US-S37)", () => {
+    it("inclui instrução de data_fim para intervalos contínuos de dias", () => {
+      const prompt = buildPrompt(baseInput());
+      expect(prompt).toContain("CAMPO data_fim (US-S37");
+      expect(prompt).toMatch(/intervalo contínuo de dias seguidos/i);
+      expect(prompt).toMatch(/proxima_data = 1º dia.*data_fim = último dia/i);
+    });
+
+    it("instrui null para dias avulsos e padrão recorrente sem intervalo fechado", () => {
+      const prompt = buildPrompt(baseInput());
+      expect(prompt).toMatch(/dias forem avulsos.*não.contínuos/i);
+      expect(prompt).toMatch(/padrão recorrente sem intervalo fechado/i);
+    });
+
+    it("inclui o exemplo Colônia de Férias (13 a 17 de Jul) com data_fim calibrado", () => {
+      const prompt = buildPrompt(baseInput());
+      expect(prompt).toContain('"proxima_data":"2026-07-13","data_fim":"2026-07-17"');
+      expect(prompt).toMatch(/proxima_data é o 1º dia \(13\), data_fim é o último \(17\)/);
     });
   });
 });

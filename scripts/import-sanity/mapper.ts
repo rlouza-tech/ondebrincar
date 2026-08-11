@@ -49,6 +49,10 @@ export function toSanityDoc(linha: LinhaEnriquecida): SanityAtracaoDocInput {
     doc.proxima_data = linha.proxima_data;
   }
 
+  if (linha.data_fim !== null) {
+    doc.data_fim = linha.data_fim;
+  }
+
   if (linha.preco_a_partir) {
     doc.preco_a_partir = true;
   }

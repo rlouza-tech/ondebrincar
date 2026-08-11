@@ -27,8 +27,13 @@ const atracaoProjection = groq`
   }
 `;
 
+// US-S37: eventos multi-dia contínuos têm data_fim (último dia) além de proxima_data
+// (1º dia) — a atração segue ativa até data_fim quando definido, não só até proxima_data.
 export const atracoesAtivas = groq`
-  *[_type == "atracao" && !(_id in path("drafts.**")) && status == "operando" && (!defined(proxima_data) || proxima_data >= $hoje)]
+  *[_type == "atracao" && !(_id in path("drafts.**")) && status == "operando"
+    && (!defined(proxima_data)
+      || (defined(data_fim) && data_fim >= $hoje)
+      || (!defined(data_fim) && proxima_data >= $hoje))]
   | order(proxima_data asc, nome asc) {
     ${atracaoProjection}
   }

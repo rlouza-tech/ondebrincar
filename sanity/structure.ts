@@ -19,7 +19,7 @@ export const structure = (S: StructureBuilder) =>
                   S.documentList()
                     .title("No ar — publicadas, operando, data válida")
                     .filter(
-                      '_type == "atracao" && !(_originalId in path("drafts.**")) && status == "operando" && (!defined(proxima_data) || proxima_data >= $hoje)',
+                      '_type == "atracao" && !(_originalId in path("drafts.**")) && status == "operando" && (!defined(proxima_data) || (defined(data_fim) && data_fim >= $hoje) || (!defined(data_fim) && proxima_data >= $hoje))',
                     )
                     .params({ hoje: hoje() })
                     .defaultOrdering([{ field: "nome", direction: "asc" }]),
@@ -44,7 +44,7 @@ export const structure = (S: StructureBuilder) =>
                   S.documentList()
                     .title("⚠️ Data vencida — publicadas, operando, data passada")
                     .filter(
-                      '_type == "atracao" && !(_originalId in path("drafts.**")) && status == "operando" && defined(proxima_data) && proxima_data < $hoje',
+                      '_type == "atracao" && !(_originalId in path("drafts.**")) && status == "operando" && defined(proxima_data) && ((defined(data_fim) && data_fim < $hoje) || (!defined(data_fim) && proxima_data < $hoje))',
                     )
                     .params({ hoje: hoje() })
                     .defaultOrdering([{ field: "proxima_data", direction: "asc" }]),

@@ -199,6 +199,7 @@ export async function readEnrichedCSV(path: string): Promise<LinhaEnriquecida[]>
           tipo_programacao: record.tipo_programacao as LinhaEnriquecida["tipo_programacao"],
           programacao_texto: record.programacao_texto ?? "",
           proxima_data: parseNullableDate(record.proxima_data ?? ""),
+          data_fim: parseNullableDate(record.data_fim ?? ""),
           foto_url: record.foto_url ?? "",
           endereco: record.endereco?.trim() || undefined,
           review_status: record.review_status as LinhaEnriquecida["review_status"],
@@ -382,12 +383,16 @@ async function main() {
     console.log(`Dedup: ${dedupIgnored} ignoradas (já existem no Sanity), ${rows.length} a processar`);
   }
 
-  // Filtro de expiração: rejeita fichas com proxima_data no passado antes de criar draft.
+  // Filtro de expiração: rejeita fichas cuja data efetiva (data_fim quando presente —
+  // eventos multi-dia contínuos, US-S37 — senão proxima_data) já passou antes de criar
+  // draft. Sem isso, um evento multi-dia importado alguns dias após o início (CSV gerado
+  // antes, import atrasado) seria rejeitado mesmo com data_fim ainda futura.
   const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
   const expired: Array<{ slug: string; proxima_data: string }> = [];
   rows = rows.filter((r) => {
-    if (r.proxima_data && r.proxima_data < today) {
-      expired.push({ slug: r.slug, proxima_data: r.proxima_data });
+    const dataEfetiva = r.data_fim ?? r.proxima_data;
+    if (dataEfetiva && dataEfetiva < today) {
+      expired.push({ slug: r.slug, proxima_data: r.proxima_data ?? "" });
       return false;
     }
     return true;
@@ -468,6 +473,9 @@ async function main() {
           };
           if (linha.proxima_data !== null) {
             dateFields.proxima_data = linha.proxima_data;
+          }
+          if (linha.data_fim !== null) {
+            dateFields.data_fim = linha.data_fim;
           }
           await sanityWriteClient
             .patch(draftId)

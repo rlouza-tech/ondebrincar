@@ -90,6 +90,7 @@ const responseSchema = {
     },
     programacao_texto: { type: "string" },
     proxima_data: { type: "string", nullable: true },
+    data_fim: { type: "string", nullable: true },
     confidence: { type: "integer", minimum: 1, maximum: 5 },
     abstain_fields: {
       type: "array",
@@ -111,6 +112,7 @@ const responseSchema = {
     "tipo_programacao",
     "programacao_texto",
     "proxima_data",
+    "data_fim",
     "confidence",
     "abstain_fields",
     "idade_inferida_por_contexto",
@@ -130,6 +132,7 @@ function errorResponse(message: string): RespostaGemini {
     tipo_programacao: "permanente",
     programacao_texto: "Consulte programação no link oficial",
     proxima_data: null,
+    data_fim: null,
     confidence: 1,
     abstain_fields: [
       "categoria",

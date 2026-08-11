@@ -20,8 +20,13 @@ import type { LinhaInput } from "./types";
  * inferir pelo contexto (YouTuber kids, teatro para bebês, show infantil genérico) antes de
  * abster-se. Quando não há pista suficiente, idade_min/idade_max retornam null (não mais um
  * chute) — o site exibe "A confirmar" em vez de uma faixa ampla que lia como "livre".
+ *
+ * US-S37 (11/08/2026): novo campo data_fim para eventos com programação contínua em vários
+ * dias seguidos (ex.: colônia de férias "6 a 10 de julho"). proxima_data segue sendo o 1º
+ * dia; data_fim é o último — evita que mark-expired.ts, a query do site e o Studio tratem o
+ * evento como encerrado logo no 2º dia.
  */
-export const PROMPT_VERSION = "v1.0.9";
+export const PROMPT_VERSION = "v1.1.0";
 
 function buildScraperV2Block(linha: LinhaInput): string {
   const hasV2 =
@@ -117,7 +122,7 @@ INPUT:
 - idade_maxima: 18
 - preco_inteira_centavos: 8000
 OUTPUT:
-{"categoria":"teatro","idade_min":0,"idade_max":18,"duracao_min":60,"preco_centavos":8000,"indoor_outdoor":"indoor","descricao":"Show musical com a Galinha Pintadinha no Teatro Bangu Shopping. As músicas mais amadas da Popó — Pintinho Amarelinho, Mariana, A Baratinha — ganham vida em espetáculo de cores, dança e interatividade. Sessão única.","mini_review":"Clássico certeiro para crianças até 4-5 anos que cresceram com a Pintadinha. Sessão única em Bangu; reserve com antecedência.","tipo_programacao":"evento_pontual","programacao_texto":"Apenas no dia 6 de junho às 15h.","proxima_data":"2026-06-06","confidence":5,"abstain_fields":[],"notes_for_editor":null,"idade_inferida_por_contexto":false}
+{"categoria":"teatro","idade_min":0,"idade_max":18,"duracao_min":60,"preco_centavos":8000,"indoor_outdoor":"indoor","descricao":"Show musical com a Galinha Pintadinha no Teatro Bangu Shopping. As músicas mais amadas da Popó — Pintinho Amarelinho, Mariana, A Baratinha — ganham vida em espetáculo de cores, dança e interatividade. Sessão única.","mini_review":"Clássico certeiro para crianças até 4-5 anos que cresceram com a Pintadinha. Sessão única em Bangu; reserve com antecedência.","tipo_programacao":"evento_pontual","programacao_texto":"Apenas no dia 6 de junho às 15h.","proxima_data":"2026-06-06","data_fim":null,"confidence":5,"abstain_fields":[],"notes_for_editor":null,"idade_inferida_por_contexto":false}
 NOTA: idade_min=0 e idade_max=18 porque sinopse diz "Classificação: Livre" — o campo idade_minima=2 era regra de meia-entrada; o scraper já converteu idade_maxima para 18 (teto editorial para Classificação Livre).
 
 === EXEMPLO 2 — CASO MÉDIO (Sympla, texto livre, dois turnos, preço ausente) ===
@@ -134,8 +139,8 @@ INPUT:
 - idade_minima: (vazio)
 - preco_inteira_centavos: (vazio)
 OUTPUT:
-{"categoria":"atividade-extra","idade_min":3,"idade_max":10,"duracao_min":180,"preco_centavos":null,"indoor_outdoor":"indoor","descricao":"Colônia de férias de culinária infantil no Espaço Cria, Cosme Velho. 15ª edição com tema Volta ao Mundo dos Sabores: cada dia uma cozinha diferente. Turmas por faixa etária (3-10 anos), com presença diária da nutricionista Gabriela Kapim.","mini_review":"Uma das colônias mais bem estruturadas do Rio — culinária como aventura, não como obrigação. Vagas limitadas. Preço não listado na Sympla; clique no link para ver lotes.","tipo_programacao":"evento_pontual","programacao_texto":"13 a 17 de julho. Turma da manhã das 9h às 12h ou turma da tarde das 14h às 17h.","proxima_data":"2026-07-13","confidence":4,"abstain_fields":["preco_centavos"],"notes_for_editor":"Preço não disponível na Sympla — consultar diretamente. Confirmar disponibilidade por turno (manhã/tarde).","idade_inferida_por_contexto":false}
-NOTA: preco_centavos=null é aceitável quando Sympla não exibe preço. duracao_min=180 inferido dos horários explícitos na sinopse. Não use [INCERTO] no texto — sinalize incerteza apenas em abstain_fields e notes_for_editor.
+{"categoria":"atividade-extra","idade_min":3,"idade_max":10,"duracao_min":180,"preco_centavos":null,"indoor_outdoor":"indoor","descricao":"Colônia de férias de culinária infantil no Espaço Cria, Cosme Velho. 15ª edição com tema Volta ao Mundo dos Sabores: cada dia uma cozinha diferente. Turmas por faixa etária (3-10 anos), com presença diária da nutricionista Gabriela Kapim.","mini_review":"Uma das colônias mais bem estruturadas do Rio — culinária como aventura, não como obrigação. Vagas limitadas. Preço não listado na Sympla; clique no link para ver lotes.","tipo_programacao":"evento_pontual","programacao_texto":"13 a 17 de julho. Turma da manhã das 9h às 12h ou turma da tarde das 14h às 17h.","proxima_data":"2026-07-13","data_fim":"2026-07-17","confidence":4,"abstain_fields":["preco_centavos"],"notes_for_editor":"Preço não disponível na Sympla — consultar diretamente. Confirmar disponibilidade por turno (manhã/tarde).","idade_inferida_por_contexto":false}
+NOTA: preco_centavos=null é aceitável quando Sympla não exibe preço. duracao_min=180 inferido dos horários explícitos na sinopse. Não use [INCERTO] no texto — sinalize incerteza apenas em abstain_fields e notes_for_editor. data_fim="2026-07-17" (US-S37) porque "13 a 17 de Jul" é um intervalo contínuo de dias seguidos do mesmo evento — proxima_data é o 1º dia (13), data_fim é o último (17).
 
 === EXEMPLO 3 — CASO BORDERLINE (Sympla, falso positivo — abstenção legítima) ===
 INPUT:
@@ -147,7 +152,7 @@ INPUT:
 - preco_bruto: (vazio)
 - sinopse_oficial: "E se uma sessão de terapia virasse um show de stand-up comedy? [...] esse show é voltado para quem já passou por algum tipo de trauma psicológico [...] Classificação Etária: 14 anos. Menores de 14 anos, somente acompanhados pelos pais ou responsáveis."
 OUTPUT:
-{"categoria":"evento","idade_min":14,"idade_max":null,"duracao_min":60,"preco_centavos":null,"indoor_outdoor":"indoor","descricao":"Show de stand-up comedy sobre psicanálise, traumas psicológicos e saúde mental. Rick Silveira fala abertamente sobre ansiedade, depressão e psicanálise em formato cômico. Classificação 14 anos.","mini_review":"Espetáculo adulto sobre terapia — o humor não é leve. Não é conteúdo infantil.","tipo_programacao":"evento_pontual","programacao_texto":"Domingo, 14 de junho às 19h.","proxima_data":"2026-06-14","confidence":1,"abstain_fields":["preco_centavos","idade_max"],"notes_for_editor":"FALSO POSITIVO: stand-up para adultos sobre psicanálise. Classificação 14 anos. Conteúdo não é infantil. Recomendar exclusão do catálogo.","idade_inferida_por_contexto":false}
+{"categoria":"evento","idade_min":14,"idade_max":null,"duracao_min":60,"preco_centavos":null,"indoor_outdoor":"indoor","descricao":"Show de stand-up comedy sobre psicanálise, traumas psicológicos e saúde mental. Rick Silveira fala abertamente sobre ansiedade, depressão e psicanálise em formato cômico. Classificação 14 anos.","mini_review":"Espetáculo adulto sobre terapia — o humor não é leve. Não é conteúdo infantil.","tipo_programacao":"evento_pontual","programacao_texto":"Domingo, 14 de junho às 19h.","proxima_data":"2026-06-14","data_fim":null,"confidence":1,"abstain_fields":["preco_centavos","idade_max"],"notes_for_editor":"FALSO POSITIVO: stand-up para adultos sobre psicanálise. Classificação 14 anos. Conteúdo não é infantil. Recomendar exclusão do catálogo.","idade_inferida_por_contexto":false}
 NOTA: quando o conteúdo claramente não é infantil, confidence=1 e notes_for_editor deve recomendar exclusão explicitamente. Não tente forçar um fit — abstenção total é a resposta correta.
 
 === EXEMPLO 4 — INFERÊNCIA POR CONTEXTO (US-S20, sem classificação etária na fonte) ===
@@ -161,7 +166,7 @@ INPUT:
 - url_origem: https://example.com/luluca-o-show
 - sinopse_oficial: "[...] A youtuber Luluca sobe ao palco com música, dança e muita interação com a plateia. Uma tarde inteira de diversão para toda a família."
 OUTPUT:
-{"categoria":"evento","idade_min":4,"idade_max":12,"duracao_min":null,"preco_centavos":9000,"indoor_outdoor":"indoor","descricao":"A youtuber Luluca sobe ao palco do Vivo Rio, em Botafogo, com música, dança e interação direta com a plateia. Tarde de show pensada para toda a família.","mini_review":"Show certeiro para quem já acompanha a Luluca no YouTube — a energia do palco é a mesma dos vídeos. Sessão única; compre com antecedência.","tipo_programacao":"evento_pontual","programacao_texto":"Sábado, 20 de junho às 16h.","proxima_data":"2026-06-20","confidence":4,"abstain_fields":["duracao_min"],"notes_for_editor":null,"idade_inferida_por_contexto":true}
+{"categoria":"evento","idade_min":4,"idade_max":12,"duracao_min":null,"preco_centavos":9000,"indoor_outdoor":"indoor","descricao":"A youtuber Luluca sobe ao palco do Vivo Rio, em Botafogo, com música, dança e interação direta com a plateia. Tarde de show pensada para toda a família.","mini_review":"Show certeiro para quem já acompanha a Luluca no YouTube — a energia do palco é a mesma dos vídeos. Sessão única; compre com antecedência.","tipo_programacao":"evento_pontual","programacao_texto":"Sábado, 20 de junho às 16h.","proxima_data":"2026-06-20","data_fim":null,"confidence":4,"abstain_fields":["duracao_min"],"notes_for_editor":null,"idade_inferida_por_contexto":true}
 NOTA: a sinopse não traz classificação etária nem recomendação de público explícita — "Luluca" é uma youtuber de conteúdo infantil conhecida, então idade_min=4/idade_max=12 vêm da regra 1 de INFERÊNCIA DE FAIXA ETÁRIA POR CONTEXTO (não de "Classificação: Livre" nem de menção direta de idade no texto). idade_inferida_por_contexto=true sinaliza isso no log. Compare com o Exemplo 3: lá a classificação etária ERA explícita ("Classificação Etária: 14 anos"), então idade_inferida_por_contexto=false mesmo com abstenção em idade_max.
 
 CONTEXTO TEMPORAL
@@ -172,6 +177,14 @@ Se dias_apresentacao mencionar dias sem mês/ano explícitos (ex.: "Dias 23, 30,
 assuma mês corrente ou próximo mês ainda não passado em relação a ${dataAtual}.
 Se for ambíguo demais, retorne null em proxima_data e marque proxima_data em abstain_fields.
 
+CAMPO data_fim (US-S37 — eventos multi-dia contínuos):
+Preencha data_fim quando dias_apresentacao descrever um intervalo contínuo de dias seguidos do mesmo evento (ex.: "6 a 10 de julho", "13 a 17 de Jul", "de 20 a 24/07"): proxima_data = 1º dia do intervalo, data_fim = último dia (formato YYYY-MM-DD).
+Retorne data_fim: null quando:
+- houver só uma data (evento de um dia só);
+- os dias forem avulsos/não-contínuos (ex.: "Dias 23, 30, 31" — sessões distintas, não um intervalo fechado);
+- for um padrão recorrente sem intervalo fechado (ex.: "sábados e domingos", "diariamente") — isso é tipo_programacao "evento_recorrente" ou "permanente", não intervalo de datas.
+Nunca invente data_fim que não esteja implícita ou explícita no input.
+
 TRANSPARÊNCIA SOBRE LACUNAS
 Quando dados críticos faltarem no input, NÃO invente — em vez disso, sinalize no texto ou em abstain_fields.
 
@@ -179,6 +192,7 @@ CAMPOS QUE GEMINI NÃO DEVE PREENCHER SEM FONTE EXPLÍCITA NO INPUT:
 - duracao_min: sem menção de duração no texto → null (não infira "60 min" por ser padrão de teatro ou atividade)
 - preco_centavos: sem preço no input → null (não infira por categoria, venue ou contexto habitual)
 - proxima_data: sem data inferível → null (não invente data "provável" ou "provável próximo fim de semana")
+- data_fim: sem intervalo contínuo de dias explícito no input → null (não infira um "provável" último dia)
 - idade_min / idade_max: sem menção de faixa etária → primeiro tente a INFERÊNCIA DE FAIXA ETÁRIA POR CONTEXTO (US-S20) abaixo; só se nenhuma das 3 pistas se aplicar, retorne null + abstain_fields (nunca invente um número "seguro")
 Regra geral: se você está adivinhando o valor, a resposta correta é null + abstain_fields + reduza confidence.
 Casos comuns do scraper v1:
@@ -252,6 +266,7 @@ Exemplo: nome "Luluca: O Show" sem classificação etária na sinopse → idade_
   Se houver múltiplas datas listadas, retorne a mais próxima que ainda não passou (formato YYYY-MM-DD).
   Se a atração for permanente e não tiver data específica inferível, retorne null.
   Nunca invente uma data que não esteja implícita ou explícita no input.
+- data_fim: siga as regras do bloco CAMPO data_fim (US-S37) acima.
 - preco_centavos: use preco_inteira_centavos do scraper v2 quando preenchido; senão extraia do preco_bruto ou de menções no texto (ex.: "R$ 80,00" -> 8000).
   Se mencionar "gratuito" ou "entrada franca", retorne 0.
   Só retorne null se não houver absolutamente nenhuma menção de preço no input.
@@ -270,6 +285,7 @@ Exemplo: nome "Luluca: O Show" sem classificação etária na sinopse → idade_
     Input com "16h e 18h" → inclua ambos os horários explicitamente
     Vazio + categoria=parque → "Aberto diariamente (consulte horário no link)"
   - proxima_data: siga as regras de proxima_data acima.
+  - data_fim: siga as regras do bloco CAMPO data_fim (US-S37) acima.
 - confidence: inteiro 1-5 (5 = muito confiante; 1 = chutei)
 - abstain_fields: campos onde você não tem certeza
 - notes_for_editor: avisos curtos para revisão humana, se necessário

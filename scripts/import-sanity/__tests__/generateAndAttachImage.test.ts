@@ -59,6 +59,7 @@ function baseLinha(overrides: Partial<LinhaEnriquecida> = {}): LinhaEnriquecida 
     tipo_programacao: "evento_recorrente",
     programacao_texto: "Sábados 16h",
     proxima_data: null,
+    data_fim: null,
     foto_url: "",
     review_status: "auto_ok",
     abstain_reasons: [],

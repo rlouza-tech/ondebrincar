@@ -112,3 +112,31 @@ describe("readEnrichedCSV — idade_min/idade_max null (US-S20)", () => {
     expect(rows[0].idade_max).toBe(10);
   });
 });
+
+describe("readEnrichedCSV — data_fim (US-S37)", () => {
+  it("data_fim ausente do CSV → null", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "import-sanity-csv-"));
+    const path = join(dir, "sem-data-fim.csv");
+    const { cols } = linhaBase();
+    await writeFile(path, `${HEADER}\n${cols.join(",")}\n`, "utf8");
+
+    const rows = await readEnrichedCSV(path);
+    expect(rows[0].data_fim).toBeNull();
+  });
+
+  it("data_fim preenchida (evento multi-dia contínuo) → propaga a data", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "import-sanity-csv-"));
+    const path = join(dir, "com-data-fim.csv");
+    const { cols } = linhaBase();
+    cols[15] = "2026-07-06"; // proxima_data
+    await writeFile(
+      path,
+      `${HEADER},data_fim\n${cols.join(",")},2026-07-10\n`,
+      "utf8",
+    );
+
+    const rows = await readEnrichedCSV(path);
+    expect(rows[0].proxima_data).toBe("2026-07-06");
+    expect(rows[0].data_fim).toBe("2026-07-10");
+  });
+});
