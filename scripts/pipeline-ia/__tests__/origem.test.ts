@@ -23,6 +23,10 @@ describe("inferOrigem", () => {
     expect(inferOrigem("https://www.uhuu.com/rio-de-janeiro/evento/exemplo")).toBe("uhuu");
   });
 
+  it("reconhece ecovilla (US-E18)", () => {
+    expect(inferOrigem("https://ecovillarihappy.com.br/programacao/")).toBe("ecovilla");
+  });
+
   it("cai em outro para domínio desconhecido", () => {
     expect(inferOrigem("https://www.ingresso.com/evento/123")).toBe("outro");
   });

@@ -41,13 +41,17 @@ import {
   normalizeUhuu,
   DEFAULT_INPUT_PATH as UHUU_DEFAULT_PATH,
 } from "@/scripts/normalizer/uhuu";
+import {
+  normalizeEcovilla,
+  DEFAULT_INPUT_PATH as ECOVILLA_DEFAULT_PATH,
+} from "@/scripts/normalizer/ecovilla";
 import { fetchExistingSlugs } from "@/scripts/import-sanity/index";
 import { filterGeo, appendGeoRejections, GEO_REJECTED_LOG_PATH } from "./geo-filter";
 import { filterLinkCompra, appendLinkRejections, LINK_REJECTED_LOG_PATH } from "./link-validator";
 import { extractBairroFromVenue } from "./bairro-extractor";
 import { normalizeAllCapsTitle } from "@/scripts/lib/title-case";
 
-type Source = "clubinho" | "sympla" | "whatsapp" | "manual" | "uhuu";
+type Source = "clubinho" | "sympla" | "whatsapp" | "manual" | "uhuu" | "ecovilla";
 
 interface CliOptions {
   inputPath?: string;
@@ -84,9 +88,12 @@ export function parseArgs(argv: string[]): CliOptions {
         next !== "sympla" &&
         next !== "whatsapp" &&
         next !== "manual" &&
-        next !== "uhuu"
+        next !== "uhuu" &&
+        next !== "ecovilla"
       ) {
-        throw new Error("--source precisa ser 'clubinho', 'sympla', 'whatsapp', 'manual' ou 'uhuu'");
+        throw new Error(
+          "--source precisa ser 'clubinho', 'sympla', 'whatsapp', 'manual', 'uhuu' ou 'ecovilla'",
+        );
       }
       options.source = next as Source;
       index += 1;
@@ -104,7 +111,7 @@ export function parseArgs(argv: string[]): CliOptions {
   if (!options.source && !options.inputPath) {
     throw new Error(
       "Uso: pnpm pipeline-ia <caminho.csv> [--limit N] [--model gemini-2.5-flash]\n" +
-      "  ou: pnpm pipeline-ia --source clubinho|sympla|whatsapp|manual|uhuu [--limit N] [--model gemini-2.5-flash]",
+      "  ou: pnpm pipeline-ia --source clubinho|sympla|whatsapp|manual|uhuu|ecovilla [--limit N] [--model gemini-2.5-flash]",
     );
   }
 
@@ -137,6 +144,11 @@ export async function loadInput(options: CliOptions): Promise<{ rows: LinhaInput
     const rows = await normalizeUhuu(path);
     return { rows, label: `uhuu:${path}` };
   }
+  if (options.source === "ecovilla") {
+    const path = options.inputPath ?? ECOVILLA_DEFAULT_PATH;
+    const rows = await normalizeEcovilla(path);
+    return { rows, label: `ecovilla:${path}` };
+  }
   // Retrocompatibilidade: inputPath direto sem --source usa readCSV
   const path = options.inputPath!;
   const rows = await readCSV(path);
@@ -166,6 +178,9 @@ export function inferOrigem(url: string): Origem {
   }
   if (normalized.includes("uhuu.com")) {
     return "uhuu";
+  }
+  if (normalized.includes("ecovillarihappy")) {
+    return "ecovilla";
   }
   return "outro";
 }

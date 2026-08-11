@@ -116,13 +116,30 @@ describe("atracao schema — origem (US-S54: renomeado de partner)", () => {
     expect(values).toContain("uhuu");
   });
 
-  it("mantém as demais opções históricas (sympla, eventim, clubinho, raindrop, uhuu, outro)", () => {
+  it("inclui a opção EcoVilla na lista de valores (US-E18)", () => {
     const field = atracao.fields.find((f) => f.name === "origem") as
       | { options?: { list?: Array<{ title: string; value: string }> } }
       | undefined;
     const values = field?.options?.list?.map((option) => option.value) ?? [];
 
-    expect(values).toEqual(["sympla", "eventim", "clubinho", "raindrop", "uhuu", "outro"]);
+    expect(values).toContain("ecovilla");
+  });
+
+  it("mantém as demais opções históricas (sympla, eventim, clubinho, raindrop, uhuu, ecovilla, outro)", () => {
+    const field = atracao.fields.find((f) => f.name === "origem") as
+      | { options?: { list?: Array<{ title: string; value: string }> } }
+      | undefined;
+    const values = field?.options?.list?.map((option) => option.value) ?? [];
+
+    expect(values).toEqual([
+      "sympla",
+      "eventim",
+      "clubinho",
+      "raindrop",
+      "uhuu",
+      "ecovilla",
+      "outro",
+    ]);
   });
 });
 
