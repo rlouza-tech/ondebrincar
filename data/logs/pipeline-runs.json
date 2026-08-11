@@ -50,3 +50,4 @@
 {"timestamp":"2026-08-03T21:11:59.540Z","source":"uhuu","fichas_processadas":3,"fichas_novas":3,"dedup_ignored":0,"geo_rejected":1,"link_rejected":0,"custo_estimado_usd":0.00193057,"latencia_media_ms":14525,"erros":[],"prompt_version":"v1.0.8"}
 {"timestamp":"2026-08-06T13:06:32.528Z","source":"uhuu","fichas_processadas":0,"fichas_novas":0,"dedup_ignored":3,"geo_rejected":1,"link_rejected":0,"custo_estimado_usd":0,"latencia_media_ms":0,"erros":[],"prompt_version":"v1.0.8"}
 {"timestamp":"2026-08-11T16:22:55.931Z","source":"ecovilla","fichas_processadas":1,"fichas_novas":1,"dedup_ignored":0,"geo_rejected":0,"link_rejected":0,"custo_estimado_usd":0.00063405,"latencia_media_ms":15083,"erros":[],"prompt_version":"v1.0.8"}
+{"timestamp":"2026-08-11T16:35:54.074Z","source":"ecovilla","fichas_processadas":11,"fichas_novas":11,"dedup_ignored":0,"geo_rejected":0,"link_rejected":0,"custo_estimado_usd":0.00690337,"latencia_media_ms":10676,"erros":[],"prompt_version":"v1.0.8"}
