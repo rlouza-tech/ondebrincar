@@ -245,9 +245,10 @@ function timestampForFilename(iso: string): string {
  * Idempotente: pula se o draft já tiver campo foto definido.
  *
  * Fluxo de fallback:
- *   1. Tenta gerar com prompt completo (inclui nome da atração via buildPlaca).
+ *   1. Tenta gerar com prompt primário via buildImagePrompt (o nome da atração
+ *      nunca é renderizado como texto na imagem).
  *   2. Se falhar (ex: recusa por IP protegido), tenta com prompt anônimo
- *      via buildImagePromptAnonymous — sem referência ao nome.
+ *      via buildImagePromptAnonymous.
  *   3. Se ambos falharem, loga image_gen_failed: true e mantém placeholder.
  *
  * Exportada para permitir testes unitários.

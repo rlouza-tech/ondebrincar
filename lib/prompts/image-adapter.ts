@@ -10,11 +10,11 @@ import type { Categoria } from "@/scripts/pipeline-ia/types";
 export const IMAGE_MODEL = "gemini-2.5-flash-image";
 
 const STYLE_SUFFIX =
-  "Estilo: ilustração colorida no estilo livro infantil brasileiro, sem rostos realistas, traços arredondados e alegres, proporção 4:3.";
+  "Estilo: ilustração colorida no estilo livro infantil brasileiro, sem rostos realistas, traços arredondados e alegres, proporção 4:3, sem nenhum texto, letra, número ou palavra escrita em qualquer parte da imagem — cena puramente visual.";
 
 /**
  * Templates de cena base por categoria.
- * A cena descreve o ambiente/composição — o nome da atração vai numa placa/letreiro dentro da cena.
+ * A cena descreve o ambiente/composição — sem nenhum texto embutido na imagem.
  */
 const CENA_BASE: Record<Categoria, string> = {
   teatro:
@@ -42,27 +42,6 @@ const CENA_BASE: Record<Categoria, string> = {
 };
 
 /**
- * Constrói a descrição da placa/letreiro com o nome da atração.
- * Varia o tipo de suporte conforme a categoria.
- */
-function buildPlaca(nome: string, categoria: Categoria): string {
-  const placas: Record<Categoria, string> = {
-    teatro: `letreiro luminoso no canto superior direito com o texto "${nome}"`,
-    parque: `placa de madeira fincada no gramado com o texto "${nome}"`,
-    museu: `placa institucional elegante na parede com o texto "${nome}"`,
-    pracinha: `placa de madeira fincada no gramado com o texto "${nome}"`,
-    "atividade-extra": `lousa verde ao fundo com o texto "${nome}" escrito em letras coloridas`,
-    evento: `faixa festiva no topo com o texto "${nome}"`,
-    praia: `placa de madeira na areia com o texto "${nome}"`,
-    "colonia-de-ferias": `faixa de lona colorida suspensa na entrada com o texto "${nome}"`,
-    futebol: `placa de madeira na lateral do campo com o texto "${nome}"`,
-    restaurante: `quadro negro em cavalete na entrada com o texto "${nome}" escrito em letras estilizadas`,
-    "festa-junina": `faixa de bandeirolas com o texto "${nome}" no centro`,
-  };
-  return placas[categoria];
-}
-
-/**
  * Extrai palavras-chave da descrição para enriquecer o prompt.
  * Limita a 120 caracteres para não sobrecarregar o prompt visual.
  */
@@ -74,8 +53,12 @@ function extrairContexto(descricao?: string): string {
 
 /**
  * Constrói o prompt visual completo para o Gemini.
+ * O nome da atração não é renderizado como texto na imagem — texto gerado por IA
+ * é historicamente não confiável neste projeto (ex.: "Fábules & Fantasias",
+ * "Teatrinhio", "Gratulio"). O parâmetro `nome` é mantido pela assinatura da função
+ * (paridade com buildImagePromptAnonymous) mas não influencia o prompt gerado.
  *
- * @param nome - Nome da atração (vai na placa/letreiro)
+ * @param nome - Nome da atração (não aparece na imagem)
  * @param categoria - Categoria editorial (define a cena base)
  * @param descricao - Descrição da atração (opcional, enriquece o contexto)
  */
@@ -85,16 +68,15 @@ export function buildImagePrompt(
   descricao?: string,
 ): string {
   const cena = CENA_BASE[categoria] ?? CENA_BASE["evento"];
-  const placa = buildPlaca(nome, categoria);
   const contexto = extrairContexto(descricao);
 
-  return `Crie uma ilustração com a seguinte cena: ${cena}, com ${placa}.${contexto} ${STYLE_SUFFIX}`;
+  return `Crie uma ilustração com a seguinte cena: ${cena}.${contexto} ${STYLE_SUFFIX}`;
 }
 
 /**
  * Constrói o prompt visual sem nenhuma referência ao nome da atração.
- * Usado como fallback quando a geração com nome falha (ex: recusa por IP protegido).
- * A cena é genérica por categoria — sem letreiro, sem placa.
+ * Usado como fallback quando a geração primária falha (ex: recusa por IP protegido).
+ * A cena é genérica por categoria — idêntica a buildImagePrompt, sem parâmetro nome.
  *
  * @param categoria - Categoria editorial (define a cena base)
  * @param descricao - Descrição da atração (opcional, enriquece o contexto)
