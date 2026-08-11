@@ -15,6 +15,7 @@ import { fileURLToPath } from "node:url";
 import { hasSanityConfig, sanityWriteClient } from "@/lib/sanity/client";
 import { buildSlugFromParts } from "@/scripts/lib/slug";
 import { normalizeClubinho } from "@/scripts/normalizer/clubinho";
+import { normalizeEcovilla } from "@/scripts/normalizer/ecovilla";
 import { normalizeSympla } from "@/scripts/normalizer/sympla";
 import { normalizeUhuu } from "@/scripts/normalizer/uhuu";
 import type { PipelineInput } from "@/lib/pipeline/types";
@@ -151,20 +152,21 @@ function extrairDataFuturaComTrecho(
 // ---------------------------------------------------------------------------
 
 /**
- * Carrega a fonte viva (Clubinho + Sympla + Uhuu, mesmas fontes de
+ * Carrega a fonte viva (Clubinho + Sympla + Uhuu + EcoVilla, mesmas fontes de
  * check-atualizacoes) e monta um mapa slug → PipelineInput. Global, sem
  * `--source`, porque este script varre todas as fichas expiradas de uma vez
  * (Fluxo 3, passo 1).
  */
 export async function buildFonteVivaMap(): Promise<Map<string, PipelineInput>> {
-  const [clubinho, sympla, uhuu] = await Promise.all([
+  const [clubinho, sympla, uhuu, ecovilla] = await Promise.all([
     normalizeClubinho().catch(() => [] as PipelineInput[]),
     normalizeSympla().catch(() => [] as PipelineInput[]),
     normalizeUhuu().catch(() => [] as PipelineInput[]),
+    normalizeEcovilla().catch(() => [] as PipelineInput[]),
   ]);
 
   const mapa = new Map<string, PipelineInput>();
-  for (const row of [...clubinho, ...sympla, ...uhuu]) {
+  for (const row of [...clubinho, ...sympla, ...uhuu, ...ecovilla]) {
     const slug = buildSlugFromParts(row.nome, row.venue, row.bairro);
     mapa.set(slug, row);
   }
@@ -257,7 +259,7 @@ async function main(): Promise<void> {
   // por slug — antes deste fix, este script só relia o programacao_texto já
   // salvo no Sanity, que nunca tem data nova depois que o evento já passou
   // daquele texto.
-  console.log("\nCarregando fonte viva (Clubinho + Sympla + Uhuu)...");
+  console.log("\nCarregando fonte viva (Clubinho + Sympla + Uhuu + EcoVilla)...");
   const fonteViva = await buildFonteVivaMap();
   console.log(`Fonte viva carregada: ${fonteViva.size} ficha(s).`);
 

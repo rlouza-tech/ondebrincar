@@ -12,6 +12,7 @@
  *   pnpm check-atualizacoes --source clubinho
  *   pnpm check-atualizacoes --source sympla
  *   pnpm check-atualizacoes --source uhuu
+ *   pnpm check-atualizacoes --source ecovilla
  *   pnpm check-atualizacoes --source manual [--fix-dates]
  *
  * --fix-dates  aplica automaticamente proxima_data para fichas com sugestão válida
@@ -33,12 +34,16 @@ import {
   DEFAULT_INPUT_PATH as UHUU_PATH,
 } from "@/scripts/normalizer/uhuu";
 import {
+  normalizeEcovilla,
+  DEFAULT_INPUT_PATH as ECOVILLA_PATH,
+} from "@/scripts/normalizer/ecovilla";
+import {
   normalizeManual,
   DEFAULT_INPUT_PATH as MANUAL_PATH,
 } from "@/scripts/normalizer/manual";
 import type { PipelineInput } from "@/lib/pipeline/types";
 
-type Source = "clubinho" | "sympla" | "uhuu" | "manual";
+type Source = "clubinho" | "sympla" | "uhuu" | "ecovilla" | "manual";
 
 // ---------------------------------------------------------------------------
 // Tipos
@@ -103,9 +108,15 @@ function parseArgs(argv: string[]): { source: Source; fixDates: boolean } {
     const next = args[i + 1];
 
     if (arg === "--source") {
-      if (next !== "clubinho" && next !== "sympla" && next !== "uhuu" && next !== "manual") {
+      if (
+        next !== "clubinho" &&
+        next !== "sympla" &&
+        next !== "uhuu" &&
+        next !== "ecovilla" &&
+        next !== "manual"
+      ) {
         throw new Error(
-          `--source aceita "clubinho", "sympla", "uhuu" ou "manual" — recebido: "${next ?? ""}"\n` +
+          `--source aceita "clubinho", "sympla", "uhuu", "ecovilla" ou "manual" — recebido: "${next ?? ""}"\n` +
           `  Exemplo: pnpm check-atualizacoes --source clubinho`,
         );
       }
@@ -121,7 +132,7 @@ function parseArgs(argv: string[]): { source: Source; fixDates: boolean } {
   if (!source) {
     throw new Error(
       "Argumento --source é obrigatório.\n" +
-      "  Uso: pnpm check-atualizacoes --source clubinho|sympla|uhuu|manual [--fix-dates]",
+      "  Uso: pnpm check-atualizacoes --source clubinho|sympla|uhuu|ecovilla|manual [--fix-dates]",
     );
   }
 
@@ -505,6 +516,7 @@ async function loadCandidates(source: Source): Promise<{ rows: PipelineInput[]; 
     case "clubinho": return { rows: await normalizeClubinho(), inputPath: CLUBINHO_PATH };
     case "sympla":   return { rows: await normalizeSympla(),   inputPath: SYMPLA_PATH };
     case "uhuu":     return { rows: await normalizeUhuu(),     inputPath: UHUU_PATH };
+    case "ecovilla": return { rows: await normalizeEcovilla(), inputPath: ECOVILLA_PATH };
     case "manual":   return { rows: await normalizeManual(),   inputPath: MANUAL_PATH };
   }
 }

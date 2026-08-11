@@ -45,8 +45,8 @@ desta skill:
 
 ## Rotina
 
-**1. Varredura automática global** (cobre Clubinho e Sympla de uma vez, sem `--source` — o
-script carrega a fonte viva das duas internamente):
+**1. Varredura automática global** (cobre Clubinho, Sympla, Uhuu e EcoVilla de uma vez, sem
+`--source` — o script carrega a fonte viva das quatro internamente):
 ```
 pnpm auto-avancar-datas
 ```
