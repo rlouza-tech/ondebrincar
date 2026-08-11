@@ -19,6 +19,8 @@
  */
 
 import { JSDOM } from "jsdom";
+import { GEOCODING_DELAY_MS, reverseGeocodeUhuu } from "./geocoding";
+import type { ReverseGeocodeResult } from "./geocoding";
 import { extractDuracaoMinutos, isLocalizacaoRioDeJaneiro } from "./parse";
 import type { LinhaEnriquecida } from "./types";
 
@@ -44,6 +46,8 @@ export interface UhuuEventDetail {
   categoria_origem: string;
   sinopse_oficial: string;
   duracao_minutos: string;
+  latitude: string;
+  longitude: string;
 }
 
 function delay(ms: number): Promise<void> {
@@ -140,7 +144,19 @@ export function extractSinopseUhuu(sobreText: string): string {
   return normalizeWhitespace(cortado).slice(0, 1200);
 }
 
-/** Parseia a página de um evento e retorna os campos só disponíveis ali (sinopse, duração, categoria). */
+/**
+ * Extrai lat/long do link "Ver localização" do Google Maps — único ponto onde
+ * a Uhuu expõe geolocalização (nunca endereço em texto, ver DISCOVERY desta
+ * story). Formato confirmado em execução real: href
+ * "https://www.google.com/maps/place/-22.9663958,-43.1875042".
+ */
+function extractCoordenadas(doc: Document): { latitude: string; longitude: string } {
+  const href = doc.querySelector('a[href*="google.com/maps/place/"]')?.getAttribute("href") ?? "";
+  const match = href.match(/maps\/place\/(-?\d+\.\d+),(-?\d+\.\d+)/);
+  return { latitude: match?.[1] ?? "", longitude: match?.[2] ?? "" };
+}
+
+/** Parseia a página de um evento e retorna os campos só disponíveis ali (sinopse, duração, categoria, coordenadas). */
 export function parseEventDetail(html: string): UhuuEventDetail {
   const dom = new JSDOM(html);
   const doc = dom.window.document;
@@ -150,15 +166,22 @@ export function parseEventDetail(html: string): UhuuEventDetail {
   );
   const sobreRaw = doc.querySelector(".tabs-content-item.sobre")?.textContent ?? "";
   const sobreNormalizado = normalizeWhitespace(sobreRaw);
+  const { latitude, longitude } = extractCoordenadas(doc);
 
   return {
     categoria_origem,
     sinopse_oficial: extractSinopseUhuu(sobreRaw),
     duracao_minutos: extractDuracaoMinutos(sobreNormalizado, ""),
+    latitude,
+    longitude,
   };
 }
 
-function buildLinha(item: UhuuListingItem, detail: UhuuEventDetail): LinhaEnriquecida {
+function buildLinha(
+  item: UhuuListingItem,
+  detail: UhuuEventDetail,
+  geo: ReverseGeocodeResult,
+): LinhaEnriquecida {
   const { idade_minima, idade_maxima } = parseParentalRating(item.parentalRating);
   const precoCentavos = parsePrecoCentavos(item.precoRaw);
 
@@ -166,7 +189,7 @@ function buildLinha(item: UhuuListingItem, detail: UhuuEventDetail): LinhaEnriqu
     nome: item.nome,
     categoria_origem: detail.categoria_origem || "Família / Infantil",
     venue: item.venue,
-    bairro: "",
+    bairro: geo.bairro,
     dias_apresentacao: [item.data, item.hora ? `às ${item.hora}` : ""].filter(Boolean).join(" "),
     desconto_percentual: "",
     preco_bruto: precoCentavos ? `a partir de R$${item.precoRaw}` : "",
@@ -179,6 +202,7 @@ function buildLinha(item: UhuuListingItem, detail: UhuuEventDetail): LinhaEnriqu
     preco_inteira_centavos: precoCentavos,
     url_ingresso: item.url,
     preco_a_partir: true,
+    ...(geo.endereco ? { endereco: geo.endereco } : {}),
   };
 }
 
@@ -187,6 +211,10 @@ export interface ScrapeUhuuOptions {
   limit?: number;
   delayMs?: number;
   fetchImpl?: typeof fetch;
+  /** Fetch usado pra chamar o Nominatim — separado de fetchImpl (uhuu.com) pra facilitar teste isolado. */
+  geocodeFetchImpl?: typeof fetch;
+  /** Intervalo entre chamadas de geocoding (default: GEOCODING_DELAY_MS, respeita política do Nominatim). */
+  geocodeDelayMs?: number;
 }
 
 export interface ScrapeUhuuStats {
@@ -205,6 +233,8 @@ export async function scrapeUhuu(options: ScrapeUhuuOptions = {}): Promise<Scrap
   const categoryUrl = options.categoryUrl ?? UHUU_CATEGORY_URL;
   const doFetch = options.fetchImpl ?? fetch;
   const delayMs = options.delayMs ?? DEFAULT_DELAY_MS;
+  const geocodeFetch = options.geocodeFetchImpl ?? fetch;
+  const geocodeDelayMs = options.geocodeDelayMs ?? GEOCODING_DELAY_MS;
 
   const allItems: UhuuListingItem[] = [];
   for (let page = 1; page <= MAX_PAGES; page += 1) {
@@ -232,7 +262,13 @@ export async function scrapeUhuu(options: ScrapeUhuuOptions = {}): Promise<Scrap
 
   const rows: LinhaEnriquecida[] = [];
   for (const item of selected) {
-    let detail: UhuuEventDetail = { categoria_origem: "", sinopse_oficial: "", duracao_minutos: "" };
+    let detail: UhuuEventDetail = {
+      categoria_origem: "",
+      sinopse_oficial: "",
+      duracao_minutos: "",
+      latitude: "",
+      longitude: "",
+    };
     try {
       const res = await doFetch(item.url);
       if (res.ok) {
@@ -244,7 +280,16 @@ export async function scrapeUhuu(options: ScrapeUhuuOptions = {}): Promise<Scrap
       const msg = err instanceof Error ? err.message : String(err);
       console.warn(`[uhuu] falha ao buscar "${item.nome}" (${item.url}) — ${msg}`);
     }
-    rows.push(buildLinha(item, detail));
+
+    let geo: ReverseGeocodeResult = { bairro: "", endereco: "" };
+    if (detail.latitude && detail.longitude) {
+      geo = await reverseGeocodeUhuu(detail.latitude, detail.longitude, geocodeFetch);
+      if (geocodeDelayMs > 0) {
+        await delay(geocodeDelayMs);
+      }
+    }
+
+    rows.push(buildLinha(item, detail, geo));
     if (delayMs > 0) {
       await delay(delayMs);
     }
