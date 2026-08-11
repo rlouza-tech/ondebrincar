@@ -88,3 +88,31 @@ export const recomendacoesPorBairro = groq`
     ${recomendacaoProjection}
   }
 `;
+
+/**
+ * US-I35 — fallback do eixo bairro: outras atrações permanentes (sem `proxima_data`) no
+ * mesmo bairro. Só usado quando a origem também é permanente; matches com data (query acima)
+ * têm prioridade, este resultado só completa slots vagos.
+ */
+export const recomendacoesPermanentesPorBairro = groq`
+  *[_type == "atracao" && !(_id in path("drafts.**")) && status == "operando"
+    && lower(bairro) == lower($bairro) && slug.current != $slug
+    && tipo_programacao == "permanente" && !defined(proxima_data)]
+  | order(nome asc)[0...6] {
+    ${recomendacaoProjection}
+  }
+`;
+
+/**
+ * US-I35 — fallback do eixo tema: outras atrações permanentes (sem `proxima_data`) na
+ * mesma categoria. Só usado quando a origem é permanente e o eixo bairro (mesmo já com
+ * fallback aplicado) não achou nenhum candidato.
+ */
+export const recomendacoesPermanentesPorTema = groq`
+  *[_type == "atracao" && !(_id in path("drafts.**")) && status == "operando"
+    && categoria == $categoria && slug.current != $slug
+    && tipo_programacao == "permanente" && !defined(proxima_data)]
+  | order(nome asc)[0...6] {
+    ${recomendacaoProjection}
+  }
+`;

@@ -1,8 +1,13 @@
 import { getProximoFimDeSemana } from "@/lib/atracoes";
 import { mockAtracoes } from "@/lib/mock-atracoes";
 import { hasSanityConfig, sanityClient } from "@/lib/sanity/client";
-import { recomendacoesPorBairro, recomendacoesPorTema } from "@/lib/sanity/queries";
-import type { Atracao, SanityRecomendacaoDocument } from "@/lib/sanity/types";
+import {
+  recomendacoesPermanentesPorBairro,
+  recomendacoesPermanentesPorTema,
+  recomendacoesPorBairro,
+  recomendacoesPorTema,
+} from "@/lib/sanity/queries";
+import type { Atracao, SanityRecomendacaoDocument, TipoProgramacao } from "@/lib/sanity/types";
 
 export type EixoRecomendacao = "tema" | "bairro";
 
@@ -94,6 +99,61 @@ export function mesclarRecomendacoes(
   return resultado;
 }
 
+/**
+ * US-I35 — anexa candidatos permanentes sem data (`fallback`) depois dos candidatos com
+ * data (`datados`), sem reordenar estes últimos. Datados sempre têm prioridade; fallback só
+ * completa slots vagos. Fallback é ordenado alfabeticamente por título e nunca duplica um
+ * slug já presente em `datados`.
+ */
+function combinarComFallbackPermanente(
+  datados: RecomendacaoCandidata[],
+  fallback: RecomendacaoCandidata[],
+): RecomendacaoCandidata[] {
+  const slugsDatados = new Set(datados.map((c) => c.slug));
+  const fallbackOrdenado = fallback
+    .filter((c) => !slugsDatados.has(c.slug))
+    .slice()
+    .sort((a, b) => a.titulo.localeCompare(b.titulo, "pt-BR"));
+
+  return [...datados, ...fallbackOrdenado];
+}
+
+/**
+ * US-I35 — regra de fallback pra atrações permanentes (sem `proximaData`): quando a origem é
+ * `tipo_programacao == "permanente"`, o eixo bairro passa a aceitar outros permanentes sem
+ * data do mesmo bairro (além dos matches com data, que continuam prioritários). Se, mesmo
+ * assim, o eixo bairro não achar nenhum candidato, o eixo tema também aceita permanentes sem
+ * data da mesma categoria. Origens não-permanentes (evento_pontual, evento_recorrente) não
+ * são afetadas — comportamento idêntico ao anterior (US-I33).
+ */
+export function montarCandidatosComFallback(params: {
+  tipoProgramacaoOrigem: TipoProgramacao;
+  porTemaDatado: RecomendacaoCandidata[];
+  porBairroDatado: RecomendacaoCandidata[];
+  porTemaPermanenteSemData: RecomendacaoCandidata[];
+  porBairroPermanenteSemData: RecomendacaoCandidata[];
+}): { porTema: RecomendacaoCandidata[]; porBairro: RecomendacaoCandidata[] } {
+  const {
+    tipoProgramacaoOrigem,
+    porTemaDatado,
+    porBairroDatado,
+    porTemaPermanenteSemData,
+    porBairroPermanenteSemData,
+  } = params;
+
+  if (tipoProgramacaoOrigem !== "permanente") {
+    return { porTema: porTemaDatado, porBairro: porBairroDatado };
+  }
+
+  const porBairro = combinarComFallbackPermanente(porBairroDatado, porBairroPermanenteSemData);
+  const porTema =
+    porBairro.length === 0
+      ? combinarComFallbackPermanente(porTemaDatado, porTemaPermanenteSemData)
+      : porTemaDatado;
+
+  return { porTema, porBairro };
+}
+
 function candidataFromSanity(doc: SanityRecomendacaoDocument): RecomendacaoCandidata {
   return {
     slug: doc.slug,
@@ -138,16 +198,36 @@ async function fetchCandidatas(atracao: Atracao): Promise<{
           fim,
         }),
       ]);
-      return {
-        porTema: temaDocs.map(candidataFromSanity),
-        porBairro: bairroDocs.map(candidataFromSanity),
-      };
+
+      // US-I35 — só busca fallback de permanentes quando a origem também é permanente.
+      let temaPermanenteDocs: SanityRecomendacaoDocument[] = [];
+      let bairroPermanenteDocs: SanityRecomendacaoDocument[] = [];
+      if (atracao.tipoProgramacao === "permanente") {
+        [temaPermanenteDocs, bairroPermanenteDocs] = await Promise.all([
+          sanityClient.fetch<SanityRecomendacaoDocument[]>(recomendacoesPermanentesPorTema, {
+            categoria: atracao.categoria,
+            slug: atracao.slug,
+          }),
+          sanityClient.fetch<SanityRecomendacaoDocument[]>(recomendacoesPermanentesPorBairro, {
+            bairro: atracao.bairro,
+            slug: atracao.slug,
+          }),
+        ]);
+      }
+
+      return montarCandidatosComFallback({
+        tipoProgramacaoOrigem: atracao.tipoProgramacao,
+        porTemaDatado: temaDocs.map(candidataFromSanity),
+        porBairroDatado: bairroDocs.map(candidataFromSanity),
+        porTemaPermanenteSemData: temaPermanenteDocs.map(candidataFromSanity),
+        porBairroPermanenteSemData: bairroPermanenteDocs.map(candidataFromSanity),
+      });
     } catch {
       return { porTema: [], porBairro: [] };
     }
   }
 
-  const porTema = mockAtracoes
+  const porTemaDatado = mockAtracoes
     .filter(
       (a) =>
         a.slug !== atracao.slug &&
@@ -157,7 +237,7 @@ async function fetchCandidatas(atracao: Atracao): Promise<{
     )
     .map(candidataFromMock);
 
-  const porBairro = mockAtracoes
+  const porBairroDatado = mockAtracoes
     .filter(
       (a) =>
         a.slug !== atracao.slug &&
@@ -168,7 +248,40 @@ async function fetchCandidatas(atracao: Atracao): Promise<{
     )
     .map(candidataFromMock);
 
-  return { porTema, porBairro };
+  // US-I35 — fallback só é calculado quando a origem é permanente (mesma regra do path Sanity).
+  const porTemaPermanenteSemData =
+    atracao.tipoProgramacao === "permanente"
+      ? mockAtracoes
+          .filter(
+            (a) =>
+              a.slug !== atracao.slug &&
+              a.categoria === atracao.categoria &&
+              a.tipoProgramacao === "permanente" &&
+              !a.proximaData,
+          )
+          .map(candidataFromMock)
+      : [];
+
+  const porBairroPermanenteSemData =
+    atracao.tipoProgramacao === "permanente"
+      ? mockAtracoes
+          .filter(
+            (a) =>
+              a.slug !== atracao.slug &&
+              a.bairro.toLowerCase() === atracao.bairro.toLowerCase() &&
+              a.tipoProgramacao === "permanente" &&
+              !a.proximaData,
+          )
+          .map(candidataFromMock)
+      : [];
+
+  return montarCandidatosComFallback({
+    tipoProgramacaoOrigem: atracao.tipoProgramacao,
+    porTemaDatado,
+    porBairroDatado,
+    porTemaPermanenteSemData,
+    porBairroPermanenteSemData,
+  });
 }
 
 /** US-I33 — recomendações pro anel "Continue o programa" no fim da ficha. */
