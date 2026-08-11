@@ -396,7 +396,8 @@ async function trySymplaEndereco(
   url: string,
 ): Promise<string | null> {
   await gotoWithRetry(session.page, url, 25_000);
-  return extrairEndereco(session.page);
+  const { endereco } = await extrairEndereco(session.page);
+  return endereco;
 }
 
 // ---------------------------------------------------------------------------
