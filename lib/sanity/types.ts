@@ -22,8 +22,8 @@ export interface Atracao {
   descricaoCurta: string;
   imagemUrl: string;
   linkExterno: string;
-  /** Origem do link de compra: "sympla" | "eventim" | "clubinho" | "raindrop" | "uhuu" | "outro". Usado em analytics de conversão. */
-  origem?: "sympla" | "eventim" | "clubinho" | "raindrop" | "uhuu" | "outro";
+  /** Origem do link de compra: "sympla" | "eventim" | "clubinho" | "raindrop" | "uhuu" | "ecovilla" | "outro". Usado em analytics de conversão. */
+  origem?: "sympla" | "eventim" | "clubinho" | "raindrop" | "uhuu" | "ecovilla" | "outro";
 }
 
 /** Shape retornado por `recomendacoesPorTema`/`recomendacoesPorBairro` (US-I33). */
@@ -47,7 +47,7 @@ export interface SanityAtracaoDocument {
   preco?: number | null;
   preco_a_partir?: boolean;
   link_compra?: string;
-  origem?: "sympla" | "eventim" | "clubinho" | "raindrop" | "uhuu" | "outro";
+  origem?: "sympla" | "eventim" | "clubinho" | "raindrop" | "uhuu" | "ecovilla" | "outro";
   bairro: string;
   endereco?: string;
   indoor_outdoor: IndoorOutdoor;

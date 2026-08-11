@@ -19,7 +19,7 @@ interface CliOptions {
   latest: boolean;
   limit?: number;
   dryRun: boolean;
-  source?: "sympla" | "clubinho" | "manual" | "uhuu";
+  source?: "sympla" | "clubinho" | "manual" | "uhuu" | "ecovilla";
   execute: boolean;
 }
 
@@ -39,10 +39,16 @@ export function parseArgs(argv: string[]): CliOptions {
     } else if (arg === "--execute") {
       options.execute = true;
     } else if (arg === "--source") {
-      if (next !== "sympla" && next !== "clubinho" && next !== "manual" && next !== "uhuu") {
-        throw new Error(`--source aceita "sympla", "clubinho", "manual" ou "uhuu"`);
+      if (
+        next !== "sympla" &&
+        next !== "clubinho" &&
+        next !== "manual" &&
+        next !== "uhuu" &&
+        next !== "ecovilla"
+      ) {
+        throw new Error(`--source aceita "sympla", "clubinho", "manual", "uhuu" ou "ecovilla"`);
       }
-      options.source = next as "sympla" | "clubinho" | "manual" | "uhuu";
+      options.source = next as "sympla" | "clubinho" | "manual" | "uhuu" | "ecovilla";
       index += 1;
     } else if (arg === "--limit") {
       const parsed = Number.parseInt(next ?? "", 10);
@@ -66,9 +72,10 @@ export function parseArgs(argv: string[]): CliOptions {
     options.source === "sympla" ||
     options.source === "clubinho" ||
     options.source === "manual" ||
-    options.source === "uhuu"
+    options.source === "uhuu" ||
+    options.source === "ecovilla"
   ) {
-    // Com --source sympla/clubinho/manual/uhuu, o CSV é resolvido automaticamente via --latest.
+    // Com --source sympla/clubinho/manual/uhuu/ecovilla, o CSV é resolvido automaticamente via --latest.
     // É necessário passar --dry-run (preview) OU --execute (import real).
     if (!options.dryRun && !options.execute) {
       throw new Error(
@@ -77,7 +84,7 @@ export function parseArgs(argv: string[]): CliOptions {
         `  Executar: pnpm import-sanity --source ${options.source} --execute`,
       );
     }
-    // --source sympla/clubinho/manual/uhuu sempre usa o CSV mais recente
+    // --source sympla/clubinho/manual/uhuu/ecovilla sempre usa o CSV mais recente
     options.latest = true;
   } else {
     if (!options.latest && !options.csvPath) {
@@ -332,6 +339,7 @@ async function main() {
   const isClubinhoExecute = options.source === "clubinho" && options.execute && !options.dryRun;
   const isManualExecute = options.source === "manual" && options.execute && !options.dryRun;
   const isUhuuExecute = options.source === "uhuu" && options.execute && !options.dryRun;
+  const isEcovillaExecute = options.source === "ecovilla" && options.execute && !options.dryRun;
   if (!process.env.SANITY_API_TOKEN && !options.dryRun) {
     throw new Error("SANITY_API_TOKEN ausente (obrigatório fora de --dry-run)");
   }
@@ -351,7 +359,8 @@ async function main() {
     options.source === "sympla" ||
     options.source === "clubinho" ||
     options.source === "manual" ||
-    options.source === "uhuu"
+    options.source === "uhuu" ||
+    options.source === "ecovilla"
   ) {
     console.log("Buscando slugs existentes no Sanity para dedup...");
     const [existingSlugs, rejectedSlugs] = await Promise.all([
@@ -399,7 +408,11 @@ async function main() {
   let imagesGenerated = 0;
   let imagesFailed = 0;
 
-  const modeLabel = options.dryRun ? " [DRY-RUN]" : (isSymplaExecute || isClubinhoExecute || isManualExecute || isUhuuExecute ? " [EXECUTE]" : "");
+  const modeLabel = options.dryRun
+    ? " [DRY-RUN]"
+    : isSymplaExecute || isClubinhoExecute || isManualExecute || isUhuuExecute || isEcovillaExecute
+      ? " [EXECUTE]"
+      : "";
   console.log(
     `Import Sanity: ${rows.length}/${allRows.length} linhas de ${csvPath}${modeLabel}`,
   );

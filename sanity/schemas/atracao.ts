@@ -110,7 +110,7 @@ export const atracao = defineType({
       name: "origem",
       title: "Origem",
       type: "string",
-      description: "Origem do link de compra. Ex.: sympla, eventim, clubinho, raindrop, uhuu ou outro.",
+      description: "Origem do link de compra. Ex.: sympla, eventim, clubinho, raindrop, uhuu, ecovilla ou outro.",
       options: {
         list: [
           { title: "Sympla", value: "sympla" },
@@ -118,6 +118,7 @@ export const atracao = defineType({
           { title: "Clubinho de Ofertas", value: "clubinho" },
           { title: "Raindrop", value: "raindrop" },
           { title: "Uhuu", value: "uhuu" },
+          { title: "EcoVilla", value: "ecovilla" },
           { title: "Outro", value: "outro" },
         ],
         layout: "radio",
