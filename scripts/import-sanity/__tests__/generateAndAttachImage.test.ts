@@ -114,11 +114,11 @@ describe("generateAndAttachImage", () => {
     // Deve ter chamado generateImage duas vezes: primary + fallback
     expect(mockGenerateImage).toHaveBeenCalledTimes(2);
 
-    // Primeira chamada: prompt com nome (contém "A Bela e a Fera")
+    // Nome da atração nunca é renderizado como texto na imagem (US-E22) — nem no
+    // prompt primário nem no fallback anônimo.
     const primaryPrompt = mockGenerateImage.mock.calls[0][0] as string;
-    expect(primaryPrompt).toContain("A Bela e a Fera");
+    expect(primaryPrompt).not.toContain("A Bela e a Fera");
 
-    // Segunda chamada: prompt anônimo (NÃO contém o nome)
     const fallbackPrompt = mockGenerateImage.mock.calls[1][0] as string;
     expect(fallbackPrompt).not.toContain("A Bela e a Fera");
 
