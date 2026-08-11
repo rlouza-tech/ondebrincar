@@ -24,10 +24,13 @@ posicionada logo depois da Uhuu — mesma natureza de scraper automatizado headl
 dependência de ordem com as outras fontes (mesmo raciocínio usado pra posicionar a Uhuu na
 US-E15). Mesmo mecanismo de dispatch, sem mudança na lógica de coordenação.
 
-Não roda nenhum comando por conta própria: direciona sequencialmente para as 6 skills-filhas
-(`clubinho`, `sympla`, `uhuu`, `ecovilla`, `raindrop`, `avancar-datas`), na ordem descrita
-abaixo, e depois roda diretamente a checagem de duplicata cross-fonte — não é uma skill-filha
-própria, é um script único, read-only, sem custo de Gemini/imagem.
+**Atualizada na US-E17 (Sprint 16)** pra trocar a chamada inline do script
+`check-duplicatas-cross-fonte` (US-S65) pela chamada via skill própria `checagem-pos-publicacao`
+— mesmo mecanismo de dispatch das demais skills-filhas, sem mudança na lógica de coordenação.
+
+Não roda nenhum comando por conta própria: direciona sequencialmente para as 7 skills-filhas
+(`clubinho`, `sympla`, `uhuu`, `ecovilla`, `raindrop`, `avancar-datas`,
+`checagem-pos-publicacao`), na ordem descrita abaixo.
 
 **Mecanismo de coordenação (ADR de US-E4):** skills não se chamam entre si — não têm agência
 própria. Quem tem agência é você, nesta sessão com o Rafa. Esta skill é o roteiro que define a
@@ -54,7 +57,7 @@ sessão só, sem pausas longas).
 
 ## Protocolo de cores compartilhado
 
-Definição válida para as 6 skills-filhas — documentada aqui uma vez só (AC3 de US-E5), não
+Definição válida para as 7 skills-filhas — documentada aqui uma vez só (AC3 de US-E5), não
 repetida em cada uma:
 
 - 🟢 **Roda direto, sem perguntar**: qualquer scrape, leitura, `check-novidades`,
@@ -88,14 +91,13 @@ skill e siga a rotina dela até o fim, respeitando os checkpoints 🔴 que ela m
 6. **Avançar-datas** (skill `avancar-datas`) — por último entre as skills-filhas, já que
    resolve fichas vencidas das fontes que acabaram de rodar (inclui as que
    Clubinho/Sympla/Uhuu/EcoVilla acabaram de trazer).
-7. **Checagem de duplicata cross-fonte** (US-S65) — depois do Avançar-datas, rode
-   `pnpm check-duplicatas-cross-fonte` diretamente (🟢, read-only, sem custo de Gemini/imagem;
-   não é uma skill-filha, é um script único). Esse comando só funciona no terminal do Rafa
-   (Claude Code), nunca no Cowork. Guarde do output: quantidade de pares candidatos e o
-   caminho do relatório `.md` gerado (`data/output/duplicatas-cross-fonte-*.md`). O script
-   nunca aplica nada sozinho — só diagnostica (Opção A da US-S63, travada). Se achar pelo
-   menos 1 candidato, avise o Rafa explicitamente no resumo final, sem esperar ele perguntar,
-   e lembre que a decisão de qual ficha marcar como `duplicada` (via
+7. **Checagem pós-publicação** (skill `checagem-pos-publicacao`) — por último, depois do
+   Avançar-datas: hoje só dedup cross-fonte (US-S65/US-S63), mas é o lugar que absorve
+   qualquer checagem futura do mesmo tipo (US-E17). Só funciona no terminal do Rafa (Claude
+   Code), nunca no Cowork. Guarde do resumo dela: quantidade de pares candidatos e o caminho
+   do relatório `.md` gerado. Nunca aplica nada sozinha — só diagnostica. Se achar pelo menos
+   1 candidato, avise o Rafa explicitamente no resumo final, sem esperar ele perguntar, e
+   lembre que a decisão de qual ficha marcar como `duplicada` (via
    `pnpm apply-duplicatas --slug <slug> --execute`, US-S64) é sempre manual dele.
 
 Se uma skill parar cedo por falta de novidade (ex.: Clubinho, Sympla, Uhuu ou EcoVilla
@@ -135,12 +137,14 @@ resumo — não finja que rodou.
 
 - **Vigilância de Conteúdo** (`check-atualizacoes`, curadoria pré-import): Fase 2 da ADR de
   US-E4, bloqueada até US-O20 fechar. Não é chamada por esta orquestração.
-- **Checagem de duplicata cross-fonte como gate de escrita**: o passo 7 da rotina só
-  diagnostica e avisa — nunca bloqueia, pausa ou condiciona os passos anteriores (Clubinho,
-  Sympla, Uhuu, EcoVilla, Raindrop, Avançar-datas) à ausência de duplicatas. Aplicar o status
-  `duplicada` continua sendo decisão manual do Rafa via `apply-duplicatas` (US-S64), sempre
-  fora desta orquestração (decisão de Opção A da US-S63, travada — nunca vira gate).
+- **Checagem pós-publicação como gate de escrita**: o passo 7 da rotina (skill
+  `checagem-pos-publicacao`) só diagnostica e avisa — nunca bloqueia, pausa ou condiciona os
+  passos anteriores (Clubinho, Sympla, Uhuu, EcoVilla, Raindrop, Avançar-datas) à ausência de
+  duplicatas. Aplicar o status `duplicada` continua sendo decisão manual do Rafa via
+  `apply-duplicatas` (US-S64), sempre fora desta orquestração (decisão de Opção A da US-S63,
+  travada — nunca vira gate).
 - **Decidir se roda ou não**: esta skill não pergunta "o que rodar" — parte do princípio que a
   resposta é sempre "tudo" (confirmado pelo Rafa em 15/07). Se o Rafa quiser rodar só uma fonte
   isolada, é mais direto chamar a skill dela (`clubinho`, `sympla`, `uhuu`, `ecovilla`,
-  `raindrop` ou `avancar-datas`) em vez desta.
+  `raindrop` ou `avancar-datas`) em vez desta. `checagem-pos-publicacao` não é uma fonte —
+  nesta primeira versão só roda como último passo do pacote completo.
