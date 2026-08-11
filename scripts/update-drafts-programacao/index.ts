@@ -132,6 +132,7 @@ async function readEnrichedCSV(path: string): Promise<LinhaEnriquecida[]> {
           tipo_programacao: record.tipo_programacao as LinhaEnriquecida["tipo_programacao"],
           programacao_texto: record.programacao_texto ?? "",
           proxima_data: parseNullableDate(record.proxima_data ?? ""),
+          data_fim: parseNullableDate(record.data_fim ?? ""),
           foto_url: record.foto_url ?? "",
           review_status: record.review_status as LinhaEnriquecida["review_status"],
           abstain_reasons: abstainRaw

@@ -32,6 +32,7 @@ export interface SanityAtracaoDocInput {
   tipo_programacao: string;
   programacao_texto: string;
   proxima_data?: string;
+  data_fim?: string;
   descricao: string;
   mini_review: string;
   review_status: string;

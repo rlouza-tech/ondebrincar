@@ -214,6 +214,13 @@ export const atracao = defineType({
         "Data da próxima sessão. Só preenchido se tipo = evento_pontual com data definida e ainda não passada.",
     }),
     defineField({
+      name: "data_fim",
+      title: "Data de encerramento (eventos multi-dia)",
+      type: "date",
+      description:
+        "Último dia de eventos com programação contínua em vários dias seguidos (ex.: colônia de férias de 6 a 10/jul). Opcional — quando ausente, o sistema usa só proxima_data (US-S37).",
+    }),
+    defineField({
       name: "descricao",
       title: "Descrição",
       type: "text",

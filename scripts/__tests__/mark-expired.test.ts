@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { selecionarParaEncerrar } from "../mark-expired";
+import { estaVencida, selecionarParaEncerrar } from "../mark-expired";
 
 // US-S43: mark-expired sobrescrevia qualquer status diferente de "encerrada"
 // (incluindo "rejeitado", que é lista negra permanente do import-sanity, e
@@ -76,5 +76,38 @@ describe("selecionarParaEncerrar (US-S43)", () => {
     ]);
 
     expect(resultado).toEqual([operando]);
+  });
+});
+
+// US-S37: eventos multi-dia contínuos (ex.: colônia de férias) têm data_fim além de
+// proxima_data — a data efetiva de vencimento passa a ser data_fim quando presente.
+describe("estaVencida (US-S37)", () => {
+  it("caso real — Colônia de Férias Gracie Kore (6 a 10/jul): não vencida no 2º dia", () => {
+    // proxima_data é o 1º dia do intervalo (6/jul); data_fim é o último (10/jul).
+    // Sem data_fim, o script marcaria encerrada já no dia 7 — exatamente o bug da story.
+    const doc = { proxima_data: "2026-07-06", data_fim: "2026-07-10" };
+
+    expect(estaVencida(doc, "2026-07-07")).toBe(false);
+    expect(estaVencida(doc, "2026-07-10")).toBe(false);
+  });
+
+  it("caso real — Colônia de Férias Gracie Kore: vencida no dia seguinte ao data_fim", () => {
+    const doc = { proxima_data: "2026-07-06", data_fim: "2026-07-10" };
+
+    expect(estaVencida(doc, "2026-07-11")).toBe(true);
+  });
+
+  it("sem data_fim (comportamento anterior preservado): vencida assim que proxima_data passa", () => {
+    const doc = { proxima_data: "2026-07-06", data_fim: undefined };
+
+    expect(estaVencida(doc, "2026-07-06")).toBe(false);
+    expect(estaVencida(doc, "2026-07-07")).toBe(true);
+  });
+
+  it("evento de um dia só (data_fim ausente): comportamento idêntico ao pré-US-S37", () => {
+    const doc = { proxima_data: "2026-06-06" };
+
+    expect(estaVencida(doc, "2026-06-06")).toBe(false);
+    expect(estaVencida(doc, "2026-06-07")).toBe(true);
   });
 });

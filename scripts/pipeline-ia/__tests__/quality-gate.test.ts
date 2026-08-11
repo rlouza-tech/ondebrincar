@@ -31,6 +31,7 @@ function baseResposta(overrides: Partial<RespostaGemini> = {}): RespostaGemini {
     programacao_texto:
       "Sessões nos dias 23, 30 e 31. Consulte horário ao clicar em 'Ver ingresso'.",
     proxima_data: "2026-05-23",
+    data_fim: null,
     confidence: 5,
     abstain_fields: [],
     idade_inferida_por_contexto: false,
@@ -74,6 +75,44 @@ describe("evaluate — programação", () => {
 
     expect(result.status).toBe("needs_human");
     expect(result.reasons).toContain("proxima_data_no_passado");
+  });
+
+  // US-S37
+  it("data_fim com formato inválido → needs_human", () => {
+    const result = evaluate(
+      baseInput(),
+      baseResposta({ proxima_data: "2026-07-06", data_fim: "10/07/2026" }),
+    );
+
+    expect(result.status).toBe("needs_human");
+    expect(result.reasons).toContain("data_fim_formato_invalido");
+  });
+
+  it("data_fim anterior a proxima_data → needs_human", () => {
+    const result = evaluate(
+      baseInput(),
+      baseResposta({ proxima_data: "2026-07-10", data_fim: "2026-07-06" }),
+    );
+
+    expect(result.status).toBe("needs_human");
+    expect(result.reasons).toContain("data_fim_anterior_a_proxima_data");
+  });
+
+  it("data_fim válida e posterior a proxima_data (evento multi-dia contínuo) → sem reason", () => {
+    const result = evaluate(
+      baseInput(),
+      baseResposta({ proxima_data: "2026-07-06", data_fim: "2026-07-10" }),
+    );
+
+    expect(result.reasons).not.toContain("data_fim_formato_invalido");
+    expect(result.reasons).not.toContain("data_fim_anterior_a_proxima_data");
+  });
+
+  it("data_fim null (evento de um dia só) → sem reason", () => {
+    const result = evaluate(baseInput(), baseResposta({ data_fim: null }));
+
+    expect(result.reasons).not.toContain("data_fim_formato_invalido");
+    expect(result.reasons).not.toContain("data_fim_anterior_a_proxima_data");
   });
 
   it("dias sem horário no input e programacao sem ressalva → needs_human", () => {

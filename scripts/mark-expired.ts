@@ -45,7 +45,19 @@ interface AtracaoVencida {
   slug: string;
   nome: string;
   proxima_data: string;
+  data_fim?: string;
   status: string;
+}
+
+// US-S37: eventos multi-dia contínuos (ex.: colônia de férias 6-10/jul) ganham data_fim —
+// a data efetiva de encerramento passa a ser data_fim (último dia), não proxima_data
+// (que é só o 1º dia). Sem data_fim, comportamento anterior é preservado.
+export function estaVencida(
+  doc: Pick<AtracaoVencida, "proxima_data" | "data_fim">,
+  hoje: string,
+): boolean {
+  const dataEfetiva = doc.data_fim ?? doc.proxima_data;
+  return dataEfetiva < hoje;
 }
 
 // Dado o conjunto de atrações com proxima_data vencida, retorna só as que
@@ -87,12 +99,16 @@ async function runReactivate() {
   console.log(`\nModo: ${DRY_RUN ? "DRY RUN (sem escrita)" : "REACTIVATE (escrita real)"}`);
   console.log(`Data de referência: ${hoje}\n`);
 
-  const docs = await sanityWriteClient.fetch<AtracaoVencida[]>(
-    `*[_type == "atracao" && status == "encerrada" && defined(proxima_data) && proxima_data >= $hoje]
+  // Busca um superconjunto (proxima_data futura OU data_fim futura) e refina com
+  // estaVencida em JS — mesmo padrão do runReactivate/main, testável sem GROQ.
+  const candidatos = await sanityWriteClient.fetch<AtracaoVencida[]>(
+    `*[_type == "atracao" && status == "encerrada" && defined(proxima_data)
+       && (proxima_data >= $hoje || (defined(data_fim) && data_fim >= $hoje))]
      | order(proxima_data asc)
-     { _id, "slug": slug.current, nome, proxima_data, status }`,
+     { _id, "slug": slug.current, nome, proxima_data, data_fim, status }`,
     { hoje },
   );
+  const docs = candidatos.filter((doc) => !estaVencida(doc, hoje));
 
   if (docs.length === 0) {
     console.log("Nenhuma atração encerrada com proxima_data futura. Nada a reativar.");
@@ -147,12 +163,16 @@ async function main() {
   console.log(`\nModo: ${modeLabel}`);
   console.log(`Data de referência: ${hoje}\n`);
 
-  const docs = await sanityWriteClient.fetch<AtracaoVencida[]>(
+  // proxima_data < hoje é superconjunto de "vencida" (data_fim, quando presente, é sempre
+  // >= proxima_data) — refinamos com estaVencida em JS pra excluir eventos multi-dia ainda
+  // em curso (US-S37).
+  const candidatos = await sanityWriteClient.fetch<AtracaoVencida[]>(
     `*[_type == "atracao" && defined(proxima_data) && proxima_data < $hoje]
      | order(proxima_data asc)
-     { _id, "slug": slug.current, nome, proxima_data, status }`,
+     { _id, "slug": slug.current, nome, proxima_data, data_fim, status }`,
     { hoje },
   );
+  const docs = candidatos.filter((doc) => estaVencida(doc, hoje));
 
   if (docs.length === 0) {
     console.log("Nenhuma atração com proxima_data vencida. Tudo ok!");

@@ -22,6 +22,7 @@ function baseLinha(overrides: Partial<LinhaEnriquecida> = {}): LinhaEnriquecida 
     tipo_programacao: "evento_recorrente",
     programacao_texto: "Sábados e domingos 16h e 18h",
     proxima_data: null,
+    data_fim: null,
     foto_url: "",
     review_status: "auto_ok",
     abstain_reasons: [],
@@ -98,6 +99,19 @@ describe("toSanityDoc", () => {
   it("inclui proxima_data quando preenchida", () => {
     const doc = toSanityDoc(baseLinha({ proxima_data: "2026-05-23" }));
     expect(doc.proxima_data).toBe("2026-05-23");
+  });
+
+  // US-S37
+  it("omite data_fim quando é null", () => {
+    const doc = toSanityDoc(baseLinha({ data_fim: null }));
+    expect(doc).not.toHaveProperty("data_fim");
+  });
+
+  it("inclui data_fim quando preenchida (evento multi-dia contínuo)", () => {
+    const doc = toSanityDoc(
+      baseLinha({ proxima_data: "2026-07-06", data_fim: "2026-07-10" }),
+    );
+    expect(doc.data_fim).toBe("2026-07-10");
   });
 
   it("preserva review_status auto_ok e needs_human", () => {

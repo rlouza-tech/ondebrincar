@@ -139,6 +139,22 @@ export function evaluate(
     reasons.push("proxima_data_no_passado");
   }
 
+  if (resposta.data_fim !== null && !isValidIsoDate(resposta.data_fim)) {
+    reasons.push("data_fim_formato_invalido");
+  }
+
+  // US-S37: data_fim só faz sentido como último dia de um intervalo que começa em
+  // proxima_data — anterior a ela é sinal de inversão/erro de extração.
+  if (
+    resposta.data_fim !== null &&
+    resposta.proxima_data !== null &&
+    isValidIsoDate(resposta.data_fim) &&
+    isValidIsoDate(resposta.proxima_data) &&
+    resposta.data_fim < resposta.proxima_data
+  ) {
+    reasons.push("data_fim_anterior_a_proxima_data");
+  }
+
   // Só sinaliza lacuna de horário se o input também não trouxe horarios_sessao.
   // O scraper v2 extrai horarios_sessao da página do produto — quando presente,
   // o Gemini usa esses dados e preenche programacao_texto corretamente.

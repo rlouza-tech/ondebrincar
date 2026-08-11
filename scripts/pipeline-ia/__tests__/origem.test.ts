@@ -62,6 +62,7 @@ function baseResposta(overrides: Partial<RespostaGemini> = {}): RespostaGemini {
     programacao_texto:
       "Sessões nos dias 23, 30 e 31. Consulte horário ao clicar em 'Ver ingresso'.",
     proxima_data: "2026-05-23",
+    data_fim: null,
     confidence: 5,
     abstain_fields: [],
     aviso_operacional: null,

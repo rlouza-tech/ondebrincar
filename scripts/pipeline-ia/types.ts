@@ -64,6 +64,8 @@ export interface RespostaGemini {
   tipo_programacao: TipoProgramacao;
   programacao_texto: string;
   proxima_data: string | null;
+  /** Último dia de eventos com programação contínua em vários dias seguidos (ex.: "6 a 10 de julho") — null quando não é um intervalo contínuo (US-S37). */
+  data_fim: string | null;
   confidence: number;
   abstain_fields: string[];
   aviso_operacional: string | null;
@@ -97,6 +99,8 @@ export interface LinhaEnriquecida {
   tipo_programacao: TipoProgramacao;
   programacao_texto: string;
   proxima_data: string | null;
+  /** Último dia de eventos com programação contínua em vários dias seguidos — null quando não se aplica (US-S37). */
+  data_fim: string | null;
   foto_url: string;
   endereco?: string;
   aviso_operacional: string | null;

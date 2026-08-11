@@ -326,6 +326,7 @@ export function buildLinhaEnriquecida(
     tipo_programacao: resposta.tipo_programacao,
     programacao_texto: resposta.programacao_texto,
     proxima_data: resposta.proxima_data,
+    data_fim: resposta.data_fim,
     foto_url: "",
     aviso_operacional: resposta.aviso_operacional ?? null,
     review_status: status,
