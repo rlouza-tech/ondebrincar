@@ -17,6 +17,7 @@ import type { PipelineInput } from "@/lib/pipeline/types";
 const mockNormalizeClubinho = vi.fn();
 const mockNormalizeSympla = vi.fn();
 const mockNormalizeUhuu = vi.fn();
+const mockNormalizeEcovilla = vi.fn();
 
 vi.mock("@/scripts/normalizer/clubinho", () => ({
   normalizeClubinho: (...args: unknown[]) => mockNormalizeClubinho(...args),
@@ -29,6 +30,10 @@ vi.mock("@/scripts/normalizer/sympla", () => ({
 vi.mock("@/scripts/normalizer/uhuu", () => ({
   normalizeUhuu: (...args: unknown[]) => mockNormalizeUhuu(...args),
   DEFAULT_INPUT_PATH: "data/input/uhuu-raw.csv",
+}));
+vi.mock("@/scripts/normalizer/ecovilla", () => ({
+  normalizeEcovilla: (...args: unknown[]) => mockNormalizeEcovilla(...args),
+  DEFAULT_INPUT_PATH: "data/input/ecovilla-raw.csv",
 }));
 
 const { buildFonteVivaMap, extrairSugestaoParaFicha } = await import("../index");
@@ -53,6 +58,7 @@ describe("buildFonteVivaMap (US-E16) — inclui Uhuu", () => {
   it("mescla Clubinho + Sympla + Uhuu no mesmo mapa, cruzado por slug", async () => {
     mockNormalizeClubinho.mockResolvedValueOnce([]);
     mockNormalizeSympla.mockResolvedValueOnce([]);
+    mockNormalizeEcovilla.mockResolvedValueOnce([]);
     mockNormalizeUhuu.mockResolvedValueOnce([
       buildInput({
         nome: "Peça Uhuu Relistada",
@@ -75,6 +81,7 @@ describe("buildFonteVivaMap (US-E16) — inclui Uhuu", () => {
     const slug = "show-uhuu-relistado-teatro-uhuu";
     mockNormalizeClubinho.mockResolvedValueOnce([]);
     mockNormalizeSympla.mockResolvedValueOnce([]);
+    mockNormalizeEcovilla.mockResolvedValueOnce([]);
     mockNormalizeUhuu.mockResolvedValueOnce([
       buildInput({
         nome: "Show Uhuu Relistado",
@@ -96,6 +103,7 @@ describe("buildFonteVivaMap (US-E16) — inclui Uhuu", () => {
   it("segue funcionando quando Uhuu falha ao carregar (catch retorna [])", async () => {
     mockNormalizeClubinho.mockResolvedValueOnce([]);
     mockNormalizeSympla.mockResolvedValueOnce([]);
+    mockNormalizeEcovilla.mockResolvedValueOnce([]);
     mockNormalizeUhuu.mockRejectedValueOnce(new Error("CSV não encontrado"));
 
     const mapa = await buildFonteVivaMap();
