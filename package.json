@@ -27,6 +27,7 @@
     "auto-avancar-datas": "dotenv -e .env.local -- tsx scripts/auto-avancar-datas/index.ts",
     "fill-missing-images": "dotenv -e .env.local -- tsx scripts/fill-missing-images/index.ts",
     "retroativo-enderecos": "dotenv -e .env.local -- tsx scripts/retroativo-enderecos/index.ts",
+    "backfill-local-endereco": "dotenv -e .env.local -- tsx scripts/backfill-local-endereco/index.ts",
     "backfill-endereco": "dotenv -e .env.local -- tsx scripts/backfill-endereco.ts",
     "backfill-idade-recomendada": "dotenv -e .env.local -- tsx scripts/backfill-idade-recomendada.ts",
     "check-duplicatas-cross-fonte": "dotenv -e .env.local -- tsx scripts/check-duplicatas-cross-fonte.ts",
