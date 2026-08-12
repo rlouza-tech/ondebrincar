@@ -7,7 +7,11 @@ export interface Atracao {
   slug: string;
   titulo: string;
   categoria: string;
-  /** null quando a faixa etária não pôde ser confirmada — site exibe "A confirmar" (US-S20). */
+  /**
+   * Idade recomendada (curadoria), não a classificação indicativa oficial — ver
+   * `idade_recomendada_min`/`idade_recomendada_max` no schema Sanity (US-I36).
+   * null quando não pôde ser confirmada — site exibe "A confirmar" (US-S20).
+   */
   idadeMin: number | null;
   idadeMax: number | null;
   bairro: string;
@@ -44,8 +48,8 @@ export interface SanityAtracaoDocument {
   nome: string;
   slug: { current: string };
   categoria: string;
-  idade_min?: number | null;
-  idade_max?: number | null;
+  idade_recomendada_min?: number | null;
+  idade_recomendada_max?: number | null;
   duracao_min?: number;
   preco?: number | null;
   preco_a_partir?: boolean;
