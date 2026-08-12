@@ -120,6 +120,8 @@ async function readEnrichedCSV(path: string): Promise<LinhaEnriquecida[]> {
           categoria: record.categoria as LinhaEnriquecida["categoria"],
           idade_min: parseNullableInt(record.idade_min ?? ""),
           idade_max: parseNullableInt(record.idade_max ?? ""),
+          idade_recomendada_min: parseNullableInt(record.idade_recomendada_min ?? ""),
+          idade_recomendada_max: parseNullableInt(record.idade_recomendada_max ?? ""),
           duracao_min: parseNullableInt(record.duracao_min ?? ""),
           preco_centavos: parseNullableInt(record.preco_centavos ?? ""),
           link_compra: record.link_compra ?? "",

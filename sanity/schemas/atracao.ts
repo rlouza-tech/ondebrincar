@@ -51,18 +51,18 @@ export const atracao = defineType({
     }),
     defineField({
       name: "idade_min",
-      title: "Idade recomendada mínima",
+      title: "Classificação etária mínima (oficial)",
       type: "number",
       description:
-        "Idade mínima recomendada, em anos. Ex.: 3. Deixe vazio quando não for possível confirmar — o site exibe \"A confirmar\" (US-S20).",
+        "Idade mínima da classificação indicativa legal ou recomendação de público explícita na fonte. Campo interno/curatorial (Studio) — não é usado no filtro público, ver idade_recomendada_min. Sem inferência por contexto: deixe vazio quando a fonte não classificar (US-S77).",
       validation: (Rule) => Rule.integer().min(0).max(18),
     }),
     defineField({
       name: "idade_max",
-      title: "Idade recomendada máxima",
+      title: "Classificação etária máxima (oficial)",
       type: "number",
       description:
-        "Idade máxima recomendada, em anos. Ex.: 8. Deixe vazio quando não for possível confirmar — o site exibe \"A confirmar\" (US-S20).",
+        "Idade máxima da classificação indicativa legal ou recomendação de público explícita na fonte. Campo interno/curatorial (Studio) — não é usado no filtro público, ver idade_recomendada_max. Sem inferência por contexto: deixe vazio quando a fonte não classificar (US-S77).",
       validation: (Rule) =>
         Rule.integer()
           .min(0)
@@ -75,6 +75,37 @@ export const atracao = defineType({
             return idadeMax >= parent.idade_min
               ? true
               : "Idade máxima deve ser maior ou igual à idade mínima.";
+          }),
+    }),
+    defineField({
+      name: "idade_recomendada_min",
+      title: "Idade recomendada mínima",
+      type: "number",
+      description:
+        "Idade mínima recomendada pro filtro público de idade. Vem da classificação oficial (idade_min) quando explícita na fonte, ou de inferência por contexto (curadoria) quando a fonte não classifica. Vazio = \"A confirmar\" no site (US-S77).",
+      validation: (Rule) => Rule.integer().min(0).max(18),
+    }),
+    defineField({
+      name: "idade_recomendada_max",
+      title: "Idade recomendada máxima",
+      type: "number",
+      description:
+        "Idade máxima recomendada pro filtro público de idade. Vem da classificação oficial (idade_max) quando explícita na fonte, ou de inferência por contexto (curadoria) quando a fonte não classifica. Vazio = \"A confirmar\" no site (US-S77).",
+      validation: (Rule) =>
+        Rule.integer()
+          .min(0)
+          .max(18)
+          .custom((idadeRecomendadaMax, context) => {
+            const parent = context.parent as { idade_recomendada_min?: number } | undefined;
+            if (
+              typeof idadeRecomendadaMax !== "number" ||
+              typeof parent?.idade_recomendada_min !== "number"
+            ) {
+              return true;
+            }
+            return idadeRecomendadaMax >= parent.idade_recomendada_min
+              ? true
+              : "Idade recomendada máxima deve ser maior ou igual à idade recomendada mínima.";
           }),
     }),
     defineField({

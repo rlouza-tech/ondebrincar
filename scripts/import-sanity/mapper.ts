@@ -37,6 +37,14 @@ export function toSanityDoc(linha: LinhaEnriquecida): SanityAtracaoDocInput {
     doc.idade_max = linha.idade_max;
   }
 
+  if (linha.idade_recomendada_min !== null) {
+    doc.idade_recomendada_min = linha.idade_recomendada_min;
+  }
+
+  if (linha.idade_recomendada_max !== null) {
+    doc.idade_recomendada_max = linha.idade_recomendada_max;
+  }
+
   if (linha.duracao_min !== null) {
     doc.duracao_min = linha.duracao_min;
   }

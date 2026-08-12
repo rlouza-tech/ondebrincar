@@ -25,8 +25,15 @@ import type { LinhaInput } from "./types";
  * dias seguidos (ex.: colônia de férias "6 a 10 de julho"). proxima_data segue sendo o 1º
  * dia; data_fim é o último — evita que mark-expired.ts, a query do site e o Studio tratem o
  * evento como encerrado logo no 2º dia.
+ *
+ * US-S77 (12/08/2026): separa classificação oficial de idade recomendada. idade_min/idade_max
+ * voltam a representar SÓ a classificação/recomendação explícita da fonte — a inferência por
+ * contexto introduzida pela US-S20 sai desses campos. Novo par idade_recomendada_min/
+ * idade_recomendada_max recebe: (a) cópia direta quando idade_min/idade_max são explícitos, ou
+ * (b) as mesmas 3 regras de inferência por contexto quando a fonte não classifica. null em
+ * qualquer um dos dois pares = "A confirmar" no campo correspondente.
  */
-export const PROMPT_VERSION = "v1.1.0";
+export const PROMPT_VERSION = "v1.2.0";
 
 function buildScraperV2Block(linha: LinhaInput): string {
   const hasV2 =
@@ -58,6 +65,7 @@ Exceção — classificação etária:
   - use idade_min: 0, independente do valor de idade_minima (que reflete regra de meia-entrada, não classificação do espetáculo)
   - use idade_max: 18, independente do valor de idade_maxima quando este vier de meia-entrada; se idade_maxima já chegar como 18, mantenha
 - Exemplo: idade_minima: 2 + idade_maxima: 18 + sinopse "Classificação: Livre" → idade_min: 0, idade_max: 18 (o 2 é faixa de meia-entrada; 18 é o teto editorial para Classificação Livre).
+- Classificação explícita como essa também copia direto para idade_recomendada_min/idade_recomendada_max (ver seção IDADE RECOMENDADA abaixo) — não rode as regras de inferência por contexto nesse caso.
 
 Exceção — regra de documento/identificação (US-S45):
 - Menções a "documento", "identidade", "RG", "identificação" ou "obrigatório apresentar" junto a uma idade NÃO são faixa etária de público.
@@ -122,8 +130,8 @@ INPUT:
 - idade_maxima: 18
 - preco_inteira_centavos: 8000
 OUTPUT:
-{"categoria":"teatro","idade_min":0,"idade_max":18,"duracao_min":60,"preco_centavos":8000,"indoor_outdoor":"indoor","descricao":"Show musical com a Galinha Pintadinha no Teatro Bangu Shopping. As músicas mais amadas da Popó — Pintinho Amarelinho, Mariana, A Baratinha — ganham vida em espetáculo de cores, dança e interatividade. Sessão única.","mini_review":"Clássico certeiro para crianças até 4-5 anos que cresceram com a Pintadinha. Sessão única em Bangu; reserve com antecedência.","tipo_programacao":"evento_pontual","programacao_texto":"Apenas no dia 6 de junho às 15h.","proxima_data":"2026-06-06","data_fim":null,"confidence":5,"abstain_fields":[],"notes_for_editor":null,"idade_inferida_por_contexto":false}
-NOTA: idade_min=0 e idade_max=18 porque sinopse diz "Classificação: Livre" — o campo idade_minima=2 era regra de meia-entrada; o scraper já converteu idade_maxima para 18 (teto editorial para Classificação Livre).
+{"categoria":"teatro","idade_min":0,"idade_max":18,"idade_recomendada_min":0,"idade_recomendada_max":18,"duracao_min":60,"preco_centavos":8000,"indoor_outdoor":"indoor","descricao":"Show musical com a Galinha Pintadinha no Teatro Bangu Shopping. As músicas mais amadas da Popó — Pintinho Amarelinho, Mariana, A Baratinha — ganham vida em espetáculo de cores, dança e interatividade. Sessão única.","mini_review":"Clássico certeiro para crianças até 4-5 anos que cresceram com a Pintadinha. Sessão única em Bangu; reserve com antecedência.","tipo_programacao":"evento_pontual","programacao_texto":"Apenas no dia 6 de junho às 15h.","proxima_data":"2026-06-06","data_fim":null,"confidence":5,"abstain_fields":[],"notes_for_editor":null,"idade_inferida_por_contexto":false}
+NOTA: idade_min=0 e idade_max=18 (classificação oficial) porque sinopse diz "Classificação: Livre" — o campo idade_minima=2 era regra de meia-entrada; o scraper já converteu idade_maxima para 18 (teto editorial para Classificação Livre). idade_recomendada_min/idade_recomendada_max copiam os mesmos valores (US-S77) porque a classificação já é explícita — idade_inferida_por_contexto=false.
 
 === EXEMPLO 2 — CASO MÉDIO (Sympla, texto livre, dois turnos, preço ausente) ===
 INPUT:
@@ -139,8 +147,8 @@ INPUT:
 - idade_minima: (vazio)
 - preco_inteira_centavos: (vazio)
 OUTPUT:
-{"categoria":"atividade-extra","idade_min":3,"idade_max":10,"duracao_min":180,"preco_centavos":null,"indoor_outdoor":"indoor","descricao":"Colônia de férias de culinária infantil no Espaço Cria, Cosme Velho. 15ª edição com tema Volta ao Mundo dos Sabores: cada dia uma cozinha diferente. Turmas por faixa etária (3-10 anos), com presença diária da nutricionista Gabriela Kapim.","mini_review":"Uma das colônias mais bem estruturadas do Rio — culinária como aventura, não como obrigação. Vagas limitadas. Preço não listado na Sympla; clique no link para ver lotes.","tipo_programacao":"evento_pontual","programacao_texto":"13 a 17 de julho. Turma da manhã das 9h às 12h ou turma da tarde das 14h às 17h.","proxima_data":"2026-07-13","data_fim":"2026-07-17","confidence":4,"abstain_fields":["preco_centavos"],"notes_for_editor":"Preço não disponível na Sympla — consultar diretamente. Confirmar disponibilidade por turno (manhã/tarde).","idade_inferida_por_contexto":false}
-NOTA: preco_centavos=null é aceitável quando Sympla não exibe preço. duracao_min=180 inferido dos horários explícitos na sinopse. Não use [INCERTO] no texto — sinalize incerteza apenas em abstain_fields e notes_for_editor. data_fim="2026-07-17" (US-S37) porque "13 a 17 de Jul" é um intervalo contínuo de dias seguidos do mesmo evento — proxima_data é o 1º dia (13), data_fim é o último (17).
+{"categoria":"atividade-extra","idade_min":3,"idade_max":10,"idade_recomendada_min":3,"idade_recomendada_max":10,"duracao_min":180,"preco_centavos":null,"indoor_outdoor":"indoor","descricao":"Colônia de férias de culinária infantil no Espaço Cria, Cosme Velho. 15ª edição com tema Volta ao Mundo dos Sabores: cada dia uma cozinha diferente. Turmas por faixa etária (3-10 anos), com presença diária da nutricionista Gabriela Kapim.","mini_review":"Uma das colônias mais bem estruturadas do Rio — culinária como aventura, não como obrigação. Vagas limitadas. Preço não listado na Sympla; clique no link para ver lotes.","tipo_programacao":"evento_pontual","programacao_texto":"13 a 17 de julho. Turma da manhã das 9h às 12h ou turma da tarde das 14h às 17h.","proxima_data":"2026-07-13","data_fim":"2026-07-17","confidence":4,"abstain_fields":["preco_centavos"],"notes_for_editor":"Preço não disponível na Sympla — consultar diretamente. Confirmar disponibilidade por turno (manhã/tarde).","idade_inferida_por_contexto":false}
+NOTA: preco_centavos=null é aceitável quando Sympla não exibe preço. duracao_min=180 inferido dos horários explícitos na sinopse. Não use [INCERTO] no texto — sinalize incerteza apenas em abstain_fields e notes_for_editor. data_fim="2026-07-17" (US-S37) porque "13 a 17 de Jul" é um intervalo contínuo de dias seguidos do mesmo evento — proxima_data é o 1º dia (13), data_fim é o último (17). idade_recomendada_min/idade_recomendada_max=3/10 copiam idade_min/idade_max (US-S77) porque "Para crianças de 3 a 10 anos" é recomendação de público explícita no texto.
 
 === EXEMPLO 3 — CASO BORDERLINE (Sympla, falso positivo — abstenção legítima) ===
 INPUT:
@@ -152,10 +160,10 @@ INPUT:
 - preco_bruto: (vazio)
 - sinopse_oficial: "E se uma sessão de terapia virasse um show de stand-up comedy? [...] esse show é voltado para quem já passou por algum tipo de trauma psicológico [...] Classificação Etária: 14 anos. Menores de 14 anos, somente acompanhados pelos pais ou responsáveis."
 OUTPUT:
-{"categoria":"evento","idade_min":14,"idade_max":null,"duracao_min":60,"preco_centavos":null,"indoor_outdoor":"indoor","descricao":"Show de stand-up comedy sobre psicanálise, traumas psicológicos e saúde mental. Rick Silveira fala abertamente sobre ansiedade, depressão e psicanálise em formato cômico. Classificação 14 anos.","mini_review":"Espetáculo adulto sobre terapia — o humor não é leve. Não é conteúdo infantil.","tipo_programacao":"evento_pontual","programacao_texto":"Domingo, 14 de junho às 19h.","proxima_data":"2026-06-14","data_fim":null,"confidence":1,"abstain_fields":["preco_centavos","idade_max"],"notes_for_editor":"FALSO POSITIVO: stand-up para adultos sobre psicanálise. Classificação 14 anos. Conteúdo não é infantil. Recomendar exclusão do catálogo.","idade_inferida_por_contexto":false}
-NOTA: quando o conteúdo claramente não é infantil, confidence=1 e notes_for_editor deve recomendar exclusão explicitamente. Não tente forçar um fit — abstenção total é a resposta correta.
+{"categoria":"evento","idade_min":14,"idade_max":null,"idade_recomendada_min":14,"idade_recomendada_max":null,"duracao_min":60,"preco_centavos":null,"indoor_outdoor":"indoor","descricao":"Show de stand-up comedy sobre psicanálise, traumas psicológicos e saúde mental. Rick Silveira fala abertamente sobre ansiedade, depressão e psicanálise em formato cômico. Classificação 14 anos.","mini_review":"Espetáculo adulto sobre terapia — o humor não é leve. Não é conteúdo infantil.","tipo_programacao":"evento_pontual","programacao_texto":"Domingo, 14 de junho às 19h.","proxima_data":"2026-06-14","data_fim":null,"confidence":1,"abstain_fields":["preco_centavos","idade_max","idade_recomendada_max"],"notes_for_editor":"FALSO POSITIVO: stand-up para adultos sobre psicanálise. Classificação 14 anos. Conteúdo não é infantil. Recomendar exclusão do catálogo.","idade_inferida_por_contexto":false}
+NOTA: quando o conteúdo claramente não é infantil, confidence=1 e notes_for_editor deve recomendar exclusão explicitamente. Não tente forçar um fit — abstenção total é a resposta correta. idade_recomendada_min=14 copia o idade_min explícito ("Classificação Etária: 14 anos"); idade_recomendada_max fica null igual idade_max, já que não há teto explícito nem pista de contexto aplicável (é conteúdo adulto, nenhuma das 3 regras de inferência serve) — idade_inferida_por_contexto continua false porque nada foi inferido, só copiado (ou deixado null).
 
-=== EXEMPLO 4 — INFERÊNCIA POR CONTEXTO (US-S20, sem classificação etária na fonte) ===
+=== EXEMPLO 4 — INFERÊNCIA POR CONTEXTO (US-S20/US-S77, sem classificação etária na fonte) ===
 INPUT:
 - nome: Luluca: O Show
 - categoria_origem: Show Infantil
@@ -166,8 +174,8 @@ INPUT:
 - url_origem: https://example.com/luluca-o-show
 - sinopse_oficial: "[...] A youtuber Luluca sobe ao palco com música, dança e muita interação com a plateia. Uma tarde inteira de diversão para toda a família."
 OUTPUT:
-{"categoria":"evento","idade_min":4,"idade_max":12,"duracao_min":null,"preco_centavos":9000,"indoor_outdoor":"indoor","descricao":"A youtuber Luluca sobe ao palco do Vivo Rio, em Botafogo, com música, dança e interação direta com a plateia. Tarde de show pensada para toda a família.","mini_review":"Show certeiro para quem já acompanha a Luluca no YouTube — a energia do palco é a mesma dos vídeos. Sessão única; compre com antecedência.","tipo_programacao":"evento_pontual","programacao_texto":"Sábado, 20 de junho às 16h.","proxima_data":"2026-06-20","data_fim":null,"confidence":4,"abstain_fields":["duracao_min"],"notes_for_editor":null,"idade_inferida_por_contexto":true}
-NOTA: a sinopse não traz classificação etária nem recomendação de público explícita — "Luluca" é uma youtuber de conteúdo infantil conhecida, então idade_min=4/idade_max=12 vêm da regra 1 de INFERÊNCIA DE FAIXA ETÁRIA POR CONTEXTO (não de "Classificação: Livre" nem de menção direta de idade no texto). idade_inferida_por_contexto=true sinaliza isso no log. Compare com o Exemplo 3: lá a classificação etária ERA explícita ("Classificação Etária: 14 anos"), então idade_inferida_por_contexto=false mesmo com abstenção em idade_max.
+{"categoria":"evento","idade_min":null,"idade_max":null,"idade_recomendada_min":4,"idade_recomendada_max":12,"duracao_min":null,"preco_centavos":9000,"indoor_outdoor":"indoor","descricao":"A youtuber Luluca sobe ao palco do Vivo Rio, em Botafogo, com música, dança e interação direta com a plateia. Tarde de show pensada para toda a família.","mini_review":"Show certeiro para quem já acompanha a Luluca no YouTube — a energia do palco é a mesma dos vídeos. Sessão única; compre com antecedência.","tipo_programacao":"evento_pontual","programacao_texto":"Sábado, 20 de junho às 16h.","proxima_data":"2026-06-20","data_fim":null,"confidence":4,"abstain_fields":["duracao_min","idade_min","idade_max"],"notes_for_editor":null,"idade_inferida_por_contexto":true}
+NOTA: a sinopse não traz classificação etária nem recomendação de público explícita, então idade_min/idade_max (classificação oficial) ficam null e entram em abstain_fields (US-S77 — sem inferência nesses campos). "Luluca" é uma youtuber de conteúdo infantil conhecida, então idade_recomendada_min=4/idade_recomendada_max=12 vêm da regra 1 de INFERÊNCIA DE FAIXA ETÁRIA POR CONTEXTO, aplicada só ao par recomendado. idade_inferida_por_contexto=true sinaliza isso no log; idade_recomendada_min/max NÃO entram em abstain_fields porque há confiança suficiente pela pista de contexto. Compare com o Exemplo 3: lá idade_min ERA explícito ("Classificação Etária: 14 anos"), então idade_recomendada_min copiou o valor em vez de vir de inferência — idade_inferida_por_contexto=false.
 
 CONTEXTO TEMPORAL
 Data atual de referência: ${dataAtual}
@@ -193,7 +201,8 @@ CAMPOS QUE GEMINI NÃO DEVE PREENCHER SEM FONTE EXPLÍCITA NO INPUT:
 - preco_centavos: sem preço no input → null (não infira por categoria, venue ou contexto habitual)
 - proxima_data: sem data inferível → null (não invente data "provável" ou "provável próximo fim de semana")
 - data_fim: sem intervalo contínuo de dias explícito no input → null (não infira um "provável" último dia)
-- idade_min / idade_max: sem menção de faixa etária → primeiro tente a INFERÊNCIA DE FAIXA ETÁRIA POR CONTEXTO (US-S20) abaixo; só se nenhuma das 3 pistas se aplicar, retorne null + abstain_fields (nunca invente um número "seguro")
+- idade_min / idade_max: sem classificação indicativa nem recomendação de público explícita no texto → null + abstain_fields (US-S77 — nunca infira por contexto nesses campos; a inferência vira idade_recomendada_min/idade_recomendada_max, ver seção IDADE RECOMENDADA abaixo)
+- idade_recomendada_min / idade_recomendada_max: sem classificação explícita para copiar de idade_min/idade_max E sem nenhuma das 3 pistas de INFERÊNCIA DE FAIXA ETÁRIA POR CONTEXTO abaixo → null + abstain_fields (nunca invente um número "seguro")
 Regra geral: se você está adivinhando o valor, a resposta correta é null + abstain_fields + reduza confidence.
 Casos comuns do scraper v1:
 - dias_apresentacao lista dias mas SEM horário (ex.: "Dias 23, 30, 31"): em programacao_texto, inclua os dias E acrescente frase explícita como "Consulte horário ao clicar em 'Ver ingresso'".
@@ -225,8 +234,9 @@ Gere exclusivamente um JSON com os campos definidos no schema da resposta. Quand
 - categoria: "teatro" | "parque" | "pracinha" | "museu" | "atividade-extra" | "evento" | "praia"
   Use a categoria_origem como ponto de partida — só reclassifique se houver evidência clara de categoria diferente.
   Use "pracinha" para praças de bairro com parquinho infantil. Use "praia" para praias. Use "parque" para parques maiores, reservas e espaços verdes extensos. Use "teatro" apenas para espetáculos com sessão marcada e ingresso.
-- idade_min e idade_max: inteiros 0-18, ou null quando não houver classificação/recomendação explícita nem pista de contexto confiável (ver INFERÊNCIA DE FAIXA ETÁRIA POR CONTEXTO abaixo) — nesse caso marque ambos em abstain_fields. Null é a resposta correta quando genuinamente não dá pra saber; nunca "chute" 0 e 18 só para preencher o campo.
-- idade_inferida_por_contexto: boolean. true apenas quando idade_min/idade_max vieram de uma das 3 regras de INFERÊNCIA DE FAIXA ETÁRIA POR CONTEXTO abaixo (não de classificação/recomendação explícita no texto). false em todos os outros casos, inclusive quando idade_min/idade_max são null.
+- idade_min e idade_max: inteiros 0-18 (classificação oficial: indicativa legal ou recomendação de público explícita na fonte), ou null quando a fonte não classifica — nesse caso marque ambos em abstain_fields. Nunca infira por contexto aqui e nunca "chute" 0 e 18 só para preencher o campo (US-S77).
+- idade_recomendada_min e idade_recomendada_max: inteiros 0-18, ou null. Ver seção IDADE RECOMENDADA (US-S77) abaixo para a lógica completa (cópia de idade_min/idade_max quando explícitos, senão inferência por contexto, senão null).
+- idade_inferida_por_contexto: boolean. true apenas quando idade_recomendada_min/idade_recomendada_max vieram de uma das 3 regras de INFERÊNCIA DE FAIXA ETÁRIA POR CONTEXTO abaixo (não de cópia da classificação oficial explícita). false em todos os outros casos, inclusive quando idade_recomendada_min/idade_recomendada_max são null.
 - duracao_min: inteiro ou null. Refere-se exclusivamente à duração real do espetáculo/atividade em si.
   NÃO use tempos mencionados em contexto operacional como valor de duracao_min. Exemplos proibidos:
   ❌ "chegar 15 min antes" → duracao_min: 15 (instrução de chegada, não duração)
@@ -246,14 +256,16 @@ REGRAS DE EXTRAÇÃO (revisão editorial — siga à risca):
   REGRA ANTI-GRATUIDADE: se a única menção de faixa etária no texto for em contexto de gratuidade/cortesia (ex: "crianças até 13 anos não pagam", "grátis até 5 anos", "entrada franca até 6 anos", "gratuidade: crianças de 0 a 12 anos"), NÃO infira idade_min nem idade_max a partir desse número — marque em abstain_fields com nota "faixa etária inferida de regra de gratuidade, não de classificação indicativa".
   REGRA ANTI-DOCUMENTO/IDENTIFICAÇÃO (US-S45): se a menção de idade estiver em contexto de "documento", "identidade", "RG", "identificação" ou "obrigatório apresentar" (ex: "obrigatória apresentação de documento para crianças a partir de 6 anos", "identificação idade de crianças entre 6 e 12 anos"), NÃO popule idade_min nem idade_max com esse número — marque em abstain_fields (ou use Classificação: Livre → 0–18 quando presente) com nota "idade citada em regra de documento/identificação, não de público mínimo".
 
-INFERÊNCIA DE FAIXA ETÁRIA POR CONTEXTO (US-S20):
-Só se aplica quando NÃO houver classificação indicativa nem recomendação de público explícita no texto (as regras de extração direta acima sempre têm prioridade). Nesses casos, antes de abster-se, tente as 3 pistas de contexto abaixo, na ordem:
-1. Show de YouTuber kids / influencer infantil (ex.: nome do evento cita um canal ou personagem de conteúdo infantil online — "Luluca", "Maria Clara e JP", "Karol Eskás", etc.) → idade_min: 4, idade_max: 12, idade_inferida_por_contexto: true.
-2. Teatro para bebês (ex.: sinopse ou nome menciona "bebê", "colo", "primeira infância") → idade_min: 0, idade_max: 3, idade_inferida_por_contexto: true.
-3. Show musical infantil genérico, sem outra pista (ex.: "show infantil", "musical infantil" sem classificação nem público-alvo específico) → idade_min: 0, idade_max: 12, idade_inferida_por_contexto: true.
-Se nenhuma das 3 pistas se aplicar com confiança: idade_min: null, idade_max: null, marque ambos em abstain_fields, idade_inferida_por_contexto: false. Não force uma dessas 3 categorias só para evitar null — abstenção genuína (→ "A confirmar" no site) é preferível a uma inferência sem base no texto.
-PROIBIDO: usar idade_min:0/idade_max:18 como default silencioso para eventos que "parecem" ser para toda a família, "programa para o bairro" ou genéricos. 0–18 só é válido quando o texto contém uma classificação indicativa explícita (ex.: "Classificação: Livre") ou recomendação de público equivalente — nunca como suposição implícita a partir do tom geral do evento. Fora esse caso: siga as 3 regras acima ou retorne null + abstain_fields.
-Exemplo: nome "Luluca: O Show" sem classificação etária na sinopse → idade_min: 4, idade_max: 12, idade_inferida_por_contexto: true, abstain_fields sem idade_min/idade_max (confiança suficiente pela pista de contexto).
+IDADE RECOMENDADA (US-S77 — idade_recomendada_min/idade_recomendada_max):
+Este par de campos alimenta o filtro público de idade do site. Siga esta ordem:
+1. Se idade_min/idade_max (classificação oficial) tiverem valor — vieram de classificação indicativa ou recomendação de público explícita no texto — COPIE-OS diretamente para idade_recomendada_min/idade_recomendada_max. Não rode as 3 regras de inferência abaixo nesse caso. idade_inferida_por_contexto: false.
+2. Se idade_min/idade_max forem ambos null (fonte não classifica), tente as 3 pistas de contexto abaixo, na ordem, ANTES de abster-se — isto é a INFERÊNCIA DE FAIXA ETÁRIA POR CONTEXTO (US-S20), agora aplicada só a idade_recomendada_min/idade_recomendada_max:
+   a. Show de YouTuber kids / influencer infantil (ex.: nome do evento cita um canal ou personagem de conteúdo infantil online — "Luluca", "Maria Clara e JP", "Karol Eskás", etc.) → idade_recomendada_min: 4, idade_recomendada_max: 12, idade_inferida_por_contexto: true.
+   b. Teatro para bebês (ex.: sinopse ou nome menciona "bebê", "colo", "primeira infância") → idade_recomendada_min: 0, idade_recomendada_max: 3, idade_inferida_por_contexto: true.
+   c. Show musical infantil genérico, sem outra pista (ex.: "show infantil", "musical infantil" sem classificação nem público-alvo específico) → idade_recomendada_min: 0, idade_recomendada_max: 12, idade_inferida_por_contexto: true.
+3. Se nenhuma das 3 pistas se aplicar com confiança: idade_recomendada_min: null, idade_recomendada_max: null, marque ambos em abstain_fields, idade_inferida_por_contexto: false. Não force uma dessas 3 categorias só para evitar null — abstenção genuína (→ "A confirmar" no site) é preferível a uma inferência sem base no texto.
+PROIBIDO: usar idade_min:0/idade_max:18 OU idade_recomendada_min:0/idade_recomendada_max:18 como default silencioso para eventos que "parecem" ser para toda a família, "programa para o bairro" ou genéricos. 0–18 só é válido quando o texto contém uma classificação indicativa explícita (ex.: "Classificação: Livre") ou recomendação de público equivalente (aí sim, copiado para idade_recomendada) — nunca como suposição implícita a partir do tom geral do evento. Fora esse caso: siga a ordem acima ou retorne null + abstain_fields.
+Exemplo: nome "Luluca: O Show" sem classificação etária na sinopse → idade_min: null, idade_max: null (abstain_fields), idade_recomendada_min: 4, idade_recomendada_max: 12, idade_inferida_por_contexto: true, sem idade_recomendada_min/idade_recomendada_max em abstain_fields (confiança suficiente pela pista de contexto).
 - tipo_programacao: classifique assim:
   * "permanente": atração sem data de encerramento definida, aberta regularmente por tempo indeterminado (ex.: parques, museus, aquários com funcionamento contínuo).
   * "evento_pontual": datas de apresentação específicas listadas, temporada com fim previsto, espetáculo com sessões marcadas ou exposição temporária (ex.: peças de teatro, shows, Patrulha Canina com dias fixos).

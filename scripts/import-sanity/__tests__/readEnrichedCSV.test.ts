@@ -113,6 +113,64 @@ describe("readEnrichedCSV — idade_min/idade_max null (US-S20)", () => {
   });
 });
 
+describe("readEnrichedCSV — idade_recomendada_min/idade_recomendada_max (US-S77)", () => {
+  it("colunas idade_recomendada_min/idade_recomendada_max ausentes do CSV → null", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "import-sanity-csv-"));
+    const path = join(dir, "sem-idade-recomendada.csv");
+    const { cols } = linhaBase();
+    await writeFile(path, `${HEADER}\n${cols.join(",")}\n`, "utf8");
+
+    const rows = await readEnrichedCSV(path);
+    expect(rows[0].idade_recomendada_min).toBeNull();
+    expect(rows[0].idade_recomendada_max).toBeNull();
+  });
+
+  it("idade_recomendada_min/idade_recomendada_max preenchidos → propaga os números, independente de idade_min/idade_max", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "import-sanity-csv-"));
+    const path = join(dir, "com-idade-recomendada.csv");
+    const { cols } = linhaBase();
+    cols[3] = ""; // idade_min (oficial) vazio
+    cols[4] = ""; // idade_max (oficial) vazio
+    await writeFile(
+      path,
+      `${HEADER},idade_recomendada_min,idade_recomendada_max\n${cols.join(",")},4,12\n`,
+      "utf8",
+    );
+
+    const rows = await readEnrichedCSV(path);
+    expect(rows[0].idade_min).toBeNull();
+    expect(rows[0].idade_max).toBeNull();
+    expect(rows[0].idade_recomendada_min).toBe(4);
+    expect(rows[0].idade_recomendada_max).toBe(12);
+  });
+});
+
+describe("readEnrichedCSV — idade_inferida_por_contexto (US-S20/US-S77)", () => {
+  it("coluna ausente do CSV → false", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "import-sanity-csv-"));
+    const path = join(dir, "sem-idade-inferida.csv");
+    const { cols } = linhaBase();
+    await writeFile(path, `${HEADER}\n${cols.join(",")}\n`, "utf8");
+
+    const rows = await readEnrichedCSV(path);
+    expect(rows[0].idade_inferida_por_contexto).toBe(false);
+  });
+
+  it("coluna 'true' no CSV → propaga true", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "import-sanity-csv-"));
+    const path = join(dir, "com-idade-inferida.csv");
+    const { cols } = linhaBase();
+    await writeFile(
+      path,
+      `${HEADER},idade_inferida_por_contexto\n${cols.join(",")},true\n`,
+      "utf8",
+    );
+
+    const rows = await readEnrichedCSV(path);
+    expect(rows[0].idade_inferida_por_contexto).toBe(true);
+  });
+});
+
 describe("readEnrichedCSV — data_fim (US-S37)", () => {
   it("data_fim ausente do CSV → null", async () => {
     const dir = await mkdtemp(join(tmpdir(), "import-sanity-csv-"));

@@ -11,6 +11,8 @@ function baseLinha(slug: string): LinhaEnriquecida {
     categoria: "teatro",
     idade_min: 4,
     idade_max: 10,
+    idade_recomendada_min: 4,
+    idade_recomendada_max: 10,
     duracao_min: 60,
     preco_centavos: 2000,
     link_compra: "https://www.sympla.com.br/exemplo",
@@ -25,6 +27,7 @@ function baseLinha(slug: string): LinhaEnriquecida {
     proxima_data: null,
     data_fim: null,
     foto_url: "",
+    aviso_operacional: null,
     review_status: "auto_ok",
     abstain_reasons: [],
     confidence: 5,
@@ -33,6 +36,8 @@ function baseLinha(slug: string): LinhaEnriquecida {
     ai_generated: true,
     ai_model: "gemini-flash-2.5",
     pipeline_failed: false,
+    preco_a_partir: false,
+    idade_inferida_por_contexto: false,
   };
 }
 

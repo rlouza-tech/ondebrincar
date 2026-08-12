@@ -20,6 +20,8 @@ function baseResposta(overrides: Partial<RespostaGemini> = {}): RespostaGemini {
     categoria: "teatro",
     idade_min: 4,
     idade_max: 10,
+    idade_recomendada_min: 4,
+    idade_recomendada_max: 10,
     duracao_min: 60,
     preco_centavos: 5490,
     indoor_outdoor: "indoor",
@@ -34,6 +36,7 @@ function baseResposta(overrides: Partial<RespostaGemini> = {}): RespostaGemini {
     data_fim: null,
     confidence: 5,
     abstain_fields: [],
+    aviso_operacional: null,
     idade_inferida_por_contexto: false,
     ...overrides,
   };
@@ -233,5 +236,54 @@ describe("evaluate — faixa etária null (US-S20)", () => {
     );
 
     expect(result.reasons).toContain("idade_min_maior_que_idade_max");
+  });
+});
+
+describe("evaluate — idade_recomendada (US-S77)", () => {
+  it("idade_recomendada_min e idade_recomendada_max null → não quebra e não sinaliza reasons de idade recomendada", () => {
+    const result = evaluate(
+      baseInput(),
+      baseResposta({ idade_recomendada_min: null, idade_recomendada_max: null }),
+    );
+
+    expect(result.reasons).not.toContain(
+      "idade_recomendada_min_maior_que_idade_recomendada_max",
+    );
+    expect(result.reasons).not.toContain("idade_recomendada_fora_do_intervalo_0_18");
+  });
+
+  it("idade_recomendada_min/idade_recomendada_max fora de ordem → sinaliza idade_recomendada_min_maior_que_idade_recomendada_max", () => {
+    const result = evaluate(
+      baseInput(),
+      baseResposta({ idade_recomendada_min: 12, idade_recomendada_max: 4 }),
+    );
+
+    expect(result.reasons).toContain(
+      "idade_recomendada_min_maior_que_idade_recomendada_max",
+    );
+  });
+
+  it("idade_recomendada_max fora do intervalo 0-18 → sinaliza idade_recomendada_fora_do_intervalo_0_18", () => {
+    const result = evaluate(
+      baseInput(),
+      baseResposta({ idade_recomendada_min: 0, idade_recomendada_max: 20 }),
+    );
+
+    expect(result.reasons).toContain("idade_recomendada_fora_do_intervalo_0_18");
+  });
+
+  it("idade_recomendada null mas idade_min/idade_max válidos → não é abstenção crítica (só idade_min/idade_max entram em CRITICAL_ABSTAIN_FIELDS)", () => {
+    const result = evaluate(
+      baseInput(),
+      baseResposta({
+        idade_recomendada_min: null,
+        idade_recomendada_max: null,
+        abstain_fields: ["idade_recomendada_min", "idade_recomendada_max"],
+      }),
+    );
+
+    expect(
+      result.reasons.some((r) => r.startsWith("abstencao_campo_critico")),
+    ).toBe(false);
   });
 });
