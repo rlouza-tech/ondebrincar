@@ -50,6 +50,7 @@ interface SymplaRawItem {
   preco_inteira_centavos?: string;
   preco_a_partir?: boolean;
   endereco?: string;
+  local?: string;
 }
 
 export async function normalizeSympla(
@@ -76,5 +77,6 @@ export async function normalizeSympla(
     url_ingresso: item.link,
     preco_a_partir: item.preco_a_partir ?? false,
     ...(item.endereco ? { endereco: item.endereco } : {}),
+    ...(item.local ? { local: item.local } : {}),
   }));
 }

@@ -61,5 +61,9 @@ export function toSanityDoc(linha: LinhaEnriquecida): SanityAtracaoDocInput {
     doc.endereco = linha.endereco;
   }
 
+  if (linha.local) {
+    doc.local = linha.local;
+  }
+
   return doc;
 }

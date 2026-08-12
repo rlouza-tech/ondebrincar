@@ -6,7 +6,7 @@ import {
   isBiletoUrl,
   precisaRevisaoManual,
   parseEnderecoBileto,
-  resolverEnderecoFallback,
+  resolverLocalEEndereco,
   parseDescartadosCache,
   mergeDescartados,
   decidirAposFalhaDeEnrich,
@@ -14,6 +14,7 @@ import {
   type DescartadoEntry,
   type SymplarRawEvent,
 } from "../sympla-enrich";
+import type { LocalEnderecoPair } from "../local-endereco-map";
 
 // ---------------------------------------------------------------------------
 // parseDescricao
@@ -313,49 +314,96 @@ describe("parseEnderecoBileto", () => {
 });
 
 // ---------------------------------------------------------------------------
-// resolverEnderecoFallback (US-S59)
+// resolverLocalEEndereco (US-S76 — evolução da US-S59)
 // ---------------------------------------------------------------------------
 
-describe("resolverEnderecoFallback", () => {
-  it("caso de controle (AC3): endereço completo extraído com sucesso não muda, mesmo com venue/nomeLocal disponíveis", () => {
+describe("resolverLocalEEndereco", () => {
+  const tabelaComPar: LocalEnderecoPair[] = [
+    {
+      local: "Shopping Nova Iguaçu",
+      endereco: "Avenida Abílio Augusto Távora, 1111 — Kinoplex — Centro",
+    },
+  ];
+
+  it("AC5/AC3 — caso de controle: endereço e nome vêm ambos da extração → os dois preenchidos, novoPar true (grava na tabela)", () => {
     expect(
-      resolverEnderecoFallback(
-        "Shopping Nova Iguaçu, Nova Iguaçu - RJ",
+      resolverLocalEEndereco(
+        "Shopping Nova Iguaçu",
         "Avenida Abílio Augusto Távora, 1111 — Kinoplex — Centro",
         "Shopping Nova Iguaçu",
       ),
-    ).toBe("Avenida Abílio Augusto Távora, 1111 — Kinoplex — Centro");
+    ).toEqual({
+      local: "Shopping Nova Iguaçu",
+      endereco: "Avenida Abílio Augusto Távora, 1111 — Kinoplex — Centro",
+      novoPar: true,
+    });
   });
 
-  it("caso real (padrão \"Oficina de Boneco Tim Tim\"): endereço e venue de listagem falharam, cai pro nome do local da página do evento", () => {
-    // Reproduz a forma dos dados do caso real reportado na revisão de 16/07: a
-    // extração de endereço completo falhou E a listagem (sympla-scrape.ts)
-    // também não capturou venue algum — mas o nome do local (eventsAddress.name,
-    // confirmado empiricamente em 11/08 em 2 eventos reais do domínio padrão)
-    // ainda está disponível na página do evento.
-    expect(resolverEnderecoFallback("", null, "Espaço Cultural Real")).toBe(
-      "Espaço Cultural Real",
-    );
+  it("AC7(a) — só nome, sem par na tabela: local preenchido, endereco vazio, sem bloquear a ficha", () => {
+    expect(resolverLocalEEndereco("", null, "Espaço Cultural Real", [])).toEqual({
+      local: "Espaço Cultural Real",
+      endereco: null,
+      novoPar: false,
+    });
   });
 
-  it("reaproveita o venue já capturado na listagem quando o endereço completo falha", () => {
+  it("AC7(b) — só nome, COM par na tabela: os dois preenchidos via lookup, sem gravar par novo", () => {
     expect(
-      resolverEnderecoFallback("Teatro Bangu Shopping", null, "Teatro Bangu Shopping"),
-    ).toBe("Teatro Bangu Shopping");
+      resolverLocalEEndereco("Shopping Nova Iguaçu", null, null, tabelaComPar),
+    ).toEqual({
+      local: "Shopping Nova Iguaçu",
+      endereco: "Avenida Abílio Augusto Távora, 1111 — Kinoplex — Centro",
+      novoPar: false,
+    });
   });
 
-  it("prioriza venue da listagem sobre nomeLocal da página do evento quando ambos existem", () => {
-    expect(resolverEnderecoFallback("Venue da listagem", null, "Nome do evento")).toBe(
-      "Venue da listagem",
-    );
+  it("AC7(c) — só endereço, COM par na tabela: os dois preenchidos via lookup reverso", () => {
+    expect(
+      resolverLocalEEndereco(
+        "",
+        "Avenida Abílio Augusto Távora, 1111 — Kinoplex — Centro",
+        null,
+        tabelaComPar,
+      ),
+    ).toEqual({
+      local: "Shopping Nova Iguaçu",
+      endereco: "Avenida Abílio Augusto Távora, 1111 — Kinoplex — Centro",
+      novoPar: false,
+    });
   });
 
-  it("retorna null quando endereço, venue e nomeLocal vêm todos vazios (sem regressão vs. comportamento anterior)", () => {
-    expect(resolverEnderecoFallback("", null, null)).toBeNull();
+  it("só endereço, sem par na tabela: endereco preenchido, local vazio, sem bloquear a ficha", () => {
+    expect(
+      resolverLocalEEndereco("", "Rua Desconhecida, 1", null, []),
+    ).toEqual({ local: null, endereco: "Rua Desconhecida, 1", novoPar: false });
   });
 
-  it("trata venue/nomeLocal só com espaços como vazio", () => {
-    expect(resolverEnderecoFallback("   ", null, "   ")).toBeNull();
+  it("AC7(e) — nenhum dos dois: sem mudança de comportamento (regressão)", () => {
+    expect(resolverLocalEEndereco("", null, null, [])).toEqual({
+      local: null,
+      endereco: null,
+      novoPar: false,
+    });
+  });
+
+  it("AC5 — reverte US-S59: não escreve mais o nome dentro de endereco quando só o nome está disponível", () => {
+    const resultado = resolverLocalEEndereco("Teatro Bangu Shopping", null, null, []);
+    expect(resultado.endereco).toBeNull();
+    expect(resultado.local).toBe("Teatro Bangu Shopping");
+  });
+
+  it("prioriza venue da listagem sobre nomeLocal da página do evento quando ambos existem (mesma prioridade da US-S59)", () => {
+    expect(
+      resolverLocalEEndereco("Venue da listagem", null, "Nome do evento", []).local,
+    ).toBe("Venue da listagem");
+  });
+
+  it("trata venue/nomeLocal/endereço só com espaços como vazio", () => {
+    expect(resolverLocalEEndereco("   ", "   ", "   ", [])).toEqual({
+      local: null,
+      endereco: null,
+      novoPar: false,
+    });
   });
 });
 

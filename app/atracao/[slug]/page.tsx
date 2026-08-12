@@ -221,6 +221,12 @@ export default async function AtracaoPage({ params, searchParams }: AtracaoPageP
                   </dd>
                 </div>
               ) : null}
+              {atracao.local ? (
+                <div className="sm:col-span-2">
+                  <dt className="font-medium text-primary">Local</dt>
+                  <dd className="text-secondary">{atracao.local}</dd>
+                </div>
+              ) : null}
               <div>
                 <dt className="font-medium text-primary">Preço</dt>
                 <dd className="text-secondary">{formatPreco(atracao)}</dd>

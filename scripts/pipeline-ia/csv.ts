@@ -25,6 +25,7 @@ const OPTIONAL_V2_COLUMNS: Array<keyof LinhaInput> = [
   "preco_inteira_centavos",
   "url_ingresso",
   "endereco",
+  "local",
 ];
 
 /**

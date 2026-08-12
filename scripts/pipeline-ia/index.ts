@@ -319,6 +319,7 @@ export function buildLinhaEnriquecida(
     // US-S16: se bairro ainda vazio após pré-processamento, usa fallback do Gemini
     bairro: linha.bairro || resposta.bairro_inferido || "",
     endereco: linha.endereco,
+    local: linha.local,
     indoor_outdoor: resposta.indoor_outdoor,
     status: "operando",
     descricao: resposta.descricao,

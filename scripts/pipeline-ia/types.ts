@@ -49,6 +49,8 @@ export interface LinhaInput {
   preco_a_partir?: boolean;
   /** Endereço completo extraído pelo scraper (ex.: Sympla fornece venue address). */
   endereco?: string;
+  /** Nome do local/venue quando o endereço completo não está disponível (US-S76). */
+  local?: string;
 }
 
 export interface RespostaGemini {
@@ -103,6 +105,7 @@ export interface LinhaEnriquecida {
   data_fim: string | null;
   foto_url: string;
   endereco?: string;
+  local?: string;
   aviso_operacional: string | null;
   review_status: ReviewStatus;
   abstain_reasons: string[];

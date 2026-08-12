@@ -18,6 +18,15 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { createBrowserSession, gotoWithRetry } from "./browser";
 import { isConteudoInfantil } from "./sympla-scrape";
+import {
+  LOCAL_ENDERECO_MAP_PATH,
+  loadLocalEnderecoMap,
+  lookupEnderecoPorLocal,
+  lookupLocalPorEndereco,
+  saveLocalEnderecoMap,
+  upsertPar,
+  type LocalEnderecoPair,
+} from "./local-endereco-map";
 
 // ---------------------------------------------------------------------------
 // Constantes
@@ -198,31 +207,55 @@ export function parseEnderecoBileto(raw: string | null | undefined): string | nu
   return cleaned.length > 5 ? cleaned : null;
 }
 
+export interface ResolvedLocalEndereco {
+  /** Nome do local/venue — nunca contém endereço completo (US-S76, reverte US-S59). */
+  local: string | null;
+  /** Endereço completo real — extraído ou vindo da tabela nome↔endereço. */
+  endereco: string | null;
+  /** true quando nome e endereço vieram ambos da extração — o par deve ser gravado na tabela (AC3). */
+  novoPar: boolean;
+}
+
 /**
- * Decide o valor final do campo `endereco` (US-S59): quando o endereço completo
- * não pôde ser extraído da página do evento, cai para o nome do local como
- * fallback — melhor a ficha mostrar "Shopping Nova Iguaçu" do que nada.
+ * Decide os valores finais de `local` e `endereco` (US-S76 — evolução da
+ * US-S59). `endereco` volta a significar só "endereço completo real": o
+ * fallback deixa de escrever o nome do local dentro dele. Quando só um dos
+ * dois vem da extração, consulta a tabela nome↔endereço (`local-endereco-map`)
+ * pelo valor disponível para preencher o outro.
  *
- * Prioridade: 1) endereço completo (caminho já existente, prioritário — não
- * muda quando funciona, AC3); 2) `venue` já capturado na listagem pelo
- * sympla-scrape.ts, se não vier vazio; 3) `nomeLocal` capturado na página do
- * evento (`eventsAddress.name` do `__NEXT_DATA__`, ver `extrairEndereco`).
+ * Prioridade do nome candidato: 1) `venue` já capturado na listagem pelo
+ * sympla-scrape.ts; 2) `nomeLocal` capturado na página do evento
+ * (`eventsAddress.name` do `__NEXT_DATA__`, ver `extrairEndereco`) — mesma
+ * prioridade da US-S59.
  *
- * Confirmado empiricamente (11/08) em 2 eventos reais do domínio padrão
- * (sympla.com.br/evento/...) que `eventsAddress.name` acompanha o mesmo objeto
- * já lido para o endereço completo — não é um seletor de DOM separado/frágil.
- * Não se aplica a bileto.sympla.com.br (US-S40/US-S51 já cobrem esse caso à parte).
+ * Quando nome e endereço vêm ambos da extração, é o caso "econômico"
+ * confirmado com o Rafa: grava o par direto, sem consultar a tabela antes
+ * (`novoPar: true` — quem chama decide gravar via `upsertPar`). A tabela
+ * nunca é gate de validação quando o dado já vem completo, só fallback para o
+ * que estiver faltando.
+ *
+ * Não se aplica a bileto.sympla.com.br (US-S40/US-S51 já cobrem esse caso à
+ * parte, sem separação local/endereco).
  */
-export function resolverEnderecoFallback(
+export function resolverLocalEEndereco(
   venueAtual: string,
   enderecoExtraido: string | null,
   nomeLocal: string | null,
-): string | null {
-  if (enderecoExtraido) return enderecoExtraido;
-  const venue = venueAtual?.trim();
-  if (venue) return venue;
-  const nome = nomeLocal?.trim();
-  return nome || null;
+  tabela: LocalEnderecoPair[] = [],
+): ResolvedLocalEndereco {
+  const nome = venueAtual?.trim() || nomeLocal?.trim() || null;
+  const endereco = enderecoExtraido?.trim() || null;
+
+  if (nome && endereco) {
+    return { local: nome, endereco, novoPar: true };
+  }
+  if (nome) {
+    return { local: nome, endereco: lookupEnderecoPorLocal(tabela, nome), novoPar: false };
+  }
+  if (endereco) {
+    return { local: lookupLocalPorEndereco(tabela, endereco), endereco, novoPar: false };
+  }
+  return { local: null, endereco: null, novoPar: false };
 }
 
 /**
@@ -425,8 +458,8 @@ export interface EnderecoExtraido {
  *
  * `endereco` vem null se não encontrar ou se o texto parecer genérico/inútil.
  * `nomeLocal` (US-S59) é o nome do local, capturado do mesmo objeto eventsAddress
- * usado na Estratégia 1 — quem chama decide se usa como fallback do endereço
- * (ver resolverEnderecoFallback). Não tentamos capturar nomeLocal via DOM
+ * usado na Estratégia 1 — quem chama decide como combiná-lo com o endereço
+ * (ver resolverLocalEEndereco, US-S76). Não tentamos capturar nomeLocal via DOM
  * separado: validação empírica (11/08, 2 eventos reais) achou o nome do local
  * num <h4> sem data-testid próprio, dentro de uma seção com vários outros <h4>
  * (políticas de cancelamento etc.) — seletor não é específico o bastante pra
@@ -540,12 +573,10 @@ export interface SymplarRawEvent {
   preco_inteira_centavos?: string;
   /** true quando há múltiplas faixas de preço (lotes, meia/inteira, etc.). */
   preco_a_partir?: boolean;
-  /**
-   * Endereço do venue extraído da página do evento. Prioritariamente o
-   * endereço completo (rua+número); quando essa extração falha, cai para o
-   * nome do local como fallback (US-S59) — ver resolverEnderecoFallback.
-   */
+  /** Endereço completo real do venue, extraído ou vindo da tabela nome↔endereço (US-S76). */
   endereco?: string;
+  /** Nome do local/venue quando o endereço completo não está disponível (US-S76, reverte US-S59). */
+  local?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -628,10 +659,17 @@ async function main() {
   const linksDescartados = new Set(descartadosSalvos.map((d) => d.link));
   const novosDescartados: DescartadoEntry[] = [];
 
+  // Tabela nome↔endereço (US-S76) — carregada 1x, atualizada progressivamente
+  // durante a rodada (um evento processado antes pode já beneficiar um
+  // posterior na mesma execução) e persistida no fim.
+  let tabelaLocalEndereco = loadLocalEnderecoMap();
+  let tabelaLocalEnderecoMudou = false;
+
   console.log("\n=== Sympla Enricher ===");
   console.log(`Input:   ${INPUT_PATH} (${eventos.length} eventos)`);
   console.log(`Alvo:    ${alvo.length} eventos`);
   console.log(`Cache:   ${DESCARTADOS_PATH} (${linksDescartados.size} descartados conhecidos)`);
+  console.log(`Tabela:  ${tabelaLocalEndereco.length} par(es) nome↔endereço conhecidos`);
   console.log(`Delay:   ${opts.delay}s entre requisições`);
   console.log(`Output:  ${OUTPUT_PATH}\n`);
 
@@ -665,17 +703,31 @@ async function main() {
         const descricaoLimpa = parseDescricao(texto);
         const { minPriceCents, multiplasFaixas } = await extrairPrecos(page);
         const { endereco: enderecoBruto, nomeLocal } = await extrairEndereco(page, ev.link);
-        // US-S59: fallback pro nome do local só fora do fluxo bileto (que já
-        // tem seu próprio protocolo de revisão manual via US-S51).
-        const enderecoExtraido = isBiletoUrl(ev.link)
-          ? enderecoBruto
-          : resolverEnderecoFallback(ev.venue, enderecoBruto, nomeLocal);
+        // US-S76: campo `local` separado do `endereco` só fora do fluxo bileto
+        // (que já tem seu próprio protocolo de revisão manual via US-S51, sem
+        // essa separação).
+        let enderecoFinal: string | null;
+        let localFinal: string | null;
+        if (isBiletoUrl(ev.link)) {
+          enderecoFinal = enderecoBruto;
+          localFinal = null;
+        } else {
+          const resolvido = resolverLocalEEndereco(ev.venue, enderecoBruto, nomeLocal, tabelaLocalEndereco);
+          enderecoFinal = resolvido.endereco;
+          localFinal = resolvido.local;
+          if (resolvido.novoPar && resolvido.local && resolvido.endereco) {
+            const tabelaAntes = tabelaLocalEndereco;
+            tabelaLocalEndereco = upsertPar(tabelaLocalEndereco, resolvido.local, resolvido.endereco);
+            if (tabelaLocalEndereco !== tabelaAntes) tabelaLocalEnderecoMudou = true;
+          }
+        }
 
         // Campos extras extraídos da página do evento
-        const precoExtra: Pick<SymplarRawEvent, "preco_inteira_centavos" | "preco_a_partir" | "endereco"> = {
+        const precoExtra: Pick<SymplarRawEvent, "preco_inteira_centavos" | "preco_a_partir" | "endereco" | "local"> = {
           ...(minPriceCents !== null ? { preco_inteira_centavos: String(minPriceCents) } : {}),
           preco_a_partir: multiplasFaixas,
-          ...(enderecoExtraido ? { endereco: enderecoExtraido } : {}),
+          ...(enderecoFinal ? { endereco: enderecoFinal } : {}),
+          ...(localFinal ? { local: localFinal } : {}),
         };
 
         if (descricaoLimpa) {
@@ -766,12 +818,20 @@ async function main() {
       writeFileSync(DESCARTADOS_PATH, JSON.stringify(descartadosFinal, null, 2), "utf-8");
     }
 
+    // Persiste tabela nome↔endereço (US-S76) — só grava se mudou.
+    if (tabelaLocalEnderecoMudou) {
+      saveLocalEnderecoMap(tabelaLocalEndereco);
+    }
+
     // Log final
     console.log(`\n${"─".repeat(50)}`);
     console.log(`✅  ${nEnriquecidos} enriquecidos / ${nSemMelhora} sem melhora / ${nFalhas} falhas / ${nDescartados} descartados (não infantil) / ${nPulados} pulados (cache) / ${nRevisao} para revisão manual`);
     console.log(`📄  Aprovados: ${OUTPUT_PATH} (${aprovados.length} eventos)`);
     if (novosDescartados.length > 0) {
       console.log(`🗑️  Cache de descartados: ${DESCARTADOS_PATH} (+${novosDescartados.length} novo(s), ${linksDescartados.size + novosDescartados.length} total)`);
+    }
+    if (tabelaLocalEnderecoMudou) {
+      console.log(`📍  Tabela nome↔endereço: ${LOCAL_ENDERECO_MAP_PATH} (${tabelaLocalEndereco.length} par(es) total)`);
     }
     if (pendentes.length > 0) {
       console.log(`🔍  Revisão pendente: ${PENDENTE_PATH} (${pendentes.length} eventos)`);
