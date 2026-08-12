@@ -1,1 +1,118 @@
-[]
+[
+  {
+    "local": "Parque Realengo Susana Naspolini",
+    "endereco": "Rua Professor Carlos Wenceslau, 290 — Realengo"
+  },
+  {
+    "local": "Teatro dos Grandes Atores - Shopping Barra Square",
+    "endereco": "Av. das Américas, 3555 — Barra da Tijuca"
+  },
+  {
+    "local": "CCSP- Centro Cultural e Pastoral Dom Orani Tempesta",
+    "endereco": "Praça Nossa Senhora da Apresentação, 352 — ccsp — Irajá"
+  },
+  {
+    "local": "Teatro Candido Mendes",
+    "endereco": "R. Joana Angélica, 63 — Ipanema"
+  },
+  {
+    "local": "Teatro Bangu Shopping",
+    "endereco": "Rua Fonseca, 240 — Shopping Bangu — Bangu"
+  },
+  {
+    "local": "Teatro Henriqueta Brieba - Tijuca Tênis Club",
+    "endereco": "Rua Conde de Bonfim, 451 — Tijuca"
+  },
+  {
+    "local": "Teatro Clara Nunes - Shopping da Gávea",
+    "endereco": "Rua Marquês de São Vicente, 52 — lj 370 — Gávea"
+  },
+  {
+    "local": "AquaRio",
+    "endereco": "Praça Muhammad Ali, S/N — Porto Maravilha"
+  },
+  {
+    "local": "IAB-RJ - Instituto de Arquitetos do Brasil",
+    "endereco": "Rua do Pinheiro, 10 — Flamengo"
+  },
+  {
+    "local": "Big Jump USA - Aerotown",
+    "endereco": "Avenida Ayrton Senna, 2541 - Aerotown Power Center — Barra da Tijuca"
+  },
+  {
+    "local": "Ecovilla Ri Happy",
+    "endereco": "Rua Jardim Botânico, 1008 — Jardim Botânico"
+  },
+  {
+    "local": "Espaço Voltz Parkour & Trampolim Park - Via Parque Shopping - Barra da Tijuca",
+    "endereco": "Via ParqueShopping  - Av. Ayrton Senna, 3000 — Barra da Tijuca"
+  },
+  {
+    "local": "Teatro das Artes - Shopping da Gávea",
+    "endereco": "Rua Marquês de São Vicente, 52 — Gávea"
+  },
+  {
+    "local": "Qualistage",
+    "endereco": "Av. Ayrton Senna, 3000 — Via Parque Shopping — Barra da Tijuca"
+  },
+  {
+    "local": "Areninha Cultural João Bosco",
+    "endereco": "Av. São Félix, 601 - (Antiga Lona de Vista Alegre) — Vista Alegre"
+  },
+  {
+    "local": "Teatro Grajaú - Grajaú Tênis Clube",
+    "endereco": "Avenida Engenheiro Richard, 83 - Grajaú Tênis Clube — Grajaú"
+  },
+  {
+    "local": "Teatros da Barra - Barra Point Shopping Center",
+    "endereco": "Av. Armando Lombardi, 350 — Barra da Tijuca"
+  },
+  {
+    "local": "Teatro Claro Mais RJ",
+    "endereco": "Rua Siqueira Campos, 143 — Sobreloja — Copacabana"
+  },
+  {
+    "local": "Teatro Miguel Falabella - Norte Shopping",
+    "endereco": "Av. Dom Helder Câmara, 5332 — 2º Piso — Cachambi"
+  },
+  {
+    "local": "Teatro dos Quatro - Shopping da Gávea",
+    "endereco": "Rua Marquês de São Vicente, 52 — lj 265 — Gávea"
+  },
+  {
+    "local": "Teatro Brigitte Blair",
+    "endereco": "Rua Miguel Lemos, 51 — H — Copacabana"
+  },
+  {
+    "local": "Museu Flamengo",
+    "endereco": "Av. Borges de Medeiros, 997 — Leblon"
+  },
+  {
+    "local": "Teatro Vannucci - Shopping da Gávea",
+    "endereco": "Rua Marques de São Vicente, 52 — lj 371 — Gávea"
+  },
+  {
+    "local": "Vivo Rio",
+    "endereco": "Av. Infante Dom Henrique, 85 — Parque do Flamengo"
+  },
+  {
+    "local": "Parque Shanghai",
+    "endereco": "Largo da Penha, 19 — Penha"
+  },
+  {
+    "local": "Marina da Glória",
+    "endereco": "Avenida Infante Dom Henrique, S/N — Glória"
+  },
+  {
+    "local": "Estádio do Maracanã",
+    "endereco": "Avenida Presidente Castelo Branco, Portão 2 — Radial Oeste — Maracanã"
+  },
+  {
+    "local": "Teatro Città",
+    "endereco": "Avenida das Américas, 700 — Barra da Tijuca"
+  },
+  {
+    "local": "Yup Star Roda Gigante do Rio",
+    "endereco": "Av. Rodrigues Alves, 455 — Porto Maravilha"
+  }
+]
