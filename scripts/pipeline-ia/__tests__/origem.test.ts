@@ -51,6 +51,8 @@ function baseResposta(overrides: Partial<RespostaGemini> = {}): RespostaGemini {
     categoria: "teatro",
     idade_min: 4,
     idade_max: 10,
+    idade_recomendada_min: 4,
+    idade_recomendada_max: 10,
     duracao_min: 60,
     preco_centavos: 5490,
     indoor_outdoor: "indoor",
@@ -66,6 +68,7 @@ function baseResposta(overrides: Partial<RespostaGemini> = {}): RespostaGemini {
     confidence: 5,
     abstain_fields: [],
     aviso_operacional: null,
+    idade_inferida_por_contexto: false,
     ...overrides,
   };
 }

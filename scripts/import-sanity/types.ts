@@ -21,6 +21,8 @@ export interface SanityAtracaoDocInput {
   categoria: string;
   idade_min?: number;
   idade_max?: number;
+  idade_recomendada_min?: number;
+  idade_recomendada_max?: number;
   duracao_min?: number;
   preco?: number;
   link_compra: string;

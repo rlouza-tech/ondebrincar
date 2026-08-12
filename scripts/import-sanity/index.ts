@@ -187,6 +187,8 @@ export async function readEnrichedCSV(path: string): Promise<LinhaEnriquecida[]>
           categoria: record.categoria as LinhaEnriquecida["categoria"],
           idade_min: parseNullableInt(record.idade_min ?? ""),
           idade_max: parseNullableInt(record.idade_max ?? ""),
+          idade_recomendada_min: parseNullableInt(record.idade_recomendada_min ?? ""),
+          idade_recomendada_max: parseNullableInt(record.idade_recomendada_max ?? ""),
           duracao_min: parseNullableInt(record.duracao_min ?? ""),
           preco_centavos: parseNullableInt(record.preco_centavos ?? ""),
           link_compra: record.link_compra ?? "",
@@ -212,6 +214,9 @@ export async function readEnrichedCSV(path: string): Promise<LinhaEnriquecida[]>
           ai_generated: (record.ai_generated ?? "false") === "true",
           ai_model: (record.ai_model ?? "").trim() || null,
           pipeline_failed: (record.pipeline_failed ?? "false") === "true",
+          preco_a_partir: (record.preco_a_partir ?? "false") === "true",
+          aviso_operacional: record.aviso_operacional?.trim() || null,
+          idade_inferida_por_contexto: (record.idade_inferida_por_contexto ?? "false") === "true",
         });
       })
       .on("error", reject)

@@ -310,6 +310,8 @@ export function buildLinhaEnriquecida(
     categoria,
     idade_min: resposta.idade_min,
     idade_max: resposta.idade_max,
+    idade_recomendada_min: resposta.idade_recomendada_min,
+    idade_recomendada_max: resposta.idade_recomendada_max,
     duracao_min: resposta.duracao_min,
     preco_centavos: resposta.preco_centavos,
     // url_ingresso é o link de compra/ingresso direto; url_origem é proveniência dos dados.

@@ -9,6 +9,8 @@ function baseLinha(overrides: Partial<LinhaEnriquecida> = {}): LinhaEnriquecida 
     categoria: "teatro",
     idade_min: 4,
     idade_max: 10,
+    idade_recomendada_min: 4,
+    idade_recomendada_max: 10,
     duracao_min: 60,
     preco_centavos: 4000,
     link_compra: "https://www.sympla.com.br/exemplo",
@@ -24,6 +26,7 @@ function baseLinha(overrides: Partial<LinhaEnriquecida> = {}): LinhaEnriquecida 
     proxima_data: null,
     data_fim: null,
     foto_url: "",
+    aviso_operacional: null,
     review_status: "auto_ok",
     abstain_reasons: [],
     confidence: 5,
@@ -32,6 +35,8 @@ function baseLinha(overrides: Partial<LinhaEnriquecida> = {}): LinhaEnriquecida 
     ai_generated: true,
     ai_model: "gemini-flash-2.5",
     pipeline_failed: false,
+    preco_a_partir: false,
+    idade_inferida_por_contexto: false,
     ...overrides,
   };
 }
@@ -48,6 +53,8 @@ describe("toSanityDoc", () => {
       categoria: "teatro",
       idade_min: 4,
       idade_max: 10,
+      idade_recomendada_min: 4,
+      idade_recomendada_max: 10,
       duracao_min: 60,
       preco: 4000,
       link_compra: "https://www.sympla.com.br/exemplo",
@@ -89,6 +96,37 @@ describe("toSanityDoc", () => {
     const doc = toSanityDoc(baseLinha({ idade_min: 0, idade_max: 3 }));
     expect(doc.idade_min).toBe(0);
     expect(doc.idade_max).toBe(3);
+  });
+
+  it("omite idade_recomendada_min e idade_recomendada_max quando são null (US-S77 — site exibe 'A confirmar')", () => {
+    const doc = toSanityDoc(
+      baseLinha({ idade_recomendada_min: null, idade_recomendada_max: null }),
+    );
+    expect(doc).not.toHaveProperty("idade_recomendada_min");
+    expect(doc).not.toHaveProperty("idade_recomendada_max");
+  });
+
+  it("inclui idade_recomendada_min e idade_recomendada_max quando preenchidos", () => {
+    const doc = toSanityDoc(
+      baseLinha({ idade_recomendada_min: 0, idade_recomendada_max: 3 }),
+    );
+    expect(doc.idade_recomendada_min).toBe(0);
+    expect(doc.idade_recomendada_max).toBe(3);
+  });
+
+  it("idade_min/idade_max (oficial) e idade_recomendada_min/idade_recomendada_max são independentes (US-S77)", () => {
+    const doc = toSanityDoc(
+      baseLinha({
+        idade_min: null,
+        idade_max: null,
+        idade_recomendada_min: 4,
+        idade_recomendada_max: 12,
+      }),
+    );
+    expect(doc).not.toHaveProperty("idade_min");
+    expect(doc).not.toHaveProperty("idade_max");
+    expect(doc.idade_recomendada_min).toBe(4);
+    expect(doc.idade_recomendada_max).toBe(12);
   });
 
   it("omite proxima_data quando é null", () => {

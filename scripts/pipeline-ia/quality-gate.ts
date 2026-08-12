@@ -102,6 +102,22 @@ export function evaluate(
     reasons.push("idade_fora_do_intervalo_0_18");
   }
 
+  // US-S77: mesmas checagens de integridade numérica, agora também para o par recomendado.
+  if (
+    resposta.idade_recomendada_min !== null &&
+    resposta.idade_recomendada_max !== null &&
+    resposta.idade_recomendada_min > resposta.idade_recomendada_max
+  ) {
+    reasons.push("idade_recomendada_min_maior_que_idade_recomendada_max");
+  }
+
+  if (
+    (resposta.idade_recomendada_min !== null && resposta.idade_recomendada_min < 0) ||
+    (resposta.idade_recomendada_max !== null && resposta.idade_recomendada_max > 18)
+  ) {
+    reasons.push("idade_recomendada_fora_do_intervalo_0_18");
+  }
+
   // US-S16: bairro pode ter sido inferido pelo Gemini (bairro_inferido) mesmo que input venha vazio
   const bairroEfetivo = linhaInput.bairro.trim() || resposta.bairro_inferido?.trim() || "";
   if (!bairroEfetivo) {

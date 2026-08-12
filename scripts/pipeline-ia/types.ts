@@ -55,9 +55,12 @@ export interface LinhaInput {
 
 export interface RespostaGemini {
   categoria: Categoria;
-  /** null quando não há classificação/recomendação explícita nem inferência de contexto confiável (US-S20) — vira "A confirmar" no site. */
+  /** Classificação etária oficial (indicativa legal ou recomendação de público explícita na fonte). null quando a fonte não classifica — sem inferência por contexto (US-S77). */
   idade_min: number | null;
   idade_max: number | null;
+  /** Idade recomendada pro filtro público: cópia de idade_min/idade_max quando explícitos, ou inferência por contexto (3 regras) quando a fonte não classifica. null = "A confirmar" (US-S77). */
+  idade_recomendada_min: number | null;
+  idade_recomendada_max: number | null;
   duracao_min: number | null;
   preco_centavos: number | null;
   indoor_outdoor: IndoorOutdoor;
@@ -78,7 +81,7 @@ export interface RespostaGemini {
    * null = Gemini não conseguiu inferir com confiança.
    */
   bairro_inferido?: string | null;
-  /** true quando idade_min/idade_max vieram de inferência por contexto (US-S20), não de classificação/recomendação explícita no texto. */
+  /** true quando idade_recomendada_min/idade_recomendada_max vieram de inferência por contexto (US-S20/US-S77), não de cópia da classificação oficial explícita. */
   idade_inferida_por_contexto: boolean;
   error?: string;
 }
@@ -89,6 +92,8 @@ export interface LinhaEnriquecida {
   categoria: Categoria;
   idade_min: number | null;
   idade_max: number | null;
+  idade_recomendada_min: number | null;
+  idade_recomendada_max: number | null;
   duracao_min: number | null;
   preco_centavos: number | null;
   link_compra: string;
@@ -117,7 +122,7 @@ export interface LinhaEnriquecida {
   pipeline_failed: boolean;
   /** true quando há múltiplas faixas de preço na fonte. Propagado sem envolver Gemini. */
   preco_a_partir: boolean;
-  /** true quando idade_min/idade_max vieram de inferência por contexto (US-S20) — não de classificação/recomendação explícita. */
+  /** true quando idade_recomendada_min/idade_recomendada_max vieram de inferência por contexto (US-S20/US-S77) — não de cópia da classificação oficial explícita. */
   idade_inferida_por_contexto: boolean;
 }
 
