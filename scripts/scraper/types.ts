@@ -32,6 +32,14 @@ export interface LinhaEnriquecida {
    * Não faz parte do CSV de saída (fora de CSV_COLUMNS).
    */
   _apiOutcome?: "primeira-tentativa" | "recuperada-via-retry" | "falhou-apos-retry";
+  /**
+   * Diagnóstico — US-S76 (12/08/2026). Par nome↔endereço vindo limpo da API
+   * do Clubinho (venue.name + venue.address, sem heurística) — alimenta
+   * data/local-endereco-map.json. Não faz parte do CSV de saída (fora de
+   * CSV_COLUMNS, é ignorado por writeScrapedCsv); coletado pelo chamador
+   * (scripts/scraper/index.ts) para upsert em lote no fim da rodada.
+   */
+  _localEnderecoPar?: { local: string; endereco: string };
 }
 
 export interface ListingPreview {

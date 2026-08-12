@@ -9,6 +9,11 @@ import {
 } from "./browser";
 import type { ClubinhoProductApi } from "./clubinho-api";
 import { writeScrapedCsv } from "./csv";
+import {
+  loadLocalEnderecoMap,
+  saveLocalEnderecoMap,
+  upsertPar,
+} from "./local-endereco-map";
 import { isLocalizacaoRioDeJaneiro } from "./parse";
 import { scrapeAtracao } from "./scrape-atracao";
 import { scrapeListing } from "./scrape-listing";
@@ -223,6 +228,20 @@ async function runClubinhoScrape(options: CliOptions): Promise<void> {
   await session.browser.close();
 
   console.log(`CSV salvo: ${options.outputPath} (${rows.length} linhas, 15 colunas)`);
+
+  // US-S76: grava em lote os pares nome↔endereço observados nesta rodada
+  // (venue.name + venue.address da API do Clubinho, já limpos).
+  const paresObservados = rows
+    .map((r) => r._localEnderecoPar)
+    .filter((par): par is { local: string; endereco: string } => Boolean(par));
+  if (paresObservados.length > 0) {
+    let tabela = loadLocalEnderecoMap();
+    for (const par of paresObservados) {
+      tabela = upsertPar(tabela, par.local, par.endereco);
+    }
+    saveLocalEnderecoMap(tabela);
+    console.log(`📍  Tabela nome↔endereço atualizada: +${paresObservados.length} par(es) observado(s) (${tabela.length} total)`);
+  }
 }
 
 async function main() {

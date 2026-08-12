@@ -149,6 +149,14 @@ export const atracao = defineType({
       validation: (Rule) => Rule.max(200),
     }),
     defineField({
+      name: "local",
+      title: "Local",
+      type: "string",
+      description:
+        "Nome do estabelecimento/venue quando o endereço completo não está disponível (ex.: Shopping Nova Iguaçu). Não é endereço — usado como complemento ou fallback de exibição (US-S76).",
+      validation: (Rule) => Rule.max(200),
+    }),
+    defineField({
       name: "indoor_outdoor",
       title: "Indoor / outdoor",
       type: "string",

@@ -63,6 +63,13 @@ function mapToLinha(
     return [rua, localizacao].filter(Boolean).join(" — ") || undefined;
   })();
 
+  // US-S76: quando a API do Clubinho traz nome + endereço juntos (já limpos,
+  // sem heurística), alimenta a tabela nome↔endereço direto — nunca usada
+  // como gate de validação aqui, só grava o par observado.
+  const venueNome = api?.venues?.[0]?.name?.trim();
+  const localEnderecoPar =
+    venueNome && endereco ? { local: venueNome, endereco } : undefined;
+
   const fullPrice = api?.lowestPrice?.full ?? null;
   const salePrice = api?.lowestPrice?.sale ?? null;
   const maxDiscount = api?.lowestPrice?.max_discount;
@@ -106,6 +113,7 @@ function mapToLinha(
     // max_discount > 0 indica desconto estrutural de lote — há múltiplas faixas de preço.
     preco_a_partir: (maxDiscount ?? 0) > 0,
     ...(endereco ? { endereco } : {}),
+    ...(localEnderecoPar ? { _localEnderecoPar: localEnderecoPar } : {}),
   };
 }
 

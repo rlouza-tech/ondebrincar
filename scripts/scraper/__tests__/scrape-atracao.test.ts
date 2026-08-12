@@ -151,3 +151,48 @@ describe("scrapeAtracao — retry por item (US-S39)", () => {
     expect(session.browser.close).not.toHaveBeenCalled();
   });
 });
+
+// ---------------------------------------------------------------------------
+// _localEnderecoPar (US-S76, AC6) — venue.name + venue.address da API do
+// Clubinho, já limpos, alimentam a tabela nome↔endereço sem heurística.
+// ---------------------------------------------------------------------------
+
+describe("scrapeAtracao — tabela nome↔endereço (US-S76, AC6)", () => {
+  it("preenche _localEnderecoPar quando a API traz nome e endereço juntos (caso f: par limpo)", async () => {
+    mockFetchProductApi.mockResolvedValueOnce({ status: 200, data: apiFixture() });
+    const session = fakeSession(false);
+
+    const result = await scrapeAtracao(session, preview);
+
+    expect(result.row._localEnderecoPar).toEqual({
+      local: "Teatro Teste",
+      endereco: "Rua Teste, 10 — Centro",
+    });
+  });
+
+  it("não preenche _localEnderecoPar quando a API só traz o nome do venue, sem endereço", async () => {
+    const apiSemEndereco: ClubinhoProductApi = {
+      ...apiFixture(),
+      venues: [{ name: "Teatro Sem Endereço" }],
+    };
+    mockFetchProductApi.mockResolvedValueOnce({ status: 200, data: apiSemEndereco });
+    const session = fakeSession(false);
+
+    const result = await scrapeAtracao(session, preview);
+
+    expect(result.row._localEnderecoPar).toBeUndefined();
+  });
+
+  it("não preenche _localEnderecoPar quando a API falha e cai no fallback sem dados", async () => {
+    mockFetchProductApi
+      .mockResolvedValueOnce({ status: 500, data: null })
+      .mockResolvedValueOnce({ status: 500, data: null });
+    const session = fakeSession(false);
+
+    const resultPromise = scrapeAtracao(session, preview);
+    await vi.advanceTimersByTimeAsync(2_500);
+    const result = await resultPromise;
+
+    expect(result.row._localEnderecoPar).toBeUndefined();
+  });
+});

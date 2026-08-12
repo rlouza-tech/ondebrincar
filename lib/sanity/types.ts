@@ -12,6 +12,8 @@ export interface Atracao {
   idadeMax: number | null;
   bairro: string;
   endereco?: string;
+  /** Nome do local/venue — exibido quando o endereço completo não está disponível (US-S76). */
+  local?: string;
   precoTipo: PrecoTipo;
   precoLabel?: string;
   /** true quando há múltiplas faixas de preço — exibe "A partir de R$X" no site. */
@@ -51,6 +53,7 @@ export interface SanityAtracaoDocument {
   origem?: "sympla" | "eventim" | "clubinho" | "raindrop" | "uhuu" | "ecovilla" | "outro";
   bairro: string;
   endereco?: string;
+  local?: string;
   indoor_outdoor: IndoorOutdoor;
   status: StatusAtracao;
   tipo_programacao?: TipoProgramacao;

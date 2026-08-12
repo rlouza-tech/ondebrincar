@@ -14,6 +14,7 @@ const atracaoProjection = groq`
   origem,
   bairro,
   endereco,
+  local,
   indoor_outdoor,
   status,
   tipo_programacao,
