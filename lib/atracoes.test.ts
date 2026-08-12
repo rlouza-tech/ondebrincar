@@ -96,7 +96,10 @@ describe("formatFaixaEtaria (US-S20)", () => {
   it("mantém o comportamento numérico existente quando ambos preenchidos", () => {
     expect(formatFaixaEtaria(0, 18)).toBe("Até 18 anos");
     expect(formatFaixaEtaria(4, 4)).toBe("4 anos");
-    expect(formatFaixaEtaria(4, 10)).toBe("4–10 anos");
+  });
+
+  it("intervalo usa formato por extenso 'de X a Y anos' (US-I36)", () => {
+    expect(formatFaixaEtaria(4, 10)).toBe("de 4 a 10 anos");
   });
 });
 
@@ -142,8 +145,8 @@ describe("mapSanityAtracao", () => {
       nome: "Teste",
       slug: { current: "teste" },
       categoria: "teatro",
-      idade_min: 4,
-      idade_max: 10,
+      idade_recomendada_min: 4,
+      idade_recomendada_max: 10,
       bairro: "Tijuca",
       indoor_outdoor: "indoor",
       status: "operando",
@@ -173,9 +176,9 @@ describe("mapSanityAtracao", () => {
     expect(atracao.imagemUrl).toBe("/placeholder-atracao.svg");
   });
 
-  it("idade_min/idade_max ausentes no documento Sanity → idadeMin/idadeMax null (US-S20)", () => {
+  it("idade_recomendada_min/idade_recomendada_max ausentes no documento Sanity → idadeMin/idadeMax null (US-S20, US-I36)", () => {
     const atracao = mapSanityAtracao(
-      baseDocument({ idade_min: undefined, idade_max: undefined }),
+      baseDocument({ idade_recomendada_min: undefined, idade_recomendada_max: undefined }),
     );
     expect(atracao.idadeMin).toBeNull();
     expect(atracao.idadeMax).toBeNull();

@@ -52,8 +52,8 @@ function mapSanityAtracao(document: SanityAtracaoDocument): Atracao {
     slug: document.slug.current,
     titulo: document.nome,
     categoria: document.categoria,
-    idadeMin: document.idade_min ?? null,
-    idadeMax: document.idade_max ?? null,
+    idadeMin: document.idade_recomendada_min ?? null,
+    idadeMax: document.idade_recomendada_max ?? null,
     bairro: document.bairro,
     endereco: document.endereco,
     local: document.local,
@@ -208,7 +208,7 @@ export function formatFaixaEtaria(
   if (idadeMin === idadeMax) {
     return `${idadeMin} anos`;
   }
-  return `${idadeMin}–${idadeMax} anos`;
+  return `de ${idadeMin} a ${idadeMax} anos`;
 }
 
 export function formatPreco(atracao: Atracao): string {
