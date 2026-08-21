@@ -1,0 +1,65 @@
+[
+  {
+    "raindrop_id": 1823515121,
+    "nome": "Eclipse Lunar no Planetário do Rio",
+    "venue": "Planetário do Rio",
+    "bairro": "Gávea",
+    "url_origem": "https://www.instagram.com/p/DcCFykHxX0y/?igsh=bjRkeTBuOGg1eTNs",
+    "sinopse_oficial": "Na madrugada do dia 27 para o 28 de agosto ocorre um eclipse lunar visível de todo o Brasil. O Planetário do Rio, na Gávea, preparou uma programação gratuita a partir das 21h (observação a partir das 22h), com telescópios e acompanhamento de astrônomos, sessões de cúpula, transmissão ao vivo, visita às exposições do Museu do Universo e música. Dá para levar canga ou cadeira de praia.",
+    "horarios_sessao": "27 de agosto, 21h, a 28 de agosto, 3h (eclipse entre 23h30 e pouco antes das 3h)",
+    "preco_inteira_centavos": "0",
+    "data_hint": "2026-08-27"
+  },
+  {
+    "raindrop_id": 1822839125,
+    "nome": "Pizza Grill Catete",
+    "venue": "Pizza Grill",
+    "bairro": "Catete",
+    "endereco": "Rua do Catete, 245 - Catete, Rio de Janeiro",
+    "url_origem": "https://www.instagram.com/p/DcHT0aFnNR_/?igsh=YXFpdGdyZGNkNXNj",
+    "sinopse_oficial": "Restaurante com área kids integrada, no imóvel histórico de 1875 que abrigava a antiga Casa do Sabão. Buffet a quilo no almoço; rodízio de pizza a partir das 18h, todos os dias da semana.",
+    "horarios_sessao": "Almoço (buffet a quilo); rodízio de pizza a partir das 18h, todos os dias"
+  },
+  {
+    "raindrop_id": 1821106454,
+    "nome": "Playground Taste Lab",
+    "venue": "Taste Lab - Shopping Tijuca",
+    "bairro": "Tijuca",
+    "endereco": "Shopping Tijuca, piso G3 (rooftop)",
+    "url_origem": "https://www.instagram.com/reel/Dbf4UAftH3s/?igsh=dTlsZmtyMWVmNW4x&igsi=dTlsZmtyMWVmNW4x",
+    "sinopse_oficial": "Espaço kids ao ar livre no rooftop do Shopping Tijuca, inaugurado em junho de 2026, integrado à área gastronômica e cercado por mesas e cadeiras. Seis atrações principais: piso com pedras de borracha, escorrega grande e a 'toca dos vagalumes' com botões interativos que acendem luzes."
+  },
+  {
+    "raindrop_id": 1821106149,
+    "nome": "Parque da Cidade",
+    "venue": "Parque da Cidade",
+    "bairro": "Gávea",
+    "endereco": "Estrada de Santa Marinha, s/nº — Gávea, Rio de Janeiro (entrada pela Rua Marquês de São Vicente)",
+    "url_origem": "https://www.instagram.com/reel/DcBM11dOVMd/?igsh=MTdjdXZ6MmZrZXpnNA==&igsi=MTdjdXZ6MmZrZXpnNA==",
+    "sinopse_oficial": "Parque no Alto da Gávea com áreas de lazer e espaço para brincar, além de bastante área verde para piquenique. O complexo abriga o Museu da Cidade (MHC), com acervo sobre a história do Rio, e a Capela de São João Batista. Estacionamento gratuito no local.",
+    "horarios_sessao": "Parque: terça a domingo, 8h às 17h. Museu: terça a domingo, 9h às 16h",
+    "preco_inteira_centavos": "0"
+  },
+  {
+    "raindrop_id": 1821105596,
+    "nome": "Museu de Astronomia e Ciências Afins (MAST)",
+    "venue": "MAST",
+    "bairro": "São Cristóvão",
+    "endereco": "R. Gen. Bruce, 586 - São Cristóvão, Rio de Janeiro",
+    "url_origem": "https://www.instagram.com/reel/Db0a8autlhF/?igsh=MW9vaW0wb3dtbzd6bg==&igsi=MW9vaW0wb3dtbzd6bg==",
+    "sinopse_oficial": "Museu gratuito e pouco visitado, com um dos acervos mais completos da história das ciências e astronomia brasileira — instrumentos científicos, máquinas e esculturas centenárias, em conjunto arquitetônico tombado pelo IPHAN com 16 edificações do início do século XX e pavilhões de observação astronômica. No 1º e 3º sábados do mês há observação do céu em telescópio portátil (18h às 19h30). Excelente passeio para adultos e crianças.",
+    "horarios_sessao": "Exposições: terça a sexta 9h às 16h30; sábados e feriados 14h às 17h30; domingos fechado",
+    "preco_inteira_centavos": "0"
+  },
+  {
+    "raindrop_id": 1821472318,
+    "nome": "Parque do Martelo",
+    "venue": "Parque do Martelo",
+    "bairro": "Humaitá",
+    "endereco": "R. Miguel Pereira, 41 - Humaitá, Rio de Janeiro - RJ, 22261-090",
+    "url_origem": "https://www.instagram.com/parquedomartelo?igsh=MTRqY3FubmQyanVrdw==&igsi=MTRqY3FubmQyanVrdw==",
+    "sinopse_oficial": "Parque de 16 mil m² em área de mata densa no meio do bairro Humaitá, com parquinho infantil, horta orgânica e trilha que leva a um mirante com vista do bairro.",
+    "horarios_sessao": "Segunda a domingo, 8h30 às 13h; sábados até 18h",
+    "preco_inteira_centavos": "0"
+  }
+]

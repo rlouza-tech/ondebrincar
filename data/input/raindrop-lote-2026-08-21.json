@@ -1,0 +1,67 @@
+[
+  {
+    "raindrop_id": 1827422223,
+    "nome": "Primavera de Museus no MUSAL",
+    "venue": "Museu Aeroespacial (MUSAL)",
+    "bairro": "Campo dos Afonsos",
+    "endereco": "Avenida Marechal Fontenelle, 2000 — Campo dos Afonsos",
+    "url_origem": "https://musal.com.br/primaverademuseus/",
+    "sinopse_oficial": "O Museu Aeroespacial participa da Primavera de Museus no dia 20 de setembro, das 9h às 17h. Entrada gratuita com ingresso retirado no site Bilheteria Express; pede-se doação de 1 kg de alimento não perecível para o Instituto Casa Viva. Há praça de alimentação, acessibilidade (rampas, elevador, fraldário, banheiros adaptados) e menores de 12 anos devem ir acompanhados. Em caso de mau tempo o evento pode ser alterado.",
+    "horarios_sessao": "20 de setembro, das 9h às 17h",
+    "preco_inteira_centavos": "0",
+    "data_hint": "2026-09-20"
+  },
+  {
+    "raindrop_id": 1826508736,
+    "nome": "FICI 2026 — Festival Internacional de Cinema Infantil",
+    "venue": "Estação Claro Gávea",
+    "bairro": "Gávea",
+    "endereco": "Rua Marquês de São Vicente, 52 — Gávea",
+    "url_origem": "https://www.sympla.com.br/fici-2026-festival-internacional-de-cinema-infantil--gvea__3536400",
+    "url_ingresso": "https://www.sympla.com.br/fici-2026-festival-internacional-de-cinema-infantil--gvea__3536400",
+    "sinopse_oficial": "23ª edição do Festival Internacional de Cinema Infantil, com sessões gratuitas de filmes nacionais e internacionais para crianças, famílias e escolas. De 22 a 30 de agosto de 2026 em dois cinemas do Grupo Estação: Estação Claro Rio (Botafogo, 22 e 23/08) e Estação Claro Gávea (29 e 30/08), sessões às 10h30 e 14h30. Ingresso individual por sessão, retirado no Sympla. Crianças acompanhadas de responsável. Programação inclui pré-estreias (Aiurê, Makunáima, Folclórica, Joãozinho, Papaya) e clássicos como Do Meu Tamanho e Tainá.",
+    "horarios_sessao": "22–23/08 Estação Claro Rio (Botafogo); 29–30/08 Estação Claro Gávea; sessões 10h30 e 14h30",
+    "preco_inteira_centavos": "0",
+    "data_hint": "2026-08-22"
+  },
+  {
+    "raindrop_id": 1826508583,
+    "nome": "FICI 2026 — Festival Internacional de Cinema Infantil",
+    "venue": "Estação Claro Gávea",
+    "bairro": "Gávea",
+    "endereco": "Rua Marquês de São Vicente, 52 — Gávea",
+    "url_origem": "https://fici.com.br/",
+    "url_ingresso": "https://www.sympla.com.br/fici-2026-festival-internacional-de-cinema-infantil--gvea__3536400",
+    "sinopse_oficial": "Mesmo festival do item anterior — site oficial. Sessões gratuitas de 22 a 30 de agosto de 2026 nos cinemas Estação Claro Rio (Botafogo) e Estação Claro Gávea. Ingressos no Sympla.",
+    "horarios_sessao": "22–23/08 Botafogo; 29–30/08 Gávea; sessões 10h30 e 14h30",
+    "preco_inteira_centavos": "0",
+    "data_hint": "2026-08-22"
+  },
+  {
+    "raindrop_id": 1826456614,
+    "nome": "Promuse Anime Fest",
+    "venue": "Centro Educacional Califórnia",
+    "bairro": "Campo Grande",
+    "endereco": "Rua Mario Cordeiro, 25 — Campo Grande",
+    "url_origem": "https://www.sympla.com.br/evento/promuse-anime-fest-evento-geek/3507322",
+    "url_ingresso": "https://www.sympla.com.br/evento/promuse-anime-fest-evento-geek/3507322",
+    "sinopse_oficial": "Evento geek gratuito no Centro Educacional Califórnia, em Campo Grande, nos dias 10 e 11 de outubro de 2026, das 12h às 18h (evento gratuito | RJ). Há kits temáticos (Saja Boys e Guerreiras do K-Pop) à venda e modelo de autorização de responsável para menores, se necessário. Bilheteria liberada em lotes.",
+    "horarios_sessao": "10 e 11 de outubro, das 12h às 18h",
+    "preco_inteira_centavos": "0",
+    "data_hint": "2026-10-10"
+  },
+  {
+    "raindrop_id": 1820991504,
+    "nome": "Patati Patatá Circo Show",
+    "venue": "Estacionamento do Shopping Grande Rio",
+    "bairro": "São João de Meriti",
+    "endereco": "Rua Maria Soares Sendas, 111 — São João de Meriti",
+    "url_origem": "https://bileto.sympla.com.br/event/122472",
+    "url_ingresso": "https://bileto.sympla.com.br/event/122472",
+    "sinopse_oficial": "Patati Patatá Circo Show em temporada no estacionamento do Shopping Grande Rio, em São João de Meriti, de 21 de agosto a 13 de setembro. Sessões de segunda, sexta, sábado e domingo (14h30, 17h e 19h30). Ingressos entre R$ 30 e R$ 160.",
+    "horarios_sessao": "21/08 a 13/09; seg, sex, sáb e dom às 14h30, 17h e 19h30",
+    "preco_inteira_centavos": "3000",
+    "preco_a_partir": true,
+    "data_hint": "2026-08-21"
+  }
+]
