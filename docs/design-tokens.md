@@ -2,13 +2,36 @@
 
 Tokens centralizados em `tailwind.config.ts`. Uso nas classes Tailwind (`text-primary`, `p-4`, `md:flex`, etc.).
 
+> **Atualizado em 18/08/2026** (achado da sessão de discovery `DISCOVERY-2026-08-18-navegacao-mobile-app-like.md`): a versão anterior deste arquivo estava desatualizada desde antes do rebrand de identidade visual (Sprint 5, `Handoff Identidade Visual/`) — cores e fonte abaixo foram checadas direto contra `tailwind.config.ts`.
+
 ## Cores
+
+### Tokens de marca (`brand.*`)
 
 | Token | Hex | Classe exemplo | Uso |
 |-------|-----|----------------|-----|
-| **primary** | `#1F3864` | `bg-primary`, `text-primary` | Marca, títulos, navegação |
-| **secondary** | `#3B6EA8` | `bg-secondary`, `text-secondary` | Links, destaques, apoio à primária |
-| **success** | `#10B981` | `bg-success`, `text-success` | Confirmações, disponível |
+| **brand.primary** | `#F97316` | `bg-brand-primary`, `text-brand-primary` | Tangerina — CTA, links, logo accent |
+| **brand.secondary** | `#0EA5E9` | `bg-brand-secondary` | Azul piscina — badges, ícones de categoria |
+| **brand.accent** | `#84CC16` | `bg-brand-accent` | Verde parque — "hoje", "novo", tags positivas |
+
+### Superfície e texto
+
+| Token | Hex | Classe exemplo | Uso |
+|-------|-----|----------------|-----|
+| **surface.base** | `#FDFAF4` | `bg-surface-base` | Fundo da página |
+| **surface.card** | `#F5F2EC` | `bg-surface-card` | Fundo de cards e seções alternadas |
+| **surface.muted** | `#E7E5E4` | `border-surface-muted` | Bordas, separadores |
+| **ink** (DEFAULT) | `#1C1917` | `text-ink` | Texto principal |
+| **ink.mid** | `#78716C` | `text-ink-mid` | Subtítulos, metadados |
+| **ink.soft** | `#A8A29E` | `text-ink-soft` | Labels, placeholders |
+
+### Aliases legados (S3.1, ainda em uso em vários componentes)
+
+| Token | Hex | Classe exemplo | Uso |
+|-------|-----|----------------|-----|
+| **primary** | `#F97316` (= brand.primary) | `bg-primary`, `text-primary` | Marca, títulos (h1, card title), navegação |
+| **secondary** | `#0EA5E9` (= brand.secondary) | `bg-secondary`, `text-secondary` | Links, metadados de card, destaques |
+| **success** | `#84CC16` (= brand.accent) | `bg-success`, `text-success` | Confirmações, "Curadoria humana", disponível |
 | **warn** | `#F59E0B` | `bg-warn`, `text-warn` | Atenção, ressalvas |
 | **error** | `#DC2626` | `bg-error`, `text-error` | Erros, indisponível |
 
@@ -16,7 +39,7 @@ Variantes `*-foreground` para texto sobre fundo sólido (`text-primary-foregroun
 
 ## Tipografia
 
-**Família:** Inter (`next/font/google`), aplicada via `font-sans`.
+**Famílias:** Fraunces (`--font-display`, fallback `serif`) para títulos display (h1 da home, headings principais); Nunito (`--font-sans`, fallback `sans-serif`) para o restante — aplicada via `font-sans` (padrão) e `font-display` (opt-in).
 
 | Nível | Classe | Tamanho | Line height |
 |-------|--------|---------|-------------|
@@ -27,7 +50,7 @@ Variantes `*-foreground` para texto sobre fundo sólido (`text-primary-foregroun
 | xl | `text-xl` | 20px (1.25rem) | 28px |
 | 2xl | `text-2xl` | 24px (1.5rem) | 32px |
 
-`2xl` reservado para títulos de seção; corpo de texto usa `base` / `lg`.
+`2xl` reservado para títulos de seção; corpo de texto usa `base` / `lg`. (Escala de tamanho não verificada como alterada pelo rebrand — mantida da versão anterior deste doc; `fontSize` não é sobrescrito em `tailwind.config.ts`, só `fontFamily` e `colors`.)
 
 ## Espaçamento (base-4)
 
