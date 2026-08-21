@@ -114,5 +114,45 @@
   {
     "local": "Yup Star Roda Gigante do Rio",
     "endereco": "Av. Rodrigues Alves, 455 — Porto Maravilha"
+  },
+  {
+    "local": "Teatro Fashion Mall",
+    "endereco": "Estrada da Gávea, 899 — São Conrado"
+  },
+  {
+    "local": "Big Jump USA - Shopping Via Brasil",
+    "endereco": "Rua Itapera, 500 — Shopping Via Brasil — Irajá"
+  },
+  {
+    "local": "Parque Realengo Susana Naspolini - Rio de Janeiro, RJ",
+    "endereco": "Rua Professor Carlos Wenceslau, 290 — Realengo"
+  },
+  {
+    "local": "CCSP- Centro Cultural e Pastoral Dom Orani Tempesta - Rio de Janeiro, RJ",
+    "endereco": "Praça Nossa Senhora da Apresentação, 352 — ccsp — Irajá"
+  },
+  {
+    "local": "Arena Flamengo - Maricá, RJ",
+    "endereco": "Flamengo, Maricá"
+  },
+  {
+    "local": "IAB-RJ - Instituto de Arquitetos do Brasil - Rio de Janeiro, RJ",
+    "endereco": "Rua do Pinheiro, 10 — Flamengo"
+  },
+  {
+    "local": "Museu do Amanhã - Rio de Janeiro, RJ",
+    "endereco": "Praça Mauá, 1 — Centro"
+  },
+  {
+    "local": "Teatro Henriqueta Brieba - Rio de Janeiro, RJ",
+    "endereco": "Rua Conde de Bonfim, 451"
+  },
+  {
+    "local": "Havana 59 - Rio de Janeiro, RJ",
+    "endereco": "Rua do Lavradio, 168 — Lapa"
+  },
+  {
+    "local": "Teatro Dercy Gonçalves - Grajaú Country Club",
+    "endereco": "Rua Professor Valadares, 262 — Grajaú Country Clube — Grajaú"
   }
 ]
