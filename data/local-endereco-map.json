@@ -154,5 +154,17 @@
   {
     "local": "Teatro Dercy Gonçalves - Grajaú Country Club",
     "endereco": "Rua Professor Valadares, 262 — Grajaú Country Clube — Grajaú"
+  },
+  {
+    "local": "VINOTECA DO VISCONDE - Rio de Janeiro, RJ",
+    "endereco": "Rua Visconde de Caravelas, 121 — Botafogo"
+  },
+  {
+    "local": "GAMES OF BOARD - Rio de Janeiro, RJ",
+    "endereco": "Rua da Passagem, 142"
+  },
+  {
+    "local": "Sambola Hall - Rio de Janeiro, RJ",
+    "endereco": "Avenida Dom Hélder Câmara, 7775 — Piedade"
   }
 ]
