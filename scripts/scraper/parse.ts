@@ -303,7 +303,7 @@ export function extractBairroFromVenue(venue: string): string {
 }
 
 /**
- * Bairros oficiais do município do Rio de Janeiro (163 bairros).
+ * Bairros oficiais do município do Rio de Janeiro (164 bairros).
  * Usado para confirmar que um venue está dentro da cidade — não apenas no estado.
  * Fonte: Lei Municipal nº 5.600/2013 + atualizações.
  */
@@ -311,7 +311,7 @@ export const BAIRROS_RIO: readonly string[] = [
   "abolição", "acari", "água santa", "alto da boa vista", "anchieta", "andaraí", "anil",
   "bancários", "bangu", "barra da tijuca", "barra de guaratiba", "barros filho",
   "benfica", "bento ribeiro", "bonsucesso", "botafogo", "brás de pina",
-  "cachambi", "cacuia", "caju", "camorim", "campinho", "cascadura", "catete",
+  "cachambi", "cacuia", "caju", "camorim", "campinho", "campo dos afonsos", "cascadura", "catete",
   "catumbi", "cavalcanti", "centro", "cidade de deus", "cidade nova", "cidade universitária",
   "cocotá", "coelho neto", "colégio", "complexo do alemão", "complexo da maré",
   "copacabana", "cordovil", "cosme velho", "costa barros", "cosmos", "covanca",

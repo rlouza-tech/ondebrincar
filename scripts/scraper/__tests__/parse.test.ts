@@ -207,6 +207,10 @@ Classificação: Livre`;
       expect(isLocalizacaoRioDeJaneiro("Espaço Cultural, SP")).toBe(false);
     });
 
+    it("aceita Campo dos Afonsos (MUSAL / Primavera de Museus)", () => {
+      expect(isLocalizacaoRioDeJaneiro("Museu Aeroespacial (MUSAL)", "Campo dos Afonsos")).toBe(true);
+    });
+
     it("aceita bairro carioca ambíguo sem marcador geográfico (Tijuca)", () => {
       expect(isLocalizacaoRioDeJaneiro("Teatro Carlos Gomes", "Tijuca")).toBe(true);
     });
