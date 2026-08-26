@@ -166,5 +166,17 @@
   {
     "local": "Sambola Hall - Rio de Janeiro, RJ",
     "endereco": "Avenida Dom Hélder Câmara, 7775 — Piedade"
+  },
+  {
+    "local": "Casa do Marinheiro, ARES-CMN - Rio de Janeiro, RJ",
+    "endereco": "Avenida Brasil, 10592 — Penha"
+  },
+  {
+    "local": "Areinha cultural terra - Rio de Janeiro, RJ",
+    "endereco": "Rua Marcos de Macedo, Sn — Guadalupe"
+  },
+  {
+    "local": "Sala Maria Thereza Tápias - Espaço Tápias - Rio de Janeiro, RJ",
+    "endereco": "Avenida Armando Lombardi, 175 — 2 andar — Barra da Tijuca"
   }
 ]
