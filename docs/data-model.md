@@ -211,7 +211,8 @@ unsubscribed_at
 | `lat`                         | number                        | não                          | -22.9849                                                                                       | Latitude                                                                    |
 | `lng`                         | number                        | não                          | -43.2210                                                                                       | Longitude                                                                   |
 | `indoor_outdoor`              | enum string                   | sim                          | `indoor`                                                                                       | `indoor` | `outdoor` | `ambos`                                              |
-| `status`                      | enum string                   | sim                          | `operando`                                                                                     | `operando` | `encerrada` | `em_obras` | `esgotada`                          |
+| `status`                      | enum string                   | sim                          | `operando`                                                                                     | `operando` | `encerrada` | `em_obras` | `esgotada` | `rejeitado` | `duplicada`          |
+| `canonical_id`                | string                        | condicional                  | `chapeuzinho-vermelho-leblon`                                                                  | Slug da ficha canônica que substitui esta. Preenchido só quando `status='duplicada'` (US-A9). Sem backfill — vazio até a US-A8 processar |
 | `descricao`                   | text (~1000 chars)            | sim                          | "Adaptação musical do clássico..."                                                             | Versão objetiva — vem do produtor ou scraping                               |
 | `mini_review`                 | text (~500 chars)             | recomendado (Lean: opcional) | "Boa pra primeira ida ao teatro de criança 3-6. Ressalva: 60min sem intervalo pode ser longo." | Voz autoral do Onde Brincar                                                 |
 | `foto`                        | image (Sanity asset, hotspot) | sim pra publicar             | (asset reference)                                                                              | Otimizada automaticamente via Sanity CDN                                    |
@@ -522,6 +523,10 @@ A planilha de import (US-S4.1) tem 15 colunas que espelham 1:1 os campos do sche
 ### Soft delete
 
 - Atrações que saem de cartaz: `status = 'encerrada'`, **não deletadas** do banco. Permitem análise histórica e SEO de URLs antigas com redirect ou aviso.
+
+### Deduplicação cross-fonte
+
+- Fichas identificadas como duplicata de uma já existente: `status = 'duplicada'`, **não deletadas** do banco — mesmo padrão do soft delete. `canonical_id` (US-A9) guarda o slug da ficha canônica que a substituiu, permitindo rastrear qual duplicata aponta pra qual original. Campo opcional, só preenchido em fichas `duplicada`; a fusão em si (detecção + escrita do `canonical_id`) é feita pela US-A8.
 
 ---
 

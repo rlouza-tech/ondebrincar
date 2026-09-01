@@ -222,6 +222,14 @@ export const atracao = defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
+      name: "canonical_id",
+      title: "ID canônico (duplicata)",
+      type: "string",
+      description:
+        "Slug da ficha canônica que substitui esta. Preenchido só quando status='duplicada' (US-A8). Campo novo — fichas existentes ficam vazias até serem processadas.",
+      validation: (Rule) => Rule.max(96),
+    }),
+    defineField({
       name: "tipo_programacao",
       title: "Tipo de programação",
       type: "string",
