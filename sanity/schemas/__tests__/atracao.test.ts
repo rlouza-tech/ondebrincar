@@ -143,6 +143,26 @@ describe("atracao schema — origem (US-S54: renomeado de partner)", () => {
   });
 });
 
+describe("atracao schema — canonical_id (US-A9)", () => {
+  it("tem campo canonical_id do tipo string", () => {
+    const field = atracao.fields.find((f) => f.name === "canonical_id");
+    expect(field).toBeDefined();
+    expect(field?.type).toBe("string");
+  });
+
+  it("não é obrigatório (opcional)", () => {
+    const field = atracao.fields.find((f) => f.name === "canonical_id") as
+      | { validation?: (rule: ReturnType<typeof createFakeRule>) => unknown }
+      | undefined;
+    expect(typeof field?.validation).toBe("function");
+
+    const rule = createFakeRule();
+    field?.validation?.(rule);
+
+    expect(rule.validate(undefined as unknown as number)).toBe(true);
+  });
+});
+
 describe("atracao schema — status duplicada (US-S64)", () => {
   it("inclui a opção duplicada na lista de valores de status", () => {
     const field = atracao.fields.find((f) => f.name === "status") as
