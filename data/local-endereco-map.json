@@ -166,5 +166,37 @@
   {
     "local": "Sambola Hall - Rio de Janeiro, RJ",
     "endereco": "Avenida Dom Hélder Câmara, 7775 — Piedade"
+  },
+  {
+    "local": "Teatro Municipal Ruth de Souza",
+    "endereco": "Rua Murtinho Nobre, 169 — Santa Teresa"
+  },
+  {
+    "local": "Centro da Música Carioca Artur da Távola",
+    "endereco": "Rua Conde de Bonfim, 824 — Tijuca"
+  },
+  {
+    "local": "Casa do Marinheiro, ARES-CMN - Rio de Janeiro, RJ",
+    "endereco": "Avenida Brasil, 10592 — Penha"
+  },
+  {
+    "local": "Areinha cultural terra - Rio de Janeiro, RJ",
+    "endereco": "Rua Marcos de Macedo, Sn — Guadalupe"
+  },
+  {
+    "local": "Rua Mary Pessoa, 146 - Rio de Janeiro, RJ",
+    "endereco": "Rua Mary Pessoa, 146 — Gávea"
+  },
+  {
+    "local": "Av. das Américas, 4200 - Rio de Janeiro, RJ",
+    "endereco": "Avenida das Américas, 4200 — Auditório da Universidade Estácio de Sá - Campos Barra da Tijuca — Barra da Tijuca"
+  },
+  {
+    "local": "Grajaú Tênis Clube - Rio de Janeiro, RJ",
+    "endereco": "Avenida Engenheiro Richard, 83 — Grajaú"
+  },
+  {
+    "local": "Mello Tênis Clube - Rio de Janeiro, RJ",
+    "endereco": "Rua Caroen, 171 — Casa — Rocha Miranda"
   }
 ]
