@@ -21,9 +21,9 @@ Rodando `pnpm rodar-pipeline -- --fonte=clubinho --limite=1` de verdade contra o
 
 ## Atualização — mesmo dia, sessão Cowork (03/09/2026)
 
-**Correção em relação à primeira versão desta seção:** a primeira tentativa de atualizar este Discovery (mais cedo, mesma sessão Cowork) concluiu que a rodada real não tinha gerado dado de frequência — errado. O card do Discovery Board no Notion (`Cards em INVESTIGAR desaparecem sem rastro após a triagem`, Épico A) já tinha sido atualizado, fora desta sessão, com números reais de duas fontes que não foram checados antes de escrever a primeira versão desta atualização: **23 de 150 cards do Sympla e 5 de 74 do Clubinho caíram em `INVESTIGAR`** na mesma sessão original (03/09/2026). Registrando a correção em vez de simplesmente sobrescrever — subestimei a checagem, não foi "sem dado disponível".
+Sinal adicional trazido pelo Rafa: a 5ª e última fonte, **Raindrop**, rodou de verdade hoje contra a API real do Raindrop: **9 cards reais, 4 aprovados, 1 descartado (fora do RJ), 4 caíram em `INVESTIGAR`**.
 
-Sinal adicional trazido pelo Rafa nesta sessão Cowork: a 5ª e última fonte, **Raindrop**, também rodou de verdade hoje contra o Raindrop real (a API do Rafa, não um site): **9 cards reais, 4 aprovados, 1 descartado (fora do RJ), 4 caíram em `INVESTIGAR`**.
+Ao investigar se as outras 4 fontes (que já tinham rodado na sessão original) geraram algum número, achei que o card do Discovery Board no Notion (`Cards em INVESTIGAR desaparecem sem rastro após a triagem`, Épico A) já tinha sido atualizado — fora desta sessão Cowork — com números reais de duas delas: **23 de 150 cards do Sympla e 5 de 74 do Clubinho caíram em `INVESTIGAR`**, na mesma sessão original (03/09/2026). Não achei esse número nos arquivos locais de `output/` (que só guardam `APROVADO` e são sobrescritos/fundidos por slug a cada rodada, ver `acumularItensProcessados`) — só existia registrado no Notion.
 
 **Consolidado das 3 fontes com número real disponível (03/09/2026):**
 
@@ -33,9 +33,9 @@ Sinal adicional trazido pelo Rafa nesta sessão Cowork: a 5ª e última fonte, *
 | Clubinho | 74 | — | — | 5 | ~7% |
 | Raindrop | 9 | 4 | 1 | 4 | ~44% |
 
-**Isso responde a Pergunta em aberto #2 original: `INVESTIGAR` não é caso raro — é volume real, todo dia, em pelo menos 3 das 5 fontes, variando de ~7% a ~44% dos cards triados.** Continua sem se saber Ecovilla/Uhuu (as outras 2 fontes), mas a amostra já é grande o suficiente (233 cards, 3 fontes distintas) pra tratar isso como padrão estrutural, não anomalia — e não como "1 ocorrência" como a primeira versão deste doc registrava. Isso muda a avaliação de Impacto e Prioridade abaixo (ver Diagnóstico).
+**Isso responde a Pergunta em aberto #2 original: `INVESTIGAR` não é caso raro — é volume real, todo dia, em pelo menos 3 das 5 fontes, variando de ~7% a ~44% dos cards triados.** Ainda não se sabe Ecovilla/Uhuu (as outras 2 fontes), mas a amostra já é grande o suficiente (233 cards, 3 fontes distintas) pra tratar isso como padrão estrutural, não anomalia. Isso muda a avaliação de Impacto e Prioridade no Diagnóstico abaixo.
 
-**Achado incidental, verificado e descartado como o mesmo bug:** os relatórios `publicar-sanity-report-*.json` de uma rodada de hoje mostram `"review_status_ignored": 1`. Investigado em `src/pipeline/publicar-sanity.ts` (linhas ~91-101): é comportamento **intencional** da US-A4 (26/08/2026) — itens com `review_status` fora de `auto_ok`/`human_approved` (ex: `needs_human`) são propositalmente excluídos da publicação, mas continuam existindo como draft no Sanity, visíveis e recuperáveis no Studio. Diferente do bug do Curador — aqui o item não se perde, só não é publicado sozinho. Não abre story nova sobre isso especificamente (mas ver Mapeamento abaixo — o mesmo padrão de "só contagem, sem lista" se repete em vários lugares do pipeline).
+**Achado incidental, verificado e descartado como o mesmo bug:** os relatórios `publicar-sanity-report-*.json` de uma rodada de hoje mostram `"review_status_ignored": 1`. Investigado em `src/pipeline/publicar-sanity.ts` (linhas ~91-101): é comportamento **intencional** da US-A4 (26/08/2026) — itens com `review_status` fora de `auto_ok`/`human_approved` (ex: `needs_human`) são propositalmente excluídos da publicação, mas continuam existindo como draft no Sanity, visíveis e recuperáveis no Studio. Diferente do bug do Curador — aqui o item não se perde, só não é publicado sozinho. Não abre story nova sobre isso especificamente (mas ver Mapeamento abaixo — o mesmo padrão "só contagem, sem lista" se repete em vários lugares do pipeline).
 
 ---
 
@@ -86,17 +86,20 @@ Pedido do Rafa: mapear no código, de ponta a ponta, todo lugar onde uma ficha p
 
 ## Histórias rascunhadas
 
-Último Story ID usado no épico A — Agentes (checado via Sprint Board no Notion): **US-A18** (Ready, Sprint 17). Próximo disponível: **US-A19**.
+Último Story ID usado no épico A — Agentes (checado via Sprint Board no Notion): **US-A18** / **US-A18b** (ambas Concluída, Sprint 17). Próximos disponíveis: **US-A19**, **US-A20**, **US-A21**.
 
 | Story ID | Título | Épico | SP estimado (chute) | AC rascunho | Sprint |
 |---|---|---|---|---|---|
-| US-A19 | Dar visibilidade a cards que caem em INVESTIGAR na triagem | A — Agentes | 1 (chute) | 1) Cards com status `INVESTIGAR` são logados individualmente no console em `orquestrador.ts`, no mesmo padrão já usado para `DESCARTADO` (título do card + motivo do Curador). 2) Teste cobrindo o novo log (mesmo padrão dos testes existentes de `DESCARTADO`). 3) `tsc`/lint limpos, testes verdes. **Em aberto, não travar o rascunho nisso:** se além do log no console vale também persistir em arquivo (já que o console se perde quando a sessão termina) — ver Pergunta em aberto #1. | a definir |
+| US-A19 | Dar visibilidade a cards que caem em INVESTIGAR na triagem | A — Agentes | 1 (chute) | 1) Cards com status `INVESTIGAR` são logados individualmente no console em `orquestrador.ts`, no mesmo padrão já usado para `DESCARTADO` (título do card + motivo do Curador). 2) Teste cobrindo o novo log (mesmo padrão dos testes existentes de `DESCARTADO`). 3) `tsc`/lint limpos, testes verdes. **Em aberto, não travar o rascunho nisso:** se além do log no console vale também persistir em arquivo (já que o console se perde quando a sessão termina) — ver Pergunta em aberto #1 (a favor: volume real de ~7-44% justifica não depender só de console). | a definir |
+| US-A20 | Contar e logar erros de processamento individualmente (Extrator/QA/Arte/Imagem) | A — Agentes | 1 (chute) | 1) `ResumoPipeline` ganha um campo de contagem de erros de processamento (hoje não existe nenhum). 2) Cada erro é logado individualmente no console no mesmo padrão de `DESCARTADO`/`INVESTIGAR` (título do card + origem + mensagem do erro). 3) Teste cobrindo o novo contador/log. 4) `tsc`/lint limpos, testes verdes. | a definir |
+| US-A21 | Painel/relatório único de pendências fora do Sanity, por rodada | A — Agentes | 3 (chute, incerto) | 1) Depois de uma rodada (`rodar-pipeline` + `publicar-sanity`), existe um único artefato consolidado listando todo item que não chegou a `created`/`updated` no Sanity nessa execução — origem, título, etapa onde parou, motivo. 2) Cobre no mínimo: `INVESTIGAR`, `DESCARTADO`, erro de processamento, `needs_human` ignorado no publish, dedup/rejeitado ignorado no publish (linhas 1, 2, 3, 7, 8 do Mapeamento acima). 3) Teste cobrindo a consolidação. **Depende de US-A19 e US-A20 existirem primeiro** — sem o log/contagem individual dessas duas, não há dado pra consolidar sobre `INVESTIGAR` e erro de processamento. **Esforço real incerto** — precisa unir dados de `rodar-pipeline` e `publicar-sanity`, que hoje rodam em momentos separados (decisão consciente de manter publish manual, ver `rodar-pipeline.ts`) — avaliar no Refinamento se isso muda. | a definir |
 
 ---
 
 ## Parking lot
 
-Nenhum item além da story acima — o único sinal desta sessão já tem hipótese explícita e virou rascunho de story.
+- **Alerta de campos em branco sem persistência** (`campos-em-branco.ts`, linha 6 do Mapeamento) — hipótese: se o scraper quebrar um seletor e ninguém estiver olhando o console naquele exato momento, o alerta se perde e a mudança de layout passa batido. Não entra como story agora porque é sinal de saúde do scraper (não status de ficha, escopo diferente do resto deste Discovery) e falta decidir o canal certo (log persistido? arquivo? notificação?) antes de ter um AC concreto.
+- **Guardião do Catálogo sem lista de quais atrações mudaram por rodada** (linha 9 do Mapeamento) — hipótese: hoje só dá pra saber "3 encerradas" na rodada, não quais — mas fica fora do escopo literal deste Discovery porque a mudança já está dentro do Sanity (recuperável no Studio), não fora dele. Motivo de não virar story agora: esforço/prioridade ainda não avaliados, e é uma extensão natural de escopo, não o pedido original.
 
 ---
 
@@ -108,12 +111,15 @@ Nenhuma decisão de produto, arquitetura ou processo foi tomada — só diagnós
 
 ## Perguntas em aberto
 
-1. **Persistência além do console:** só logar (como `DESCARTADO` já faz) resolve o problema imediato, mas o console se perde quando a sessão termina — vale também salvar em arquivo (ex: uma seção "Investigar" no `relatorio.html`, ou uma lista separada em JSON) pra ficar recuperável depois? Ou o log já é suficiente porque, na prática, alguém está acompanhando o console em toda execução real?
-2. **Frequência real ainda desconhecida — continua aberta após a rodada real de hoje.** As execuções das 5 fontes terminaram (mesma sessão original), mas não geraram dado novo: sem log persistido, não há como contar quantos itens caíram em `INVESTIGAR` nessa rodada. Isso reforça — não substitui — a Pergunta em aberto #2 original: só vamos ter esse número depois que a própria US-A19 (log individual) existir e rodar pelo menos uma vez.
+1. **Persistência além do console:** só logar (como `DESCARTADO` já faz) resolve o problema imediato, mas o console se perde quando a sessão termina — vale também salvar em arquivo (ex: uma seção "Investigar" no `relatorio.html`, ou uma lista separada em JSON) pra ficar recuperável depois? Com o volume real confirmado (~7% a ~44%), a resposta provável é sim — mas ainda cabe decidir formato no Refinamento.
+2. ~~Frequência real ainda desconhecida~~ — **respondida** (ver Atualização acima): 23/150 (Sympla), 5/74 (Clubinho), 4/9 (Raindrop) cards caíram em `INVESTIGAR` na rodada real de 03/09/2026. Falta só Ecovilla/Uhuu, mas a amostra de 233 cards em 3 fontes já é suficiente pra tratar como padrão estrutural.
+3. **Formato do painel único (US-A21):** nova seção do `relatorio.html`, um arquivo JSON novo (ex: `output/pendencias.json`), ou um comando CLI separado que lê `itens-processados.json` + o(s) `publicar-sanity-report-*.json` e imprime um resumo? Decidir no Refinamento da US-A21, depois que US-A19/US-A20 já estiverem gerando o dado que o painel vai consolidar.
 
 ---
 
 ## Recomendações pro próximo Kickoff/Refinamento
 
-- US-A19 tem hipótese e AC mínimo, mas falta persona/cenário completo, SP calibrado e a Pergunta em aberto #1 resolvida — passar por Refinamento antes de qualquer Kickoff.
-- A tentativa de responder a Pergunta em aberto #2 com a rodada real de hoje não funcionou (ver Atualização acima) — sem log, sem contagem. Recomendação revisada: **não vale mais esperar por esse dado antes do Refinamento** — ele só vai existir depois que a US-A19 (log) estiver no ar. Sugestão pro Refinamento: considerar nascer já com persistência em arquivo (não só log), já que "esperar mais sinal" se mostrou um beco sem saída — o log é o próprio instrumento de medição que falta.
+- US-A19 tem hipótese e AC mínimo, mas falta persona/cenário completo, SP calibrado e a Pergunta em aberto #1 resolvida — passar por Refinamento antes de qualquer Kickoff. Com o volume real confirmado, a recomendação é nascer já com persistência em arquivo, não só log console.
+- **US-A20 e US-A21 são novas** (ver Mapeamento, pedido do Rafa nesta sessão Cowork) — US-A20 (contar/logar erros de processamento) é sequência natural de US-A19, mesmo padrão, mesmo esforço baixo. US-A21 (painel único) é o pedido de fundo do Rafa ("não quero abrir arquivo na mão") mas depende de US-A19+US-A20 existirem primeiro — não faz sentido no Kickoff antes delas.
+- Sugestão de sequência pro Refinamento: **US-A19 → US-A20 → US-A21**, nessa ordem — as duas primeiras são baixo esforço e desbloqueiam a terceira.
+- O card do Discovery Board no Notion já tem os números de Sympla/Clubinho — vale atualizar o campo Contexto dele com o número do Raindrop também, pra não ficar por fora do que está registrado aqui (Cowork não decide isso sozinho sem avisar — ver mensagem de resposta desta sessão).
