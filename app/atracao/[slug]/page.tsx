@@ -261,7 +261,7 @@ export default async function AtracaoPage({ params, searchParams }: AtracaoPageP
             <AtracaoDetailActions atracao={atracao} />
 
             {atracao.linkExterno ? (
-              <div className="fixed inset-x-0 bottom-16 z-40 border-t border-surface-muted bg-white p-4 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] lg:static lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
+              <div className="fixed inset-x-0 bottom-20 z-40 border-t border-surface-muted bg-white p-4 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] lg:static lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
                 <OutboundLink
                   atracao={atracao}
                   href={atracao.linkExterno}

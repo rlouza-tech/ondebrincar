@@ -164,7 +164,7 @@ function BottomNavInner() {
       aria-label="Navegação principal"
       className="fixed inset-x-0 bottom-0 z-40 border-t border-surface-muted bg-white pb-[env(safe-area-inset-bottom)] lg:hidden"
     >
-      <ul className="mx-auto flex max-w-screen-lg items-stretch justify-around">
+      <ul className="mx-auto flex h-20 max-w-screen-lg items-stretch justify-around">
         {NAV_ITEMS.map(({ key, label, overrides, isActive, Icon }) => {
           const active = isActive(state);
           return (
@@ -173,7 +173,7 @@ function BottomNavInner() {
                 href={buildHref(isHome, searchParams, overrides)}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex h-16 flex-col items-center justify-center gap-1 text-xs font-medium transition-colors",
+                  "flex h-full flex-col items-center gap-1 px-1 pb-2 pt-2.5 text-center text-xs font-medium leading-tight transition-colors",
                   "focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary",
                   active ? "text-primary" : "text-ink-mid hover:text-primary",
                 )}
