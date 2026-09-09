@@ -6,6 +6,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { HomeContent } from "@/app/home-content";
 import { getAllAtracoes } from "@/lib/atracoes";
+import { getDestaquesSemana } from "@/lib/destaques";
 
 interface HomePageProps {
   searchParams?: {
@@ -39,7 +40,10 @@ export function generateMetadata({ searchParams }: HomePageProps): Metadata {
 }
 
 export default async function HomePage() {
-  const atracoes = await getAllAtracoes();
+  const [atracoes, destaques] = await Promise.all([
+    getAllAtracoes(),
+    getDestaquesSemana(),
+  ]);
   const bairros = Array.from(
     new Set(atracoes.map((atracao) => atracao.bairro)),
   ).sort((a, b) => a.localeCompare(b, "pt-BR"));
@@ -56,7 +60,7 @@ export default async function HomePage() {
             </p>
           }
         >
-          <HomeContent atracoes={atracoes} bairros={bairros} />
+          <HomeContent atracoes={atracoes} bairros={bairros} destaques={destaques} />
         </Suspense>
       </main>
       <SiteFooter />
