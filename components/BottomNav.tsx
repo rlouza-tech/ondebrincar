@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { CATEGORIA_TRIGGER_PARAM } from "@/lib/filter-options";
+import { buildHref, type NavItemDef } from "@/lib/nav-links";
 import { cn } from "@/lib/cn";
 
 function HomeIcon() {
@@ -82,20 +83,7 @@ function TagIcon() {
   );
 }
 
-interface NavItemDef {
-  key: string;
-  label: string;
-  overrides: Record<string, string | null>;
-  isActive: (params: {
-    isHome: boolean;
-    data: string;
-    preco: string;
-    categoria: string;
-  }) => boolean;
-  Icon: () => React.JSX.Element;
-}
-
-const NAV_ITEMS: NavItemDef[] = [
+const NAV_ITEMS: Array<NavItemDef & { Icon: () => React.JSX.Element }> = [
   {
     key: "inicio",
     label: "Início",
@@ -126,26 +114,6 @@ const NAV_ITEMS: NavItemDef[] = [
     Icon: TagIcon,
   },
 ];
-
-function buildHref(
-  isHome: boolean,
-  currentParams: URLSearchParams,
-  overrides: Record<string, string | null>,
-): string {
-  const params = new URLSearchParams(isHome ? currentParams.toString() : "");
-  params.delete(CATEGORIA_TRIGGER_PARAM);
-
-  for (const [key, value] of Object.entries(overrides)) {
-    if (value === null) {
-      params.delete(key);
-    } else {
-      params.set(key, value);
-    }
-  }
-
-  const query = params.toString();
-  return query ? `/?${query}` : "/";
-}
 
 function BottomNavInner() {
   const pathname = usePathname();
