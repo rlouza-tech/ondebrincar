@@ -198,5 +198,13 @@
   {
     "local": "Mello Tênis Clube - Rio de Janeiro, RJ",
     "endereco": "Rua Caroen, 171 — Casa — Rocha Miranda"
+  },
+  {
+    "local": "Teatro Glauce Rocha",
+    "endereco": "Av. Rio Branco, 179 — Centro"
+  },
+  {
+    "local": "Teatro Cesgranrio - Rio de Janeiro, RJ",
+    "endereco": "Rua Santa Alexandrina, 1011 — Rio Comprido"
   }
 ]
