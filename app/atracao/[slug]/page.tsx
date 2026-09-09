@@ -7,6 +7,7 @@ import { AttractionDetailTracker } from "@/components/AttractionDetailTracker";
 import { BottomNav } from "@/components/BottomNav";
 import { JsonLd } from "@/components/JsonLd";
 import { AddressLink } from "@/components/AddressLink";
+import { FichaTabs } from "@/components/FichaTabs";
 import { OutboundLink } from "@/components/OutboundLink";
 import { RecommendationRing } from "@/components/RecommendationRing";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -205,60 +206,69 @@ export default async function AtracaoPage({ params, searchParams }: AtracaoPageP
                   {atracao.titulo}
                 </h1>
 
-                <dl className="grid gap-3 text-sm sm:grid-cols-2">
-                  <div>
-                    <dt className="font-medium text-primary">Idade</dt>
-                    <dd className="text-secondary">
-                      {formatFaixaEtaria(atracao.idadeMin, atracao.idadeMax)}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="font-medium text-primary">Bairro</dt>
-                    <dd className="text-secondary">{atracao.bairro}</dd>
-                  </div>
-                  {atracao.endereco ? (
-                    <div className="sm:col-span-2">
-                      <dt className="font-medium text-primary">Endereço</dt>
-                      <dd className="text-secondary">
-                        <AddressLink atracao={atracao} endereco={atracao.endereco} />
-                      </dd>
-                    </div>
-                  ) : null}
-                  {atracao.local ? (
-                    <div className="sm:col-span-2">
-                      <dt className="font-medium text-primary">Local</dt>
-                      <dd className="text-secondary">{atracao.local}</dd>
-                    </div>
-                  ) : null}
-                  <div>
-                    <dt className="font-medium text-primary">Preço</dt>
-                    <dd className="text-secondary">{formatPreco(atracao)}</dd>
-                  </div>
-                  <div>
-                    <dt className="font-medium text-primary">Ambiente</dt>
-                    <dd className="text-secondary">
-                      {atracao.indoorOutdoor === "indoor"
-                        ? "Interno"
-                        : atracao.indoorOutdoor === "outdoor"
-                          ? "Ao ar livre"
-                          : "Interno e externo"}
-                    </dd>
-                  </div>
-                </dl>
+                <FichaTabs
+                  detalhes={
+                    <>
+                      <dl className="grid gap-3 text-sm sm:grid-cols-2">
+                        <div>
+                          <dt className="font-medium text-primary">Idade</dt>
+                          <dd className="text-secondary">
+                            {formatFaixaEtaria(atracao.idadeMin, atracao.idadeMax)}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="font-medium text-primary">Bairro</dt>
+                          <dd className="text-secondary">{atracao.bairro}</dd>
+                        </div>
+                        {atracao.endereco ? (
+                          <div className="sm:col-span-2">
+                            <dt className="font-medium text-primary">Endereço</dt>
+                            <dd className="text-secondary">
+                              <AddressLink atracao={atracao} endereco={atracao.endereco} />
+                            </dd>
+                          </div>
+                        ) : null}
+                        {atracao.local ? (
+                          <div className="sm:col-span-2">
+                            <dt className="font-medium text-primary">Local</dt>
+                            <dd className="text-secondary">{atracao.local}</dd>
+                          </div>
+                        ) : null}
+                        <div>
+                          <dt className="font-medium text-primary">Preço</dt>
+                          <dd className="text-secondary">{formatPreco(atracao)}</dd>
+                        </div>
+                        <div>
+                          <dt className="font-medium text-primary">Ambiente</dt>
+                          <dd className="text-secondary">
+                            {atracao.indoorOutdoor === "indoor"
+                              ? "Interno"
+                              : atracao.indoorOutdoor === "outdoor"
+                                ? "Ao ar livre"
+                                : "Interno e externo"}
+                          </dd>
+                        </div>
+                      </dl>
 
-                <div className="rounded-lg bg-primary/5 px-4 py-3">
-                  <p className="text-sm font-medium text-primary">Quando ir</p>
-                  <p className="text-base text-secondary">{atracao.programacaoTexto}</p>
-                  {atracao.proximaData ? (
-                    <p className="mt-1 text-xs text-secondary">
-                      Próxima sessão: {formatadorDeData(atracao.proximaData)}
-                    </p>
-                  ) : null}
-                </div>
+                      <div className="rounded-lg bg-primary/5 px-4 py-3">
+                        <p className="text-sm font-medium text-primary">Quando ir</p>
+                        <p className="text-base text-secondary">{atracao.programacaoTexto}</p>
+                        {atracao.proximaData ? (
+                          <p className="mt-1 text-xs text-secondary">
+                            Próxima sessão: {formatadorDeData(atracao.proximaData)}
+                          </p>
+                        ) : null}
+                      </div>
 
-                <p className="text-base leading-relaxed text-secondary">
-                  {atracao.descricaoCurta}
-                </p>
+                      <p className="text-base leading-relaxed text-secondary">
+                        {atracao.descricaoCurta}
+                      </p>
+                    </>
+                  }
+                  sugestoes={
+                    <RecommendationRing recomendacoes={recomendacoes} className="lg:hidden" />
+                  }
+                />
 
                 <AtracaoDetailActions atracao={atracao} />
 
@@ -281,8 +291,6 @@ export default async function AtracaoPage({ params, searchParams }: AtracaoPageP
                 ) : null}
               </div>
             </article>
-
-            <RecommendationRing recomendacoes={recomendacoes} />
           </div>
 
           <RecommendationRing recomendacoes={recomendacoes} variant="rail" />
