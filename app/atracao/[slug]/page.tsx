@@ -174,113 +174,119 @@ export default async function AtracaoPage({ params, searchParams }: AtracaoPageP
       {jsonLd && <JsonLd data={jsonLd} />}
       <AttractionDetailTracker atracao={atracao} />
       <SiteHeader />
-      <main className="mx-auto max-w-screen-lg px-4 pb-44 pt-8 sm:px-6 sm:pt-10 lg:pb-10 lg:px-8">
-        <Link
-          href={backHref}
-          className="mb-6 inline-block text-sm font-medium text-secondary hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-        >
-          ← Voltar para a lista
-        </Link>
+      <main className="mx-auto max-w-screen-lg px-4 pb-44 pt-8 sm:px-6 sm:pt-10 lg:max-w-[1240px] lg:pb-10 lg:px-8">
+        <div className="lg:flex lg:items-start lg:gap-10">
+          <div className="min-w-0 lg:flex-1">
+            <Link
+              href={backHref}
+              className="mb-6 inline-block text-sm font-medium text-secondary hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            >
+              ← Voltar para a lista
+            </Link>
 
-        <article className="grid gap-8 lg:grid-cols-2 lg:gap-10">
-          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-primary/5">
-            <Image
-              src={sanityImageUrl(atracao.imagemUrl, 1200)}
-              alt={`Foto: ${atracao.titulo}`}
-              fill
-              priority
-              unoptimized
-              sizes="(max-width: 1024px) 100vw, 50vw"
-              className="object-cover"
-            />
-          </div>
+            <article className="grid gap-8 lg:grid-cols-2 lg:gap-10">
+              <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-primary/5">
+                <Image
+                  src={sanityImageUrl(atracao.imagemUrl, 1200)}
+                  alt={`Foto: ${atracao.titulo}`}
+                  fill
+                  priority
+                  unoptimized
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="object-cover"
+                />
+              </div>
 
-          <div className="space-y-4">
-            <p className="text-sm font-medium uppercase tracking-wide text-secondary">
-              {atracao.categoria}
-            </p>
-            <h1 className="text-2xl font-display font-bold text-primary md:text-3xl">
-              {atracao.titulo}
-            </h1>
-
-            <dl className="grid gap-3 text-sm sm:grid-cols-2">
-              <div>
-                <dt className="font-medium text-primary">Idade</dt>
-                <dd className="text-secondary">
-                  {formatFaixaEtaria(atracao.idadeMin, atracao.idadeMax)}
-                </dd>
-              </div>
-              <div>
-                <dt className="font-medium text-primary">Bairro</dt>
-                <dd className="text-secondary">{atracao.bairro}</dd>
-              </div>
-              {atracao.endereco ? (
-                <div className="sm:col-span-2">
-                  <dt className="font-medium text-primary">Endereço</dt>
-                  <dd className="text-secondary">
-                    <AddressLink atracao={atracao} endereco={atracao.endereco} />
-                  </dd>
-                </div>
-              ) : null}
-              {atracao.local ? (
-                <div className="sm:col-span-2">
-                  <dt className="font-medium text-primary">Local</dt>
-                  <dd className="text-secondary">{atracao.local}</dd>
-                </div>
-              ) : null}
-              <div>
-                <dt className="font-medium text-primary">Preço</dt>
-                <dd className="text-secondary">{formatPreco(atracao)}</dd>
-              </div>
-              <div>
-                <dt className="font-medium text-primary">Ambiente</dt>
-                <dd className="text-secondary">
-                  {atracao.indoorOutdoor === "indoor"
-                    ? "Interno"
-                    : atracao.indoorOutdoor === "outdoor"
-                      ? "Ao ar livre"
-                      : "Interno e externo"}
-                </dd>
-              </div>
-            </dl>
-
-            <div className="rounded-lg bg-primary/5 px-4 py-3">
-              <p className="text-sm font-medium text-primary">Quando ir</p>
-              <p className="text-base text-secondary">{atracao.programacaoTexto}</p>
-              {atracao.proximaData ? (
-                <p className="mt-1 text-xs text-secondary">
-                  Próxima sessão: {formatadorDeData(atracao.proximaData)}
+              <div className="space-y-4">
+                <p className="text-sm font-medium uppercase tracking-wide text-secondary">
+                  {atracao.categoria}
                 </p>
-              ) : null}
-            </div>
+                <h1 className="text-2xl font-display font-bold text-primary md:text-3xl">
+                  {atracao.titulo}
+                </h1>
 
-            <p className="text-base leading-relaxed text-secondary">
-              {atracao.descricaoCurta}
-            </p>
+                <dl className="grid gap-3 text-sm sm:grid-cols-2">
+                  <div>
+                    <dt className="font-medium text-primary">Idade</dt>
+                    <dd className="text-secondary">
+                      {formatFaixaEtaria(atracao.idadeMin, atracao.idadeMax)}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="font-medium text-primary">Bairro</dt>
+                    <dd className="text-secondary">{atracao.bairro}</dd>
+                  </div>
+                  {atracao.endereco ? (
+                    <div className="sm:col-span-2">
+                      <dt className="font-medium text-primary">Endereço</dt>
+                      <dd className="text-secondary">
+                        <AddressLink atracao={atracao} endereco={atracao.endereco} />
+                      </dd>
+                    </div>
+                  ) : null}
+                  {atracao.local ? (
+                    <div className="sm:col-span-2">
+                      <dt className="font-medium text-primary">Local</dt>
+                      <dd className="text-secondary">{atracao.local}</dd>
+                    </div>
+                  ) : null}
+                  <div>
+                    <dt className="font-medium text-primary">Preço</dt>
+                    <dd className="text-secondary">{formatPreco(atracao)}</dd>
+                  </div>
+                  <div>
+                    <dt className="font-medium text-primary">Ambiente</dt>
+                    <dd className="text-secondary">
+                      {atracao.indoorOutdoor === "indoor"
+                        ? "Interno"
+                        : atracao.indoorOutdoor === "outdoor"
+                          ? "Ao ar livre"
+                          : "Interno e externo"}
+                    </dd>
+                  </div>
+                </dl>
 
-            <AtracaoDetailActions atracao={atracao} />
+                <div className="rounded-lg bg-primary/5 px-4 py-3">
+                  <p className="text-sm font-medium text-primary">Quando ir</p>
+                  <p className="text-base text-secondary">{atracao.programacaoTexto}</p>
+                  {atracao.proximaData ? (
+                    <p className="mt-1 text-xs text-secondary">
+                      Próxima sessão: {formatadorDeData(atracao.proximaData)}
+                    </p>
+                  ) : null}
+                </div>
 
-            {atracao.linkExterno ? (
-              <div className="fixed inset-x-0 bottom-20 z-40 border-t border-surface-muted bg-white p-4 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] lg:static lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
-                <OutboundLink
-                  atracao={atracao}
-                  href={atracao.linkExterno}
-                  ctaLabel={atracao.tipoProgramacao === "permanente" ? "Visitar site" : "Ver ingressos"}
-                  isBuyTicket={atracao.tipoProgramacao !== "permanente"}
-                  className={buttonClassName({
-                    variant: "primary",
-                    size: "lg",
-                    className: "w-full lg:w-auto",
-                  })}
-                >
-                  {atracao.tipoProgramacao === "permanente" ? "Visitar site" : "Ver ingressos"}
-                </OutboundLink>
+                <p className="text-base leading-relaxed text-secondary">
+                  {atracao.descricaoCurta}
+                </p>
+
+                <AtracaoDetailActions atracao={atracao} />
+
+                {atracao.linkExterno ? (
+                  <div className="fixed inset-x-0 bottom-20 z-40 border-t border-surface-muted bg-white p-4 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] lg:static lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
+                    <OutboundLink
+                      atracao={atracao}
+                      href={atracao.linkExterno}
+                      ctaLabel={atracao.tipoProgramacao === "permanente" ? "Visitar site" : "Ver ingressos"}
+                      isBuyTicket={atracao.tipoProgramacao !== "permanente"}
+                      className={buttonClassName({
+                        variant: "primary",
+                        size: "lg",
+                        className: "w-full lg:w-auto",
+                      })}
+                    >
+                      {atracao.tipoProgramacao === "permanente" ? "Visitar site" : "Ver ingressos"}
+                    </OutboundLink>
+                  </div>
+                ) : null}
               </div>
-            ) : null}
-          </div>
-        </article>
+            </article>
 
-        <RecommendationRing recomendacoes={recomendacoes} />
+            <RecommendationRing recomendacoes={recomendacoes} />
+          </div>
+
+          <RecommendationRing recomendacoes={recomendacoes} variant="rail" />
+        </div>
       </main>
       <SiteFooter />
       <BottomNav />

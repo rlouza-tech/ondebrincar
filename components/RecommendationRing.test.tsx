@@ -36,9 +36,11 @@ const recomendacoes: Recomendacao[] = [
 
 let container: HTMLDivElement;
 
-function render(items: Recomendacao[]) {
+function render(items: Recomendacao[], variant?: "ring" | "rail") {
   act(() => {
-    createRoot(container).render(<RecommendationRing recomendacoes={items} />);
+    createRoot(container).render(
+      <RecommendationRing recomendacoes={items} variant={variant} />,
+    );
   });
 }
 
@@ -110,6 +112,72 @@ describe("RecommendationRing — US-I33", () => {
 
   it("liga cada card pra /atracao/<slug>", () => {
     render(recomendacoes);
+    const links = container.querySelectorAll("a");
+    expect(links[0].getAttribute("href")).toBe("/atracao/peca-circo");
+    expect(links[1].getAttribute("href")).toBe("/atracao/show-parque");
+  });
+});
+
+describe("RecommendationRing — variant rail (US-I45)", () => {
+  beforeEach(() => {
+    container = document.createElement("div");
+    document.body.appendChild(container);
+  });
+
+  afterEach(() => {
+    act(() => {
+      document.body.removeChild(container);
+    });
+    vi.clearAllMocks();
+  });
+
+  it("não renderiza nada quando não há recomendações", () => {
+    render([], "rail");
+    expect(container.querySelector("aside")).toBeNull();
+  });
+
+  it("renderiza como <aside>, não <section>, no formato rail", () => {
+    render(recomendacoes, "rail");
+    expect(container.querySelector("aside")).not.toBeNull();
+    expect(container.querySelector("section")).toBeNull();
+  });
+
+  it("renderiza o título 'Continue o programa' e um card por recomendação", () => {
+    render(recomendacoes, "rail");
+    expect(container.querySelector("h2")?.textContent).toBe("Continue o programa");
+    expect(container.querySelectorAll("a").length).toBe(2);
+  });
+
+  it("renderiza nome e bairro de cada card com dados reais", () => {
+    render(recomendacoes, "rail");
+    const texto = container.textContent ?? "";
+    expect(texto).toContain("Peça do Circo");
+    expect(texto).toContain("Mesmo tema");
+    expect(texto).toContain("Show no Parque");
+    expect(texto).toContain("Também em Copacabana");
+  });
+
+  it("dispara recommendation_click com posição e eixo ao clicar num card do rail", () => {
+    render(recomendacoes, "rail");
+    const links = container.querySelectorAll("a");
+    act(() => {
+      links[0].dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+    });
+
+    expect(trackEvent).toHaveBeenCalledWith(
+      "recommendation_click",
+      expect.objectContaining({
+        attraction_id: "peca-circo",
+        attraction_name: "Peça do Circo",
+        category: "teatro",
+        position: 0,
+        axis: "tema",
+      }),
+    );
+  });
+
+  it("liga cada card pra /atracao/<slug> no rail", () => {
+    render(recomendacoes, "rail");
     const links = container.querySelectorAll("a");
     expect(links[0].getAttribute("href")).toBe("/atracao/peca-circo");
     expect(links[1].getAttribute("href")).toBe("/atracao/show-parque");
