@@ -39,6 +39,11 @@ export interface SanityDestaquesSemanaDocument {
   atracoes: SanityAtracaoDocument[];
 }
 
+/** Shape retornado por `configHomeAtual` (US-I46) — ids de `CARROSSEL_POOL` (`lib/carrosseis.ts`). */
+export interface SanityConfigHomeDocument {
+  carrosseisAtivos?: string[] | null;
+}
+
 /** Shape retornado por `recomendacoesPorTema`/`recomendacoesPorBairro` (US-I33). */
 export interface SanityRecomendacaoDocument {
   slug: string;

@@ -6,7 +6,10 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { HomeContent } from "@/app/home-content";
 import { getAllAtracoes } from "@/lib/atracoes";
+import { carrosseisAtivosOrdenados } from "@/lib/carrosseis";
+import { getConfigHomeAtual } from "@/lib/config-home";
 import { getDestaquesSemana } from "@/lib/destaques";
+import { montarCarrosseisZona, ZONA_ORDEM_PADRAO, type ZonaId } from "@/lib/zonas";
 
 interface HomePageProps {
   searchParams?: {
@@ -40,13 +43,23 @@ export function generateMetadata({ searchParams }: HomePageProps): Metadata {
 }
 
 export default async function HomePage() {
-  const [atracoes, destaques] = await Promise.all([
+  const [atracoes, destaques, configHome] = await Promise.all([
     getAllAtracoes(),
     getDestaquesSemana(),
+    getConfigHomeAtual(),
   ]);
   const bairros = Array.from(
     new Set(atracoes.map((atracao) => atracao.bairro)),
   ).sort((a, b) => a.localeCompare(b, "pt-BR"));
+
+  // US-I47 — lê a config do painel de curadoria (US-I46) pra saber quais zonas mostrar e em
+  // que ordem; sem doc salvo ainda, cai nas 5 zonas na ordem padrão do Discovery.
+  const zonasAtivas = configHome?.carrosseisAtivos?.length
+    ? carrosseisAtivosOrdenados(configHome.carrosseisAtivos)
+        .map((carrossel) => carrossel.id)
+        .filter((id): id is ZonaId => id.startsWith("zona-"))
+    : ZONA_ORDEM_PADRAO;
+  const carrosseisZona = montarCarrosseisZona(atracoes, zonasAtivas);
 
   return (
     <>
@@ -60,7 +73,12 @@ export default async function HomePage() {
             </p>
           }
         >
-          <HomeContent atracoes={atracoes} bairros={bairros} destaques={destaques} />
+          <HomeContent
+            atracoes={atracoes}
+            bairros={bairros}
+            destaques={destaques}
+            carrosseisZona={carrosseisZona}
+          />
         </Suspense>
       </main>
       <SiteFooter />
