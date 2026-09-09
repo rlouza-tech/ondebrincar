@@ -6,6 +6,20 @@ export const structure = (S: StructureBuilder) =>
   S.list()
     .title("Onde Brincar")
     .items([
+      // ── ⭐ Curadoria — painéis singleton (US-I51 + US-I46) ─────────────
+      S.listItem()
+        .title("⭐ Destaques da semana")
+        .id("destaquesSemana")
+        .child(
+          S.document().schemaType("destaquesSemana").documentId("destaquesSemana"),
+        ),
+      S.listItem()
+        .title("☰ Configuração da Home")
+        .id("configHome")
+        .child(S.document().schemaType("configHome").documentId("configHome")),
+
+      S.divider(),
+
       // ── 🟢 No ar — publicadas e operando (US-O5 + US-O6) ─────────────
       S.listItem()
         .title("🟢 No ar")
