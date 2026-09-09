@@ -40,7 +40,7 @@ function TikTokIcon() {
 export function SiteFooter() {
   return (
     <footer className="mt-12 border-t border-surface-muted bg-surface-card">
-      <div className="mx-auto flex max-w-screen-lg flex-col items-center gap-5 px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto flex max-w-screen-lg flex-col items-center gap-5 px-4 pb-36 pt-8 sm:px-6 lg:px-8 lg:pb-8">
 
         {/* Redes sociais + CTA */}
         <nav

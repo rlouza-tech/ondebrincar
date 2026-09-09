@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { BottomNav } from "@/components/BottomNav";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { HomeContent } from "@/app/home-content";
@@ -45,7 +46,7 @@ export default async function HomePage() {
   return (
     <>
       <SiteHeader />
-      <main className="mx-auto max-w-screen-lg px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+      <main className="mx-auto max-w-screen-lg px-4 pb-24 pt-8 sm:px-6 sm:pt-10 lg:pb-10 lg:px-8">
         <Suspense
           fallback={
             <p className="text-sm text-secondary" aria-live="polite">
@@ -57,6 +58,7 @@ export default async function HomePage() {
         </Suspense>
       </main>
       <SiteFooter />
+      <BottomNav />
     </>
   );
 }
