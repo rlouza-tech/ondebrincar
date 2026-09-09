@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BottomNav } from "@/components/BottomNav";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 
@@ -13,7 +14,7 @@ export default function PrivacidadePage() {
   return (
     <>
       <SiteHeader />
-      <main className="mx-auto max-w-screen-md px-4 py-10 sm:px-6 lg:px-8">
+      <main className="mx-auto max-w-screen-md px-4 pb-24 pt-10 sm:px-6 lg:pb-10 lg:px-8">
         <Link
           href="/"
           className="mb-8 inline-block text-sm font-medium text-secondary hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
@@ -198,6 +199,7 @@ export default function PrivacidadePage() {
         </article>
       </main>
       <SiteFooter />
+      <BottomNav />
     </>
   );
 }

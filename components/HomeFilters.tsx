@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FilterDropdown } from "@/components/FilterDropdown";
 import {
@@ -10,6 +10,7 @@ import {
 import { trackEvent, type FilterUsedParams } from "@/lib/analytics";
 import {
   CATEGORIA_OPTIONS,
+  CATEGORIA_TRIGGER_PARAM,
   DATA_OPTIONS,
   FAIXAS_ETARIAS,
   getFilterDisplayLabel,
@@ -53,6 +54,19 @@ export function HomeFilters({ bairros, atracoes }: HomeFiltersProps) {
   const precoAtivo = searchParams.get("preco") ?? "";
   const ambienteAtivo = searchParams.get("ambiente") ?? "";
   const dataAtiva = searchParams.get("data") ?? "";
+
+  useEffect(() => {
+    if (searchParams.get(CATEGORIA_TRIGGER_PARAM) !== "1") {
+      return;
+    }
+
+    setOpenDropdown("categoria");
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete(CATEGORIA_TRIGGER_PARAM);
+    const query = params.toString();
+    router.replace(query ? `/?${query}` : "/", { scroll: false });
+  }, [searchParams, router]);
 
   const bairroDisplayLabel =
     bairrosAtivos.length === 1

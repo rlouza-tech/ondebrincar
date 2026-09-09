@@ -37,6 +37,10 @@ export const DATA_OPTIONS = [
   { label: "Próximo fim de semana", value: "proximo-fim-de-semana" },
 ] as const;
 
+/** Query param usado pelo menu inferior mobile (US-I42) para pedir que o
+ * dropdown de categoria do HomeFilters abra sozinho ao chegar na home. */
+export const CATEGORIA_TRIGGER_PARAM = "abrirCategoria";
+
 export const FILTER_PARAM_KEYS = [
   "bairro",
   "idade",

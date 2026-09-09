@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AtracaoDetailActions } from "@/components/AtracaoDetailActions";
 import { AttractionDetailTracker } from "@/components/AttractionDetailTracker";
+import { BottomNav } from "@/components/BottomNav";
 import { JsonLd } from "@/components/JsonLd";
 import { AddressLink } from "@/components/AddressLink";
 import { OutboundLink } from "@/components/OutboundLink";
@@ -173,7 +174,7 @@ export default async function AtracaoPage({ params, searchParams }: AtracaoPageP
       {jsonLd && <JsonLd data={jsonLd} />}
       <AttractionDetailTracker atracao={atracao} />
       <SiteHeader />
-      <main className="mx-auto max-w-screen-lg px-4 pb-28 pt-8 sm:px-6 sm:pt-10 lg:pb-10 lg:px-8">
+      <main className="mx-auto max-w-screen-lg px-4 pb-44 pt-8 sm:px-6 sm:pt-10 lg:pb-10 lg:px-8">
         <Link
           href={backHref}
           className="mb-6 inline-block text-sm font-medium text-secondary hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
@@ -260,7 +261,7 @@ export default async function AtracaoPage({ params, searchParams }: AtracaoPageP
             <AtracaoDetailActions atracao={atracao} />
 
             {atracao.linkExterno ? (
-              <div className="fixed inset-x-0 bottom-0 z-40 border-t border-surface-muted bg-white p-4 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] lg:static lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
+              <div className="fixed inset-x-0 bottom-16 z-40 border-t border-surface-muted bg-white p-4 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] lg:static lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
                 <OutboundLink
                   atracao={atracao}
                   href={atracao.linkExterno}
@@ -282,6 +283,7 @@ export default async function AtracaoPage({ params, searchParams }: AtracaoPageP
         <RecommendationRing recomendacoes={recomendacoes} />
       </main>
       <SiteFooter />
+      <BottomNav />
     </>
   );
 }
