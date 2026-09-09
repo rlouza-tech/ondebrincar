@@ -16,6 +16,13 @@ export interface RecommendationRingProps {
    * nesse breakpoint, no lugar de duplicar a mesma recomendação duas vezes na página.
    */
   variant?: "ring" | "rail";
+  /**
+   * Override das classes do wrapper externo do variant "ring" — usado pela aba
+   * "Sugestões" da FichaTabs (US-I52), que já provê a separação visual (a própria
+   * faixa de abas), então dispensa o `mt-10 border-t ... pt-8` pensado pra quando o
+   * "ring" era a última seção solta da página.
+   */
+  className?: string;
 }
 
 const EIXO_BADGE: Record<EixoRecomendacao, { label: (bairro: string) => string; className: string }> = {
@@ -29,7 +36,11 @@ const EIXO_BADGE: Record<EixoRecomendacao, { label: (bairro: string) => string; 
   },
 };
 
-export function RecommendationRing({ recomendacoes, variant = "ring" }: RecommendationRingProps) {
+export function RecommendationRing({
+  recomendacoes,
+  variant = "ring",
+  className,
+}: RecommendationRingProps) {
   if (recomendacoes.length === 0) {
     return null;
   }
@@ -42,7 +53,7 @@ export function RecommendationRing({ recomendacoes, variant = "ring" }: Recommen
       className={
         isRail
           ? "hidden shrink-0 lg:sticky lg:top-8 lg:block lg:w-[340px]"
-          : "mt-10 border-t border-surface-muted pt-8 lg:hidden"
+          : (className ?? "mt-10 border-t border-surface-muted pt-8 lg:hidden")
       }
     >
       <h2 className={isRail ? "text-lg font-display font-bold text-primary" : "text-xl font-display font-bold text-primary"}>
