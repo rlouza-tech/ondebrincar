@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { ActiveFilters } from "@/components/ActiveFilters";
 import { AtracaoCardLink } from "@/components/AtracaoCardLink";
+import { DestaquesTrilha } from "@/components/DestaquesTrilha";
 import { HomeFilters } from "@/components/HomeFilters";
 import { ShareSearchButton } from "@/components/ShareSearchButton";
 import { filtrarAtracoes, filtrosFromSearchParams, type Atracao } from "@/lib/atracoes";
@@ -11,9 +12,10 @@ import { filtrarAtracoes, filtrosFromSearchParams, type Atracao } from "@/lib/at
 interface HomeContentProps {
   atracoes: Atracao[];
   bairros: string[];
+  destaques: Atracao[];
 }
 
-export function HomeContent({ atracoes, bairros }: HomeContentProps) {
+export function HomeContent({ atracoes, bairros, destaques }: HomeContentProps) {
   const searchParams = useSearchParams();
 
   const filtros = useMemo(
@@ -45,6 +47,8 @@ export function HomeContent({ atracoes, bairros }: HomeContentProps) {
           ressalvas honestas sobre idade e logística.
         </p>
       </div>
+
+      <DestaquesTrilha destaques={destaques} />
 
       <HomeFilters bairros={bairros} atracoes={atracoes} />
 

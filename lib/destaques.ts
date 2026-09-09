@@ -1,3 +1,8 @@
+import { mapSanityAtracao } from "@/lib/atracoes";
+import { hasSanityConfig, sanityClient } from "@/lib/sanity/client";
+import { destaquesSemanaAtual } from "@/lib/sanity/queries";
+import type { Atracao, SanityDestaquesSemanaDocument } from "@/lib/sanity/types";
+
 /**
  * US-I51 — regras da trilha "Destaques da semana": quantos itens (Refinamento, 04/09/2026)
  * e depois de quantos dias sem curadoria manual o cron sorteia novos destaques.
@@ -39,4 +44,29 @@ export function sortearNovaCuradoria(
     pool.splice(indice, 1);
   }
   return escolhidos;
+}
+
+/**
+ * US-I43 — trilha "Destaques da semana" pro front-end: lê a curadoria atual do Sanity, na
+ * ordem definida em `destaquesSemana.atracoes`. Curadoria é 100% manual (US-I51) — nenhuma
+ * lógica de seleção aqui, só leitura e mapeamento.
+ *
+ * Sem Sanity configurado, sem documento publicado (ninguém curou ainda) ou erro de fetch:
+ * retorna `[]` — a trilha inteira não renderiza (decisão do Rafa, sessão de execução
+ * US-I43, 09/09/2026 — sem fallback automático).
+ */
+export async function getDestaquesSemana(): Promise<Atracao[]> {
+  if (!hasSanityConfig()) return [];
+
+  try {
+    const doc = await sanityClient.fetch<SanityDestaquesSemanaDocument | null>(
+      destaquesSemanaAtual,
+      {},
+      { cache: "no-store" },
+    );
+    if (!doc) return [];
+    return doc.atracoes.map(mapSanityAtracao);
+  } catch {
+    return [];
+  }
 }

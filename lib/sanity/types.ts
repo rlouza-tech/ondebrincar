@@ -33,6 +33,12 @@ export interface Atracao {
   origem?: "sympla" | "eventim" | "clubinho" | "raindrop" | "uhuu" | "ecovilla" | "outro";
 }
 
+/** Shape retornado por `destaquesSemanaAtual` (US-I51/US-I43) — refs já resolvidas. */
+export interface SanityDestaquesSemanaDocument {
+  ultimaCuradoria?: string | null;
+  atracoes: SanityAtracaoDocument[];
+}
+
 /** Shape retornado por `recomendacoesPorTema`/`recomendacoesPorBairro` (US-I33). */
 export interface SanityRecomendacaoDocument {
   slug: string;
