@@ -23,6 +23,15 @@ export const atracao = defineType({
   type: "document",
   description:
     "Atração infantil editorial gerenciada no Sanity. Espelha o núcleo de 15 campos do data-model para o MVP.",
+  fieldsets: [
+    {
+      name: "auditoria",
+      title: "Auditoria da pipeline de Agentes (QA + Direção de Arte)",
+      description:
+        "Dados brutos gerados pela pipeline de Agentes — só a pipeline escreve aqui. Read-only no Studio (US-A27).",
+      options: { collapsible: true, collapsed: true },
+    },
+  ],
   fields: [
     defineField({
       name: "nome",
@@ -340,6 +349,101 @@ export const atracao = defineType({
       initialValue: false,
       description:
         "true quando a chamada ao Gemini falhou e a ficha foi importada sem adaptação de voz (placeholder editorial).",
+    }),
+    defineField({
+      name: "tag_sanity",
+      title: "Tag Sanity (veredito bruto do QA)",
+      type: "string",
+      fieldset: "auditoria",
+      readOnly: true,
+      description:
+        "Veredito bruto do Auditor QA antes da fusão com o review_status final (ex.: auto_ok, needs_human, rejected). Só a pipeline escreve. Vazio para fichas publicadas antes da US-A27 (US-A27).",
+    }),
+    defineField({
+      name: "qa_verificacoes",
+      title: "Verificações do QA",
+      type: "object",
+      fieldset: "auditoria",
+      readOnly: true,
+      description:
+        "Os 3 checks feitos pelo Auditor QA, com o valor textual observado em cada um. Só a pipeline escreve (US-A27).",
+      fields: [
+        defineField({
+          name: "cidade_rj",
+          title: "Cidade RJ",
+          type: "string",
+          readOnly: true,
+          description: "Ex.: APROVADO / REPROVADO.",
+        }),
+        defineField({
+          name: "consistencia_evidencias",
+          title: "Consistência de evidências",
+          type: "string",
+          readOnly: true,
+          description: "Ex.: APROVADO / DIVERGENTE / INSUFICIENTE.",
+        }),
+        defineField({
+          name: "campos_obrigatorios",
+          title: "Campos obrigatórios",
+          type: "string",
+          readOnly: true,
+          description: "Ex.: COMPLETO / INCOMPLETO.",
+        }),
+      ],
+    }),
+    defineField({
+      name: "qa_pendencias",
+      title: "Pendências do QA",
+      type: "text",
+      fieldset: "auditoria",
+      readOnly: true,
+      rows: 3,
+      description:
+        "Lista de pendências identificadas pelo QA, quando houver. Ex.: 'Preço em centavos ausente'. Só a pipeline escreve (US-A27).",
+    }),
+    defineField({
+      name: "direcao_arte",
+      title: "Direção de arte",
+      type: "object",
+      fieldset: "auditoria",
+      readOnly: true,
+      description:
+        "Dados de direção de arte gerados pela pipeline pra geração de imagem (conceito, prompts, paleta). Só a pipeline escreve (US-A27).",
+      fields: [
+        defineField({
+          name: "conceito_visual",
+          title: "Conceito visual",
+          type: "text",
+          readOnly: true,
+          rows: 3,
+        }),
+        defineField({
+          name: "prompt_principal",
+          title: "Prompt principal",
+          type: "text",
+          readOnly: true,
+          rows: 3,
+        }),
+        defineField({
+          name: "prompt_fallback",
+          title: "Prompt fallback",
+          type: "text",
+          readOnly: true,
+          rows: 3,
+        }),
+        defineField({
+          name: "paleta",
+          title: "Paleta",
+          type: "string",
+          readOnly: true,
+        }),
+        defineField({
+          name: "foto_alt_sugerido",
+          title: "Foto alt sugerido",
+          type: "string",
+          readOnly: true,
+        }),
+      ],
     }),
   ],
   preview: {

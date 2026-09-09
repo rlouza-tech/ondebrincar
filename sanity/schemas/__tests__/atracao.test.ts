@@ -163,6 +163,90 @@ describe("atracao schema — canonical_id (US-A9)", () => {
   });
 });
 
+describe("atracao schema — campos de auditoria da pipeline de Agentes (US-A27)", () => {
+  it("tem o fieldset 'auditoria', collapsible e collapsed por padrão", () => {
+    const fieldset = atracao.fieldsets?.find((fs) => fs.name === "auditoria");
+    expect(fieldset).toBeDefined();
+    expect(fieldset?.options?.collapsible).toBe(true);
+    expect(fieldset?.options?.collapsed).toBe(true);
+  });
+
+  it("tem campo tag_sanity, string, read-only, no fieldset auditoria", () => {
+    const field = atracao.fields.find((f) => f.name === "tag_sanity") as
+      | { type?: string; fieldset?: string; readOnly?: boolean }
+      | undefined;
+    expect(field).toBeDefined();
+    expect(field?.type).toBe("string");
+    expect(field?.fieldset).toBe("auditoria");
+    expect(field?.readOnly).toBe(true);
+  });
+
+  it("tem campo qa_verificacoes, object read-only, com os 3 checks (cidade_rj, consistencia_evidencias, campos_obrigatorios)", () => {
+    const field = atracao.fields.find((f) => f.name === "qa_verificacoes") as
+      | {
+          type?: string;
+          fieldset?: string;
+          readOnly?: boolean;
+          fields?: Array<{ name: string; type: string; readOnly?: boolean }>;
+        }
+      | undefined;
+    expect(field).toBeDefined();
+    expect(field?.type).toBe("object");
+    expect(field?.fieldset).toBe("auditoria");
+    expect(field?.readOnly).toBe(true);
+
+    const subNames = field?.fields?.map((f) => f.name) ?? [];
+    expect(subNames).toEqual(["cidade_rj", "consistencia_evidencias", "campos_obrigatorios"]);
+    expect(field?.fields?.every((f) => f.readOnly === true)).toBe(true);
+  });
+
+  it("tem campo qa_pendencias, text read-only, no fieldset auditoria", () => {
+    const field = atracao.fields.find((f) => f.name === "qa_pendencias") as
+      | { type?: string; fieldset?: string; readOnly?: boolean }
+      | undefined;
+    expect(field).toBeDefined();
+    expect(field?.type).toBe("text");
+    expect(field?.fieldset).toBe("auditoria");
+    expect(field?.readOnly).toBe(true);
+  });
+
+  it("tem campo direcao_arte, object read-only, com conceito_visual/prompt_principal/prompt_fallback/paleta/foto_alt_sugerido", () => {
+    const field = atracao.fields.find((f) => f.name === "direcao_arte") as
+      | {
+          type?: string;
+          fieldset?: string;
+          readOnly?: boolean;
+          fields?: Array<{ name: string; type: string; readOnly?: boolean }>;
+        }
+      | undefined;
+    expect(field).toBeDefined();
+    expect(field?.type).toBe("object");
+    expect(field?.fieldset).toBe("auditoria");
+    expect(field?.readOnly).toBe(true);
+
+    const subNames = field?.fields?.map((f) => f.name) ?? [];
+    expect(subNames).toEqual([
+      "conceito_visual",
+      "prompt_principal",
+      "prompt_fallback",
+      "paleta",
+      "foto_alt_sugerido",
+    ]);
+    expect(field?.fields?.every((f) => f.readOnly === true)).toBe(true);
+  });
+
+  it("nenhum campo de auditoria é obrigatório (sem backfill retroativo — assumption fechada)", () => {
+    const nomes = ["tag_sanity", "qa_verificacoes", "qa_pendencias", "direcao_arte"];
+    for (const nome of nomes) {
+      const field = atracao.fields.find((f) => f.name === nome) as
+        | { validation?: unknown }
+        | undefined;
+      expect(field).toBeDefined();
+      expect(field?.validation).toBeUndefined();
+    }
+  });
+});
+
 describe("atracao schema — status duplicada (US-S64)", () => {
   it("inclui a opção duplicada na lista de valores de status", () => {
     const field = atracao.fields.find((f) => f.name === "status") as

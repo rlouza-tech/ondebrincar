@@ -62,6 +62,16 @@ export const structure = (S: StructureBuilder) =>
             .defaultOrdering([{ field: "_updatedAt", direction: "desc" }]),
         ),
 
+      // ── 🔍 Precisa revisão humana — auditoria da pipeline de Agentes (US-A27) ─
+      S.listItem()
+        .title("🔍 Precisa revisão humana")
+        .child(
+          S.documentList()
+            .title("Precisa revisão humana — review_status needs_human")
+            .filter('_type == "atracao" && review_status == "needs_human"')
+            .defaultOrdering([{ field: "_updatedAt", direction: "desc" }]),
+        ),
+
       // ── ⏸ Fora do ar — publicadas, encerradas/em obras/esgotadas (US-O5) ─
       S.listItem()
         .title("⏸ Fora do ar")
