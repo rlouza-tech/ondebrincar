@@ -122,3 +122,38 @@ export const recomendacoesPermanentesPorTema = groq`
     ${recomendacaoProjection}
   }
 `;
+
+/**
+ * US-I51 — trilha "Destaques da semana" atual, com as referências resolvidas na mesma
+ * ordem do array `atracoes` (a ordem do array é a ordem de exibição — GROQ preserva essa
+ * ordem em `[]->` porque o dereference acontece item a item, não via filtro/reordenação).
+ */
+export const destaquesSemanaAtual = groq`
+  *[_type == "destaquesSemana"][0] {
+    ultimaCuradoria,
+    atracoes[]->{
+      ${atracaoProjection}
+    }
+  }
+`;
+
+/** US-I51 — só o essencial pro cron de rotação decidir/agir (evita puxar o doc inteiro). */
+export const destaquesSemanaParaRotacao = groq`
+  *[_type == "destaquesSemana"][0] {
+    _id,
+    ultimaCuradoria,
+    "idsAtuais": atracoes[]._ref
+  }
+`;
+
+/** US-I51 — ids das atrações ativas elegíveis pro sorteio automático do cron. */
+export const idsAtracoesAtivas = groq`
+  *[_type == "atracao" && !(_id in path("drafts.**")) && status == "operando"]._id
+`;
+
+/** US-I46 — quais carrosséis de zona/categoria estão ativos e em que ordem, além de Destaques. */
+export const configHomeAtual = groq`
+  *[_type == "configHome"][0] {
+    carrosseisAtivos
+  }
+`;

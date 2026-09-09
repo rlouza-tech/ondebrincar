@@ -8,6 +8,10 @@ import { catalogoDashboardPlugin } from "./sanity/plugins/catalogoDashboard";
 const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "missing-project-id";
 const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || "production";
 
+// Documentos singleton (US-I51 + US-I46) — só existem via o painel fixo no Structure,
+// nunca pelo menu global "Novo documento" (senão dá pra criar um segundo por engano).
+const SINGLETON_TYPES = new Set(["destaquesSemana", "configHome"]);
+
 export default defineConfig({
   name: "ondebrincar",
   title: "Onde Brincar",
@@ -17,5 +21,13 @@ export default defineConfig({
   plugins: [structureTool({ structure }), visionTool(), catalogoDashboardPlugin()],
   schema: {
     types: schemas,
+  },
+  document: {
+    newDocumentOptions: (prev, { creationContext }) => {
+      if (creationContext.type === "global") {
+        return prev.filter((item) => !SINGLETON_TYPES.has(item.templateId));
+      }
+      return prev;
+    },
   },
 });
