@@ -77,6 +77,11 @@ export interface AddressClickParams {
   address: string;
 }
 
+/** Disparado ao clicar no card teaser "Ver tudo" que revela a listagem completa da home (US-I56). */
+export interface VerTudoClickParams {
+  results_count: number;
+}
+
 /** Disparado ao clicar num card do anel de recomendação (US-I33). */
 export interface RecommendationClickParams {
   attraction_id: string;
