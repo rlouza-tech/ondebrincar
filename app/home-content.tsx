@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { ActiveFilters } from "@/components/ActiveFilters";
 import { AtracaoCardLink } from "@/components/AtracaoCardLink";
 import { DestaquesTrilha } from "@/components/DestaquesTrilha";
+import { DestaquesTrilhaMobile } from "@/components/DestaquesTrilhaMobile";
 import { HomeFilters } from "@/components/HomeFilters";
 import { ShareSearchButton } from "@/components/ShareSearchButton";
 import { ZonaCarrossel } from "@/components/ZonaCarrossel";
@@ -51,7 +52,12 @@ export function HomeContent({ atracoes, bairros, destaques, carrosseisZona }: Ho
         </p>
       </div>
 
-      <DestaquesTrilha destaques={destaques} />
+      <div className="hidden lg:block">
+        <DestaquesTrilha destaques={destaques} />
+      </div>
+      <div className="lg:hidden">
+        <DestaquesTrilhaMobile destaques={destaques} />
+      </div>
 
       {carrosseisZona.map((carrossel) => (
         <ZonaCarrossel key={carrossel.id} carrossel={carrossel} />
