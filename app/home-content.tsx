@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ActiveFilters } from "@/components/ActiveFilters";
 import { AtracaoCardLink } from "@/components/AtracaoCardLink";
@@ -8,9 +8,16 @@ import { DestaquesTrilha } from "@/components/DestaquesTrilha";
 import { DestaquesTrilhaMobile } from "@/components/DestaquesTrilhaMobile";
 import { HomeFilters } from "@/components/HomeFilters";
 import { ShareSearchButton } from "@/components/ShareSearchButton";
+import { VerTudoTeaser } from "@/components/VerTudoTeaser";
 import { ZonaCarrossel } from "@/components/ZonaCarrossel";
 import { ZonaCarrosselMobile } from "@/components/ZonaCarrosselMobile";
-import { filtrarAtracoes, filtrosFromSearchParams, type Atracao } from "@/lib/atracoes";
+import { trackEvent, type VerTudoClickParams } from "@/lib/analytics";
+import {
+  countActiveFilters,
+  filtrarAtracoes,
+  filtrosFromSearchParams,
+  type Atracao,
+} from "@/lib/atracoes";
 import type { CarrosselZona } from "@/lib/zonas";
 
 interface HomeContentProps {
@@ -22,6 +29,8 @@ interface HomeContentProps {
 
 export function HomeContent({ atracoes, bairros, destaques, carrosseisZona }: HomeContentProps) {
   const searchParams = useSearchParams();
+  const listagemRef = useRef<HTMLDivElement>(null);
+  const [expandidoManual, setExpandidoManual] = useState(false);
 
   const filtros = useMemo(
     () => filtrosFromSearchParams(searchParams),
@@ -33,10 +42,28 @@ export function HomeContent({ atracoes, bairros, destaques, carrosseisZona }: Ho
     [atracoes, filtros],
   );
 
+  // AC4 — chegando via link com filtro ativo ("Ver todas — Zona X" da US-I47,
+  // ShareSearchButton), a seção já entra expandida: o card teaser nunca renderiza.
+  const filtroAtivoNaUrl = countActiveFilters(searchParams) > 0;
+  const expandido = expandidoManual || filtroAtivoNaUrl;
+
+  useEffect(() => {
+    if (expandidoManual) {
+      listagemRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [expandidoManual]);
+
   const contagemLabel =
     resultados.length === 1
       ? "1 atração encontrada"
       : `${resultados.length} atrações encontradas`;
+
+  const handleVerTudoClick = () => {
+    trackEvent("ver_tudo_click", {
+      results_count: resultados.length,
+    } satisfies VerTudoClickParams);
+    setExpandidoManual(true);
+  };
 
   return (
     <div className="space-y-8">
@@ -71,34 +98,44 @@ export function HomeContent({ atracoes, bairros, destaques, carrosseisZona }: Ho
         ))}
       </div>
 
-      <HomeFilters bairros={bairros} atracoes={atracoes} />
+      {expandido ? (
+        <div ref={listagemRef} className="space-y-8">
+          <p className="text-base font-semibold text-primary" aria-live="polite">
+            {contagemLabel}
+          </p>
 
-      <ActiveFilters searchParams={searchParams} atracoes={atracoes} />
+          <HomeFilters bairros={bairros} atracoes={atracoes} />
 
-      <div className="flex items-center justify-between gap-4">
-        <p className="text-sm font-medium text-secondary" aria-live="polite">
-          {contagemLabel}
-        </p>
-        <ShareSearchButton searchParams={searchParams} />
-      </div>
+          <ActiveFilters searchParams={searchParams} atracoes={atracoes} />
 
-      {resultados.length === 0 ? (
-        <p className="rounded-lg border border-warn/30 bg-warn/10 px-4 py-3 text-sm text-primary">
-          Nenhuma atração encontrada com esses filtros. Tente outro bairro,
-          faixa etária ou categoria.
-        </p>
+          <div className="flex items-center justify-between gap-4">
+            <p className="text-sm font-medium text-secondary" aria-live="polite">
+              {contagemLabel}
+            </p>
+            <ShareSearchButton searchParams={searchParams} />
+          </div>
+
+          {resultados.length === 0 ? (
+            <p className="rounded-lg border border-warn/30 bg-warn/10 px-4 py-3 text-sm text-primary">
+              Nenhuma atração encontrada com esses filtros. Tente outro bairro,
+              faixa etária ou categoria.
+            </p>
+          ) : (
+            <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {resultados.map((atracao) => (
+                <li key={atracao.slug}>
+                  <AtracaoCardLink
+                    atracao={atracao}
+                    filterRef={searchParams.toString()}
+                    sempreDisponivel={filtros.data !== undefined && !atracao.proximaData}
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       ) : (
-        <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {resultados.map((atracao) => (
-            <li key={atracao.slug}>
-              <AtracaoCardLink
-                atracao={atracao}
-                filterRef={searchParams.toString()}
-                sempreDisponivel={filtros.data !== undefined && !atracao.proximaData}
-              />
-            </li>
-          ))}
-        </ul>
+        <VerTudoTeaser count={resultados.length} onClick={handleVerTudoClick} />
       )}
     </div>
   );
