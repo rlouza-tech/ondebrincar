@@ -7,15 +7,18 @@ import { AtracaoCardLink } from "@/components/AtracaoCardLink";
 import { DestaquesTrilha } from "@/components/DestaquesTrilha";
 import { HomeFilters } from "@/components/HomeFilters";
 import { ShareSearchButton } from "@/components/ShareSearchButton";
+import { ZonaCarrossel } from "@/components/ZonaCarrossel";
 import { filtrarAtracoes, filtrosFromSearchParams, type Atracao } from "@/lib/atracoes";
+import type { CarrosselZona } from "@/lib/zonas";
 
 interface HomeContentProps {
   atracoes: Atracao[];
   bairros: string[];
   destaques: Atracao[];
+  carrosseisZona: CarrosselZona[];
 }
 
-export function HomeContent({ atracoes, bairros, destaques }: HomeContentProps) {
+export function HomeContent({ atracoes, bairros, destaques, carrosseisZona }: HomeContentProps) {
   const searchParams = useSearchParams();
 
   const filtros = useMemo(
@@ -49,6 +52,10 @@ export function HomeContent({ atracoes, bairros, destaques }: HomeContentProps) 
       </div>
 
       <DestaquesTrilha destaques={destaques} />
+
+      {carrosseisZona.map((carrossel) => (
+        <ZonaCarrossel key={carrossel.id} carrossel={carrossel} />
+      ))}
 
       <HomeFilters bairros={bairros} atracoes={atracoes} />
 
