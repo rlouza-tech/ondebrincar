@@ -96,6 +96,15 @@ export const ZONA_ORDEM_PADRAO: ZonaId[] = [
 
 export const CAP_CARROSSEL_ZONA = 8;
 
+/**
+ * US-I50 — cap do par mobile, menor que o desktop (Discovery 19/08, Grupo 1: viewport
+ * estreito cabe ~2,2 cards por tela, cap de 8 exigiria ~3 telas de swipe por zona). Como
+ * 4 < `CAP_CARROSSEL_ZONA`, o componente mobile faz `slice(0, CAP_CARROSSEL_ZONA_MOBILE)`
+ * sobre os até 8 itens que `montarCarrosseisZona` já entrega — sem duplicar a query de
+ * dados nem rodar `avisarBairrosNaoMapeados` duas vezes.
+ */
+export const CAP_CARROSSEL_ZONA_MOBILE = 4;
+
 const BAIRRO_PARA_ZONA = new Map<string, ZonaId>();
 for (const zona of ZONAS) {
   for (const bairro of zona.bairros) {
