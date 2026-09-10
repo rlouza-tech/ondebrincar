@@ -9,6 +9,7 @@ import { DestaquesTrilhaMobile } from "@/components/DestaquesTrilhaMobile";
 import { HomeFilters } from "@/components/HomeFilters";
 import { ShareSearchButton } from "@/components/ShareSearchButton";
 import { ZonaCarrossel } from "@/components/ZonaCarrossel";
+import { ZonaCarrosselMobile } from "@/components/ZonaCarrosselMobile";
 import { filtrarAtracoes, filtrosFromSearchParams, type Atracao } from "@/lib/atracoes";
 import type { CarrosselZona } from "@/lib/zonas";
 
@@ -59,9 +60,16 @@ export function HomeContent({ atracoes, bairros, destaques, carrosseisZona }: Ho
         <DestaquesTrilhaMobile destaques={destaques} />
       </div>
 
-      {carrosseisZona.map((carrossel) => (
-        <ZonaCarrossel key={carrossel.id} carrossel={carrossel} />
-      ))}
+      <div className="hidden lg:block lg:space-y-8">
+        {carrosseisZona.map((carrossel) => (
+          <ZonaCarrossel key={carrossel.id} carrossel={carrossel} />
+        ))}
+      </div>
+      <div className="space-y-8 lg:hidden">
+        {carrosseisZona.map((carrossel) => (
+          <ZonaCarrosselMobile key={carrossel.id} carrossel={carrossel} />
+        ))}
+      </div>
 
       <HomeFilters bairros={bairros} atracoes={atracoes} />
 
