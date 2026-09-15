@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getFimDeSemanaReferencia, mesclarRecomendacoes, montarCandidatosComFallback } from "./recomendacoes";
 import {
   recomendacoesPermanentesPorBairro,
@@ -56,12 +56,38 @@ describe("getFimDeSemanaReferencia", () => {
     });
   });
 
-  it("sem proximaData (atração permanente), usa o próximo fim de semana a partir de hoje", () => {
-    const semData = getFimDeSemanaReferencia(undefined);
-    const dataInicio = new Date(`${semData.inicio}T12:00:00`);
-    const dataFim = new Date(`${semData.fim}T12:00:00`);
-    expect(dataInicio.getDay()).toBe(6); // sábado
-    expect(dataFim.getDay()).toBe(0); // domingo
+  const janelaPermanente: Array<{
+    dia: string;
+    hoje: string;
+    inicio: string;
+    fim: string;
+  }> = [
+    { dia: "segunda", hoje: "2026-09-14", inicio: "2026-09-18", fim: "2026-09-20" },
+    { dia: "terça", hoje: "2026-09-15", inicio: "2026-09-18", fim: "2026-09-20" },
+    { dia: "quarta", hoje: "2026-09-16", inicio: "2026-09-18", fim: "2026-09-20" },
+    { dia: "quinta", hoje: "2026-09-17", inicio: "2026-09-18", fim: "2026-09-20" },
+    { dia: "sexta", hoje: "2026-09-18", inicio: "2026-09-18", fim: "2026-09-20" },
+    { dia: "sábado", hoje: "2026-09-19", inicio: "2026-09-19", fim: "2026-09-20" },
+    { dia: "domingo", hoje: "2026-09-20", inicio: "2026-09-20", fim: "2026-09-20" },
+  ];
+
+  describe("sem proximaData (US-I59)", () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it.each(janelaPermanente)(
+      "no $dia usa a janela corrigida $inicio → $fim",
+      ({ hoje, inicio, fim }) => {
+        const [year, month, day] = hoje.split("-").map(Number);
+        vi.setSystemTime(new Date(year, month - 1, day, 12, 0, 0));
+        expect(getFimDeSemanaReferencia(undefined)).toEqual({ inicio, fim });
+      },
+    );
   });
 });
 

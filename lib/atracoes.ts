@@ -230,17 +230,24 @@ export interface FiltroBusca {
   data?: string;
 }
 
+/**
+ * Janela do filtro "fim de semana" a partir de hoje (US-I59).
+ * Ancora na sexta desta semana (offset 0) ou da semana +offset e não começa
+ * antes de hoje: sex–dom (seg–sex), sáb–dom (sábado), só o domingo (domingo).
+ */
 export function getProximoFimDeSemana(offset = 0): { inicio: Date; fim: Date } {
   const hoje = new Date();
   hoje.setHours(0, 0, 0, 0);
-  const diaSemana = hoje.getDay(); // 0=dom, 6=sáb
-  const diasAteSabado = (6 - diaSemana + 7) % 7 || 7;
-  const sabado = new Date(hoje);
-  sabado.setDate(hoje.getDate() + diasAteSabado + offset * 7);
-  const domingo = new Date(sabado);
-  domingo.setDate(sabado.getDate() + 1);
+  const dow = hoje.getDay(); // 0=dom .. 6=sáb
+  const mondayIndex = (dow + 6) % 7; // seg=0 ... dom=6
+  const diasAteSexta = 4 - mondayIndex; // negativo quando a sexta já passou
+  const sexta = new Date(hoje);
+  sexta.setDate(hoje.getDate() + diasAteSexta + offset * 7);
+  const domingo = new Date(sexta);
+  domingo.setDate(sexta.getDate() + 2);
   domingo.setHours(23, 59, 59, 999);
-  return { inicio: sabado, fim: domingo };
+  const inicio = new Date(Math.max(hoje.getTime(), sexta.getTime()));
+  return { inicio, fim: domingo };
 }
 
 import { FILTER_PARAM_KEYS } from "@/lib/filter-options";
