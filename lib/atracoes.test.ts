@@ -1,8 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   filtrarAtracoes,
   formatFaixaEtaria,
   getAtracaoBySlug,
+  getProximoFimDeSemana,
   mapSanityAtracao,
   normalizeCategoriaSlug,
   sanityImageUrl,
@@ -78,6 +79,127 @@ describe("filtrarAtracoes", () => {
       resultados.some((a) => a.slug === "atracao-sem-faixa-teste"),
     ).toBe(false);
   });
+});
+
+function toISODateLocal(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function atLocalNoon(isoDate: string): Date {
+  const [year, month, day] = isoDate.split("-").map(Number);
+  return new Date(year, month - 1, day, 12, 0, 0);
+}
+
+function atracaoComData(slug: string, proximaData?: string): Atracao {
+  const { proximaData: _omit, ...base } = mockAtracoes[0];
+  return proximaData
+    ? { ...base, slug, proximaData }
+    : { ...base, slug };
+}
+
+describe("getProximoFimDeSemana (US-I59)", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  const janelaEsseFimDeSemana: Array<{
+    dia: string;
+    hoje: string;
+    inicio: string;
+    fim: string;
+  }> = [
+    { dia: "segunda", hoje: "2026-09-14", inicio: "2026-09-18", fim: "2026-09-20" },
+    { dia: "terça", hoje: "2026-09-15", inicio: "2026-09-18", fim: "2026-09-20" },
+    { dia: "quarta", hoje: "2026-09-16", inicio: "2026-09-18", fim: "2026-09-20" },
+    { dia: "quinta", hoje: "2026-09-17", inicio: "2026-09-18", fim: "2026-09-20" },
+    { dia: "sexta", hoje: "2026-09-18", inicio: "2026-09-18", fim: "2026-09-20" },
+    { dia: "sábado", hoje: "2026-09-19", inicio: "2026-09-19", fim: "2026-09-20" },
+    { dia: "domingo", hoje: "2026-09-20", inicio: "2026-09-20", fim: "2026-09-20" },
+  ];
+
+  it.each(janelaEsseFimDeSemana)(
+    "no $dia ($hoje) a janela é $inicio → $fim",
+    ({ hoje, inicio, fim }) => {
+      vi.setSystemTime(atLocalNoon(hoje));
+      const janela = getProximoFimDeSemana(0);
+      expect(toISODateLocal(janela.inicio)).toBe(inicio);
+      expect(toISODateLocal(janela.fim)).toBe(fim);
+      expect(janela.inicio.getHours()).toBe(0);
+      expect(janela.fim.getHours()).toBe(23);
+      expect(janela.fim.getMinutes()).toBe(59);
+    },
+  );
+
+  it.each(janelaEsseFimDeSemana)(
+    "no $dia ($hoje) 'próximo fim de semana' é sexta–domingo da semana seguinte",
+    ({ hoje }) => {
+      vi.setSystemTime(atLocalNoon(hoje));
+      const janela = getProximoFimDeSemana(1);
+      expect(toISODateLocal(janela.inicio)).toBe("2026-09-25");
+      expect(toISODateLocal(janela.fim)).toBe("2026-09-27");
+    },
+  );
+});
+
+describe("filtrarAtracoes data=fim-de-semana (US-I59)", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  const catalogo: Atracao[] = [
+    atracaoComData("quinta", "2026-09-17"),
+    atracaoComData("sexta", "2026-09-18"),
+    atracaoComData("sabado", "2026-09-19"),
+    atracaoComData("domingo", "2026-09-20"),
+    atracaoComData("proxima-sexta", "2026-09-25"),
+    atracaoComData("proximo-sabado", "2026-09-26"),
+    atracaoComData("proximo-domingo", "2026-09-27"),
+    atracaoComData("permanente"),
+    atracaoComData("fora", "2026-10-10"),
+  ];
+
+  const esseFimDeSemana: Array<{ dia: string; hoje: string; slugs: string[] }> = [
+    { dia: "segunda", hoje: "2026-09-14", slugs: ["sexta", "sabado", "domingo", "permanente"] },
+    { dia: "terça", hoje: "2026-09-15", slugs: ["sexta", "sabado", "domingo", "permanente"] },
+    { dia: "quarta", hoje: "2026-09-16", slugs: ["sexta", "sabado", "domingo", "permanente"] },
+    { dia: "quinta", hoje: "2026-09-17", slugs: ["sexta", "sabado", "domingo", "permanente"] },
+    { dia: "sexta", hoje: "2026-09-18", slugs: ["sexta", "sabado", "domingo", "permanente"] },
+    { dia: "sábado", hoje: "2026-09-19", slugs: ["sabado", "domingo", "permanente"] },
+    { dia: "domingo", hoje: "2026-09-20", slugs: ["domingo", "permanente"] },
+  ];
+
+  it.each(esseFimDeSemana)(
+    "no $dia inclui só a janela restante do fim de semana",
+    ({ hoje, slugs }) => {
+      vi.setSystemTime(atLocalNoon(hoje));
+      const resultados = filtrarAtracoes(catalogo, { data: "fim-de-semana" });
+      expect(resultados.map((a) => a.slug).sort()).toEqual([...slugs].sort());
+    },
+  );
+
+  it.each(esseFimDeSemana)(
+    "no $dia o filtro 'próximo-fim-de-semana' mostra sex+sáb+dom seguintes",
+    ({ hoje }) => {
+      vi.setSystemTime(atLocalNoon(hoje));
+      const resultados = filtrarAtracoes(catalogo, {
+        data: "proximo-fim-de-semana",
+      });
+      expect(resultados.map((a) => a.slug).sort()).toEqual(
+        ["proxima-sexta", "proximo-sabado", "proximo-domingo", "permanente"].sort(),
+      );
+    },
+  );
 });
 
 describe("formatFaixaEtaria (US-S20)", () => {

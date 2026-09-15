@@ -40,8 +40,10 @@ function toISODateLocal(date: Date): string {
 }
 
 /**
- * Fim de semana (sáb-dom) usado como referência pro eixo "mesmo bairro": o que contém
- * `proximaData`, ou o próximo a partir de hoje quando a atração é permanente (sem data).
+ * Fim de semana usado como referência pro eixo "mesmo bairro": o que contém
+ * `proximaData` (sáb–dom daquela data), ou a janela "esse fim de semana" a partir
+ * de hoje quando a atração é permanente (sem data) — sexta a domingo, limitada a
+ * não começar antes de hoje (US-I59).
  */
 export function getFimDeSemanaReferencia(proximaData?: string): { inicio: string; fim: string } {
   if (!proximaData) {
