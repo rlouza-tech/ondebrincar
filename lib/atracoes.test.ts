@@ -94,10 +94,10 @@ function atLocalNoon(isoDate: string): Date {
 }
 
 function atracaoComData(slug: string, proximaData?: string): Atracao {
-  const { proximaData: _omit, ...base } = mockAtracoes[0];
-  return proximaData
-    ? { ...base, slug, proximaData }
-    : { ...base, slug };
+  if (proximaData) {
+    return { ...mockAtracoes[0], slug, proximaData };
+  }
+  return { ...mockAtracoes[0], slug };
 }
 
 describe("getProximoFimDeSemana (US-I59)", () => {
