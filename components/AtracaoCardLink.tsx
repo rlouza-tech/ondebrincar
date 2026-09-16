@@ -8,7 +8,14 @@ import {
   formatPreco,
   sanityImageUrl,
 } from "@/lib/atracoes";
-import { buildShareUrl, trackEvent, trackShareClick, type SaveClickParams } from "@/lib/analytics";
+import {
+  buildCardClickParams,
+  buildShareUrl,
+  trackEvent,
+  trackShareClick,
+  type CardClickSourceSection,
+  type SaveClickParams,
+} from "@/lib/analytics";
 import { useAttractionView } from "@/hooks/useAttractionView";
 import type { Atracao } from "@/lib/sanity/types";
 import { cn } from "@/lib/cn";
@@ -18,9 +25,11 @@ export interface AtracaoCardLinkProps {
   className?: string;
   filterRef?: string;
   sempreDisponivel?: boolean;
+  /** Seção da home que renderizou o card (US-V11). */
+  sourceSection: CardClickSourceSection;
 }
 
-export function AtracaoCardLink({ atracao, className, filterRef, sempreDisponivel }: AtracaoCardLinkProps) {
+export function AtracaoCardLink({ atracao, className, filterRef, sempreDisponivel, sourceSection }: AtracaoCardLinkProps) {
   const [favorite, setFavorite] = useState(false);
   const cardRef = useAttractionView(atracao, "listing");
 
@@ -52,6 +61,9 @@ export function AtracaoCardLink({ atracao, className, filterRef, sempreDisponive
     <div ref={cardRef} className={cn("relative", className)}>
       <Link
         href={filterRef ? `/atracao/${atracao.slug}?ref=${encodeURIComponent(filterRef)}` : `/atracao/${atracao.slug}`}
+        onClick={() => {
+          trackEvent("card_click", buildCardClickParams(atracao, sourceSection));
+        }}
         className="block rounded-xl transition-shadow hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
       >
         <AtracaoCard
