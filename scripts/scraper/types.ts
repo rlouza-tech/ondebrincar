@@ -1,4 +1,4 @@
-/** Linha gerada pelo scraper v2 (15 colunas). */
+/** Linha gerada pelo scraper v2 (colunas em CSV_COLUMNS). */
 export interface LinhaEnriquecida {
   nome: string;
   categoria_origem: string;
@@ -19,6 +19,11 @@ export interface LinhaEnriquecida {
   preco_a_partir?: boolean;
   /** Endereço completo do venue extraído pelo scraper. Ex.: Rua Fonseca, 240 — Bangu. */
   endereco?: string;
+  /**
+   * Nome do estabelecimento/venue persistido no Sanity (`local`). Distinto de
+   * `venue` (campo intermediário do scraper, usado em slug/geo). US-S82.
+   */
+  local?: string;
   /**
    * Diagnóstico — US-S36 (instrumentação, 06/07/2026).
    * Status HTTP retornado por fetchProductApi() para esta ficha (da última

@@ -21,6 +21,7 @@ export const CSV_COLUMNS: Array<keyof LinhaEnriquecida> = [
   "url_ingresso",
   "preco_a_partir",
   "endereco",
+  "local",
 ];
 
 export async function writeScrapedCsv(

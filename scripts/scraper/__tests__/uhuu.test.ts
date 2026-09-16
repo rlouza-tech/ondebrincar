@@ -1,10 +1,15 @@
+import { mkdtemp, readFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
+import { writeScrapedCsv } from "../csv";
 import {
   extractSinopseUhuu,
   parseEventDetail,
   parseListingPage,
   parseParentalRating,
   parsePrecoCentavos,
+  resolveUhuuLocal,
   scrapeUhuu,
 } from "../uhuu";
 
@@ -222,6 +227,32 @@ describe("parseEventDetail", () => {
     expect(detail.latitude).toBe("-22.9663958");
     expect(detail.longitude).toBe("-43.1875042");
   });
+
+  it("extrai o nome do espaço de #pageEventLocal (US-S82)", () => {
+    const detail = parseEventDetail(EVENT_DETAIL_HTML_COM_MAPA);
+    expect(detail.venue).toBe("Teatro Claro MAIS RJ");
+  });
+
+  it("página sem #pageEventLocal retorna venue vazio — o local cai no local_nome da listagem", () => {
+    const detail = parseEventDetail(EVENT_DETAIL_HTML);
+    expect(detail.venue).toBe("");
+  });
+});
+
+describe("resolveUhuuLocal (US-S82)", () => {
+  it("prioriza o nome da página do evento quando os dois existem", () => {
+    expect(resolveUhuuLocal("Teatro da listagem", "Teatro Claro MAIS RJ")).toBe(
+      "Teatro Claro MAIS RJ",
+    );
+  });
+
+  it("cai no local_nome da listagem quando a página do evento não traz o espaço", () => {
+    expect(resolveUhuuLocal("Teatro Bangu Shopping", "")).toBe("Teatro Bangu Shopping");
+  });
+
+  it("retorna vazio quando nenhum dos dois vem preenchido", () => {
+    expect(resolveUhuuLocal("  ", "")).toBe("");
+  });
 });
 
 describe("scrapeUhuu (orquestração)", () => {
@@ -257,6 +288,7 @@ describe("scrapeUhuu (orquestração)", () => {
     expect(rows).toHaveLength(1);
     expect(rows[0].nome).toBe("Turminha do Teatro - Uma Aventura Jurássica");
     expect(rows[0].venue).toBe("Teatro Bangu Shopping");
+    expect(rows[0].local).toBe("Teatro Bangu Shopping");
     expect(rows[0].idade_minima).toBe("0");
     expect(rows[0].idade_maxima).toBe("18");
     expect(rows[0].preco_inteira_centavos).toBe("4000");
@@ -278,6 +310,7 @@ describe("scrapeUhuu (orquestração)", () => {
     expect(rows).toHaveLength(1);
     expect(rows[0].sinopse_oficial).toBe("");
     expect(rows[0].duracao_minutos).toBe("");
+    expect(rows[0].local).toBe("Teatro Bangu Shopping");
   });
 
   it("evento com coordenadas dispara geocoding e preenche bairro/endereço (AC2 — caso real Maria Clara & JP)", async () => {
@@ -308,6 +341,11 @@ describe("scrapeUhuu (orquestração)", () => {
     expect(rows).toHaveLength(1);
     expect(rows[0].bairro).toBe("Copacabana");
     expect(rows[0].endereco).toBe("Rua Siqueira Campos, 143");
+    expect(rows[0].local).toBe("Teatro Claro MAIS RJ");
+    expect(rows[0]._localEnderecoPar).toEqual({
+      local: "Teatro Claro MAIS RJ",
+      endereco: "Rua Siqueira Campos, 143",
+    });
     expect(geocodeFetchImpl).toHaveBeenCalledWith(
       expect.stringContaining("lat=-22.9663958&lon=-43.1875042"),
       expect.anything(),
@@ -330,6 +368,28 @@ describe("scrapeUhuu (orquestração)", () => {
     expect(rows).toHaveLength(1);
     expect(rows[0].bairro).toBe("");
     expect(rows[0].endereco).toBeUndefined();
+    expect(rows[0].local).toBe("Teatro Bangu Shopping");
+    expect(rows[0]._localEnderecoPar).toBeUndefined();
     expect(geocodeFetchImpl).not.toHaveBeenCalled();
+  });
+
+  it("persiste local no CSV (US-S82 — o campo que o import-sanity grava no Sanity)", async () => {
+    const listingHtmlPage1 = buildListingHtml([buildCardHtml()]);
+    const fetchImpl = vi.fn(async (url: string | URL) => {
+      const u = String(url);
+      if (u.includes("page=1")) return new Response(listingHtmlPage1, { status: 200 });
+      if (u.includes("page=2")) return new Response(buildListingHtml([]), { status: 200 });
+      if (u.includes("/evento/")) return new Response(EVENT_DETAIL_HTML, { status: 200 });
+      return new Response("", { status: 404 });
+    }) as unknown as typeof fetch;
+
+    const { rows } = await scrapeUhuu({ fetchImpl, delayMs: 0 });
+    const dir = await mkdtemp(join(tmpdir(), "uhuu-local-"));
+    const csvPath = join(dir, "uhuu-raw.csv");
+    await writeScrapedCsv(csvPath, rows);
+
+    const csv = await readFile(csvPath, "utf8");
+    expect(csv.split("\n")[0]).toContain("local");
+    expect(csv).toContain("Teatro Bangu Shopping");
   });
 });

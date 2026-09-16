@@ -6,9 +6,11 @@
  * canônico (scripts/scraper/csv.ts::CSV_COLUMNS), igual ao do Clubinho.
  *
  * Mapeamento de campos (o que o scraper consegue vs. o que fica para o Gemini):
- *   nome, venue, dias_apresentacao, url_origem, url_ingresso   → vêm direto do
- *     payload de analytics embutido no card de listagem da Uhuu (gtag
- *     select_item) — sempre presentes.
+ *   nome, venue, local, dias_apresentacao, url_origem, url_ingresso
+ *     → vêm direto do payload de analytics embutido no card de listagem da
+ *     Uhuu (gtag select_item, campo `local_nome`) — sempre presentes.
+ *     `local` é o mesmo nome persistido no Sanity (US-S82); `venue` segue
+ *     como campo intermediário de slug/geo.
  *   categoria_origem, sinopse_oficial, duracao_minutos         → vêm da página
  *     do evento (aba "Sobre"). sinopse_oficial e duracao_minutos podem ficar
  *     vazios se o evento não descrever duração em minutos no texto.
