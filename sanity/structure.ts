@@ -67,12 +67,21 @@ export const structure = (S: StructureBuilder) =>
         ),
 
       // ── 📝 A publicar — todos os drafts (US-O5) ───────────────────────
+      // status != "encerrada": exclui propostas do Guardião do Catálogo
+      // (Agentes, US-A15/US-A6) — quando ele encerra uma ficha vencida sem
+      // data futura viva em nenhuma fonte, grava status:"encerrada" só no
+      // rascunho (docs/33 no repo Agentes), nunca no publicado. Essas
+      // propostas não são conteúdo novo pra publicar — o publicado
+      // correspondente já aparece em "⚠️ Data vencida" (ainda status
+      // "operando", data passada), que é onde cabe revisar a proposta.
       S.listItem()
         .title("📝 A publicar")
         .child(
           S.documentList()
             .title("A publicar — drafts")
-            .filter('_type == "atracao" && _originalId in path("drafts.**")')
+            .filter(
+              '_type == "atracao" && _originalId in path("drafts.**") && status != "encerrada"',
+            )
             .defaultOrdering([{ field: "_updatedAt", direction: "desc" }]),
         ),
 
