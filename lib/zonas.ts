@@ -174,8 +174,9 @@ export function montarCarrosseisZona(
 /**
  * AC5 — "Ver todas — Zona X" reaproveita o filtro de bairro multi-select já existente
  * (`?bairro=X&bairro=Y`, via `HomeFilters.tsx`/`filtrarAtracoes`), sem feature nova.
- * US-I57 — inclui `substituir=1` pra o miolo ser trocado pela listagem, em vez de
- * expandir embaixo dos carrosséis (mesmo sinal do menu lateral).
+ * US-I57 / US-I58 — inclui `substituir=1` pra o miolo ser trocado pela listagem,
+ * em vez de expandir embaixo dos carrosséis (mesmo sinal do menu lateral e do
+ * menu inferior).
  */
 export function zonaVerTodasHref(bairros: string[]): string {
   const params = new URLSearchParams();

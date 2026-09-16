@@ -41,10 +41,12 @@ export const DATA_OPTIONS = [
  * dropdown de categoria do HomeFilters abra sozinho ao chegar na home. */
 export const CATEGORIA_TRIGGER_PARAM = "abrirCategoria";
 
-/** Query param de uso único (US-I57): o clique veio do menu lateral ou de
- * "Ver todas — Zona X", então o miolo da Home deve ser substituído pela
- * listagem filtrada em vez de expandir embaixo dos carrosséis. Lido uma vez
- * e removido da URL — link direto/compartilhado sem este param continua no
+/** Query param (US-I57 / US-I58): o clique veio do menu lateral, do menu
+ * inferior ou de "Ver todas — Zona X", então o miolo da Home deve ser
+ * substituído pela listagem filtrada em vez de expandir embaixo dos
+ * carrosséis. Fica na URL de propósito — removê-lo com router.replace
+ * perdia o estado no remount do Suspense. ShareSearchButton tira o param
+ * do link copiado; link direto/compartilhado sem ele continua no
  * comportamento da US-I56. */
 export const SUBSTITUIR_MIOLO_PARAM = "substituir";
 

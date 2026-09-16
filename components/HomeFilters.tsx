@@ -59,14 +59,11 @@ export function HomeFilters({ bairros, atracoes }: HomeFiltersProps) {
     if (searchParams.get(CATEGORIA_TRIGGER_PARAM) !== "1") {
       return;
     }
-
+    // US-I58 — não tira abrirCategoria da URL aqui. O replace no efeito
+    // remountava o Suspense e o dropdown fechava; o param fica até o
+    // próximo write de filtro (abaixo) pra o seletor reabrir se remountar.
     setOpenDropdown("categoria");
-
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete(CATEGORIA_TRIGGER_PARAM);
-    const query = params.toString();
-    router.replace(query ? `/?${query}` : "/", { scroll: false });
-  }, [searchParams, router]);
+  }, [searchParams]);
 
   const bairroDisplayLabel =
     bairrosAtivos.length === 1
@@ -81,8 +78,14 @@ export function HomeFilters({ bairros, atracoes }: HomeFiltersProps) {
     value: bairro,
   }));
 
-  const toggleBairro = (value: string) => {
+  const currentParams = () => {
     const params = new URLSearchParams(searchParams.toString());
+    params.delete(CATEGORIA_TRIGGER_PARAM);
+    return params;
+  };
+
+  const toggleBairro = (value: string) => {
+    const params = currentParams();
     const current = params.getAll("bairro");
     params.delete("bairro");
 
@@ -107,7 +110,7 @@ export function HomeFilters({ bairros, atracoes }: HomeFiltersProps) {
   };
 
   const toggleParam = (key: string, value: string, ativo: string) => {
-    const params = new URLSearchParams(searchParams.toString());
+    const params = currentParams();
     const nextValue = ativo === value ? null : value;
 
     if (nextValue === null) {
@@ -132,14 +135,14 @@ export function HomeFilters({ bairros, atracoes }: HomeFiltersProps) {
   };
 
   const clearParam = (key: string) => {
-    const params = new URLSearchParams(searchParams.toString());
+    const params = currentParams();
     params.delete(key);
     const query = params.toString();
     router.replace(query ? `/?${query}` : "/", { scroll: false });
   };
 
   const clearSecondaryFilters = () => {
-    const params = new URLSearchParams(searchParams.toString());
+    const params = currentParams();
     params.delete("preco");
     params.delete("ambiente");
     const query = params.toString();

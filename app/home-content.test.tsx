@@ -239,3 +239,59 @@ describe("HomeContent — substituir o miolo (US-I57)", () => {
     expect(getFiltrosSection()).toBeNull();
   });
 });
+
+describe("HomeContent — menu inferior mobile substitui o miolo (US-I58)", () => {
+  beforeEach(() => {
+    container = document.createElement("div");
+    document.body.appendChild(container);
+    root = createRoot(container);
+    Element.prototype.scrollIntoView = vi.fn();
+    window.scrollTo = vi.fn();
+  });
+
+  afterEach(() => {
+    act(() => {
+      root.unmount();
+      document.body.removeChild(container);
+    });
+    vi.clearAllMocks();
+  });
+
+  it("Esse fim de semana / Grátis com substituir=1 esconde Destaques e carrosséis", () => {
+    render("data=fim-de-semana&substituir=1");
+    expect(temEditorial()).toBe(false);
+    expect(getFiltrosSection()).not.toBeNull();
+    expect(window.scrollTo).toHaveBeenCalledWith({
+      top: 0,
+      behavior: "auto",
+    });
+  });
+
+  it("Categorias (abrirCategoria=1&substituir=1) substitui o miolo e abre o seletor", () => {
+    render("abrirCategoria=1&substituir=1");
+
+    expect(temEditorial()).toBe(false);
+    expect(getTeaserButton()).toBeUndefined();
+    expect(getFiltrosSection()).not.toBeNull();
+    const listbox = document.body.querySelector("[role='listbox']");
+    expect(listbox).not.toBeNull();
+    expect(listbox?.textContent).toContain("Teatro");
+    expect(mockReplace).not.toHaveBeenCalled();
+  });
+
+  it("abrirCategoria=1 sem substituir expande embaixo, sem esconder o editorial", () => {
+    render("abrirCategoria=1");
+
+    expect(temEditorial()).toBe(true);
+    expect(getFiltrosSection()).not.toBeNull();
+    expect(getTeaserButton()).toBeUndefined();
+  });
+
+  it("substituir=1 sem filtro (seletor aberto, categoria ainda não escolhida) mantém o miolo substituído", () => {
+    render("substituir=1");
+
+    expect(temEditorial()).toBe(false);
+    expect(getFiltrosSection()).not.toBeNull();
+    expect(getTeaserButton()).toBeUndefined();
+  });
+});

@@ -3,7 +3,10 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { CATEGORIA_TRIGGER_PARAM } from "@/lib/filter-options";
+import {
+  CATEGORIA_TRIGGER_PARAM,
+  SUBSTITUIR_MIOLO_PARAM,
+} from "@/lib/filter-options";
 import { buildHref, type NavItemDef } from "@/lib/nav-links";
 import { cn } from "@/lib/cn";
 
@@ -88,28 +91,32 @@ const NAV_ITEMS: Array<NavItemDef & { Icon: () => React.JSX.Element }> = [
     key: "inicio",
     label: "Início",
     overrides: { data: null, preco: null, categoria: null, [CATEGORIA_TRIGGER_PARAM]: null },
-    isActive: ({ isHome, data, preco, categoria }) =>
-      isHome && !data && !preco && !categoria,
+    isActive: ({ isHome, data, preco, categoria, abrirCategoria }) =>
+      isHome && !data && !preco && !categoria && abrirCategoria !== "1",
     Icon: HomeIcon,
   },
   {
     key: "categorias",
     label: "Categorias",
-    overrides: { [CATEGORIA_TRIGGER_PARAM]: "1" },
-    isActive: ({ isHome, categoria }) => isHome && categoria.length > 0,
+    overrides: {
+      [CATEGORIA_TRIGGER_PARAM]: "1",
+      [SUBSTITUIR_MIOLO_PARAM]: "1",
+    },
+    isActive: ({ isHome, categoria, abrirCategoria }) =>
+      isHome && (categoria.length > 0 || abrirCategoria === "1"),
     Icon: CategoriasIcon,
   },
   {
     key: "fim-de-semana",
     label: "Esse fim de semana",
-    overrides: { data: "fim-de-semana" },
+    overrides: { data: "fim-de-semana", [SUBSTITUIR_MIOLO_PARAM]: "1" },
     isActive: ({ isHome, data }) => isHome && data === "fim-de-semana",
     Icon: CalendarIcon,
   },
   {
     key: "gratis",
     label: "Grátis",
-    overrides: { preco: "gratuito" },
+    overrides: { preco: "gratuito", [SUBSTITUIR_MIOLO_PARAM]: "1" },
     isActive: ({ isHome, preco }) => isHome && preco === "gratuito",
     Icon: TagIcon,
   },
@@ -125,6 +132,7 @@ function BottomNavInner() {
     data: searchParams.get("data") ?? "",
     preco: searchParams.get("preco") ?? "",
     categoria: searchParams.get("categoria") ?? "",
+    abrirCategoria: searchParams.get(CATEGORIA_TRIGGER_PARAM) ?? "",
   };
 
   return (

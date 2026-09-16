@@ -12,6 +12,7 @@ export interface NavItemDef {
     data: string;
     preco: string;
     categoria: string;
+    abrirCategoria?: string;
   }) => boolean;
 }
 
