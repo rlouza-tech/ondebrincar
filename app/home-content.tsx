@@ -18,7 +18,10 @@ import {
   filtrosFromSearchParams,
   type Atracao,
 } from "@/lib/atracoes";
-import { SUBSTITUIR_MIOLO_PARAM } from "@/lib/filter-options";
+import {
+  CATEGORIA_TRIGGER_PARAM,
+  SUBSTITUIR_MIOLO_PARAM,
+} from "@/lib/filter-options";
 import type { CarrosselZona } from "@/lib/zonas";
 
 interface HomeContentProps {
@@ -46,11 +49,16 @@ export function HomeContent({ atracoes, bairros, destaques, carrosseisZona }: Ho
   // AC4 da US-I56 — chegando via link com filtro ativo (ShareSearchButton, URL
   // colada), a seção já entra expandida: o card teaser nunca renderiza.
   const filtroAtivoNaUrl = countActiveFilters(searchParams) > 0;
-  // US-I57 — o sinal fica na URL. Removê-lo com router.replace perdia o estado
-  // no remount do Suspense e os carrosséis voltavam (o bug de "clico e nada").
+  // US-I57 / US-I58 — o sinal fica na URL. Removê-lo com router.replace perdia
+  // o estado no remount do Suspense e os carrosséis voltavam. O item
+  // Categorias do menu inferior não aplica filtro (só abrirCategoria=1), então
+  // substituir=1 sozinho já esconde o editorial — sem exigir filtro ativo.
+  const abrirCategoria =
+    searchParams.get(CATEGORIA_TRIGGER_PARAM) === "1";
   const substituirMiolo =
-    searchParams.get(SUBSTITUIR_MIOLO_PARAM) === "1" && filtroAtivoNaUrl;
-  const expandido = expandidoManual || filtroAtivoNaUrl;
+    searchParams.get(SUBSTITUIR_MIOLO_PARAM) === "1";
+  const expandido =
+    expandidoManual || filtroAtivoNaUrl || substituirMiolo || abrirCategoria;
   const mostrarEditorial = !substituirMiolo;
 
   useEffect(() => {

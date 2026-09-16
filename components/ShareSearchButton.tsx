@@ -4,7 +4,10 @@ import { useState } from "react";
 import type { ReadonlyURLSearchParams } from "next/navigation";
 import { buildShareUrl, trackEvent, type ShareClickParams } from "@/lib/analytics";
 import { countActiveFilters } from "@/lib/atracoes";
-import { SUBSTITUIR_MIOLO_PARAM } from "@/lib/filter-options";
+import {
+  CATEGORIA_TRIGGER_PARAM,
+  SUBSTITUIR_MIOLO_PARAM,
+} from "@/lib/filter-options";
 
 interface ShareSearchButtonProps {
   searchParams: ReadonlyURLSearchParams;
@@ -40,6 +43,7 @@ export function ShareSearchButton({ searchParams }: ShareSearchButtonProps) {
   async function compartilharBusca() {
     const url = new URL(window.location.href);
     url.searchParams.delete(SUBSTITUIR_MIOLO_PARAM);
+    url.searchParams.delete(CATEGORIA_TRIGGER_PARAM);
     const shareUrl = buildShareUrl(url.toString(), "ob_busca");
     await navigator.clipboard.writeText(shareUrl);
 

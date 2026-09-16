@@ -53,16 +53,23 @@ describe("HomeFilters — gatilho abrirCategoria (US-I42)", () => {
     expect(listbox?.textContent).toContain("Teatro");
   });
 
-  it("remove abrirCategoria da URL depois de abrir o dropdown", () => {
+  it("não tira abrirCategoria da URL ao abrir o dropdown (US-I58 — sobrevive a remount)", () => {
     render("abrirCategoria=1");
-    expect(mockReplace).toHaveBeenCalledWith("/", { scroll: false });
+    expect(mockReplace).not.toHaveBeenCalled();
   });
 
-  it("preserva outros filtros já ativos ao remover abrirCategoria da URL", () => {
-    render("abrirCategoria=1&bairro=Tijuca");
-    expect(mockReplace).toHaveBeenCalledWith("/?bairro=Tijuca", {
-      scroll: false,
+  it("tira abrirCategoria da URL no próximo write de filtro, preservando os demais", () => {
+    render("abrirCategoria=1&bairro=Tijuca&substituir=1");
+    const teatro = Array.from(
+      document.body.querySelectorAll("[role='option']"),
+    ).find((el) => el.textContent === "Teatro") as HTMLButtonElement | undefined;
+    act(() => {
+      teatro?.click();
     });
+    expect(mockReplace).toHaveBeenCalledWith(
+      "/?bairro=Tijuca&substituir=1&categoria=teatro",
+      { scroll: false },
+    );
   });
 
   it("não abre o dropdown nem mexe na URL quando abrirCategoria não está presente", () => {
