@@ -173,4 +173,14 @@ describe("toSanityDoc", () => {
     expect(doc.pipeline_failed).toBe(true);
     expect(doc).not.toHaveProperty("ai_model");
   });
+
+  it("inclui local quando preenchido (US-S82)", () => {
+    const doc = toSanityDoc(baseLinha({ local: "Teatro Bangu Shopping" }));
+    expect(doc.local).toBe("Teatro Bangu Shopping");
+  });
+
+  it("omite local quando ausente", () => {
+    const doc = toSanityDoc(baseLinha());
+    expect(doc).not.toHaveProperty("local");
+  });
 });

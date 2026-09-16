@@ -17,6 +17,7 @@ import {
 import { isLocalizacaoRioDeJaneiro } from "./parse";
 import { scrapeAtracao } from "./scrape-atracao";
 import { scrapeListing } from "./scrape-listing";
+import type { LinhaEnriquecida } from "./types";
 import { scrapeUhuu, UHUU_CATEGORY_URL } from "./uhuu";
 import { scrapeEcovilla, ECOVILLA_PROGRAMACAO_URL } from "./ecovilla";
 
@@ -122,6 +123,7 @@ async function runUhuuScrape(options: CliOptions): Promise<void> {
   );
 
   await writeScrapedCsv(options.outputPath, rows);
+  persistLocalEnderecoPares(rows);
   console.log(`CSV salvo: ${options.outputPath} (${rows.length} linhas)`);
 }
 
@@ -227,21 +229,25 @@ async function runClubinhoScrape(options: CliOptions): Promise<void> {
   await writeScrapedCsv(options.outputPath, rows);
   await session.browser.close();
 
-  console.log(`CSV salvo: ${options.outputPath} (${rows.length} linhas, 15 colunas)`);
+  console.log(`CSV salvo: ${options.outputPath} (${rows.length} linhas)`);
+  persistLocalEnderecoPares(rows);
+}
 
-  // US-S76: grava em lote os pares nome↔endereço observados nesta rodada
-  // (venue.name + venue.address da API do Clubinho, já limpos).
+/** US-S76/US-S82: grava em lote os pares nome↔endereço observados nesta rodada. */
+function persistLocalEnderecoPares(rows: LinhaEnriquecida[]): void {
   const paresObservados = rows
     .map((r) => r._localEnderecoPar)
     .filter((par): par is { local: string; endereco: string } => Boolean(par));
-  if (paresObservados.length > 0) {
-    let tabela = loadLocalEnderecoMap();
-    for (const par of paresObservados) {
-      tabela = upsertPar(tabela, par.local, par.endereco);
-    }
-    saveLocalEnderecoMap(tabela);
-    console.log(`📍  Tabela nome↔endereço atualizada: +${paresObservados.length} par(es) observado(s) (${tabela.length} total)`);
+  if (paresObservados.length === 0) return;
+
+  let tabela = loadLocalEnderecoMap();
+  for (const par of paresObservados) {
+    tabela = upsertPar(tabela, par.local, par.endereco);
   }
+  saveLocalEnderecoMap(tabela);
+  console.log(
+    `📍  Tabela nome↔endereço atualizada: +${paresObservados.length} par(es) observado(s) (${tabela.length} total)`,
+  );
 }
 
 async function main() {

@@ -60,4 +60,19 @@ Fantasy,Teatro Infantil,Teatro Clara Nunes,Gávea,Dias 18,50%,R$60,https://clubi
     const rows = await readCSV(path);
     expect(rows[0].endereco).toBeUndefined();
   });
+
+  it("lê a coluna local quando presente (US-S82)", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "csv-v2-"));
+    const path = join(dir, "com-local.csv");
+    await writeFile(
+      path,
+      `nome,categoria_origem,venue,bairro,dias_apresentacao,desconto_percentual,preco_bruto,url_origem,sinopse_oficial,horarios_sessao,duracao_minutos,idade_minima,idade_maxima,preco_inteira_centavos,url_ingresso,preco_a_partir,endereco,local
+Gatinhos,Teatro Infantil,Teatro Bangu Shopping,Bangu,Dias 20,,,https://uhuu.com/evento/x,Sinopse,,,0,18,4000,https://uhuu.com/evento/x,true,"Rua Fonseca, 240 — Bangu",Teatro Bangu Shopping
+`,
+      "utf8",
+    );
+    const rows = await readCSV(path);
+    expect(rows[0].local).toBe("Teatro Bangu Shopping");
+    expect(rows[0].endereco).toBe("Rua Fonseca, 240 — Bangu");
+  });
 });

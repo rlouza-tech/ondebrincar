@@ -48,6 +48,8 @@ export interface UhuuEventDetail {
   duracao_minutos: string;
   latitude: string;
   longitude: string;
+  /** Nome do espaço na página do evento (`#pageEventLocal`). US-S82. */
+  venue: string;
 }
 
 function delay(ms: number): Promise<void> {
@@ -156,6 +158,23 @@ function extractCoordenadas(doc: Document): { latitude: string; longitude: strin
   return { latitude: match?.[1] ?? "", longitude: match?.[2] ?? "" };
 }
 
+/**
+ * Nome do espaço na página do evento. A Uhuu expõe isso em
+ * `#pageEventLocal` (confirmado no HTML real — ver fixture US-S74) e, em
+ * alguns cards, também em `.local-nome`. US-S82: o dado já existia na fonte;
+ * o adapter só não o persistia em `local`.
+ */
+export function extractVenueFromEventPage(doc: Document): string {
+  const fromId = normalizeWhitespace(doc.querySelector("#pageEventLocal")?.textContent ?? "");
+  if (fromId) return fromId;
+  return normalizeWhitespace(doc.querySelector(".local-nome")?.textContent ?? "");
+}
+
+/** Resolve o `local` persistido: página do evento, senão o `local_nome` da listagem. */
+export function resolveUhuuLocal(listingVenue: string, detailVenue: string): string {
+  return detailVenue.trim() || listingVenue.trim();
+}
+
 /** Parseia a página de um evento e retorna os campos só disponíveis ali (sinopse, duração, categoria, coordenadas). */
 export function parseEventDetail(html: string): UhuuEventDetail {
   const dom = new JSDOM(html);
@@ -174,6 +193,7 @@ export function parseEventDetail(html: string): UhuuEventDetail {
     duracao_minutos: extractDuracaoMinutos(sobreNormalizado, ""),
     latitude,
     longitude,
+    venue: extractVenueFromEventPage(doc),
   };
 }
 
@@ -184,6 +204,7 @@ function buildLinha(
 ): LinhaEnriquecida {
   const { idade_minima, idade_maxima } = parseParentalRating(item.parentalRating);
   const precoCentavos = parsePrecoCentavos(item.precoRaw);
+  const local = resolveUhuuLocal(item.venue, detail.venue);
 
   return {
     nome: item.nome,
@@ -203,6 +224,8 @@ function buildLinha(
     url_ingresso: item.url,
     preco_a_partir: true,
     ...(geo.endereco ? { endereco: geo.endereco } : {}),
+    ...(local ? { local } : {}),
+    ...(local && geo.endereco ? { _localEnderecoPar: { local, endereco: geo.endereco } } : {}),
   };
 }
 
@@ -268,6 +291,7 @@ export async function scrapeUhuu(options: ScrapeUhuuOptions = {}): Promise<Scrap
       duracao_minutos: "",
       latitude: "",
       longitude: "",
+      venue: "",
     };
     try {
       const res = await doFetch(item.url);
