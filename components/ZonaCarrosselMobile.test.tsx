@@ -99,7 +99,7 @@ describe("ZonaCarrosselMobile — US-I50", () => {
     const links = Array.from(container.querySelectorAll("a"));
     const verTodas = links.find((link) => link.textContent?.includes("Ver todas"));
     expect(verTodas?.getAttribute("href")).toBe(
-      "/?bairro=Botafogo&bairro=Copacabana&bairro=Ipanema",
+      "/?bairro=Botafogo&bairro=Copacabana&bairro=Ipanema&substituir=1",
     );
   });
 

@@ -68,7 +68,9 @@ describe("CategorySidebar — US-I44", () => {
     setSearch();
     render();
     const parqueLink = getLinks().find((link) => link.textContent === "Parque");
-    expect(parqueLink?.getAttribute("href")).toBe("/?categoria=parque");
+    expect(parqueLink?.getAttribute("href")).toBe(
+      "/?categoria=parque&substituir=1",
+    );
   });
 
   it("destaca a categoria ativa e faz o link dela desmarcar o filtro (toggle)", () => {
@@ -93,7 +95,7 @@ describe("CategorySidebar — US-I44", () => {
     render();
     const teatroLink = getLinks().find((link) => link.textContent === "Teatro");
     expect(teatroLink?.getAttribute("href")).toBe(
-      "/?bairro=Tijuca&categoria=teatro",
+      "/?bairro=Tijuca&categoria=teatro&substituir=1",
     );
   });
 
@@ -101,6 +103,19 @@ describe("CategorySidebar — US-I44", () => {
     setSearch();
     render();
     expect(getLinks()[0].getAttribute("aria-current")).toBe("page");
+  });
+
+  it("atalhos de Explorar (exceto Início) pedem substituir=1", () => {
+    setSearch();
+    render();
+    const links = getLinks();
+    expect(links[0].getAttribute("href")).toBe("/");
+    expect(links[1].getAttribute("href")).toBe(
+      "/?data=fim-de-semana&substituir=1",
+    );
+    expect(links[2].getAttribute("href")).toBe(
+      "/?preco=gratuito&substituir=1",
+    );
   });
 
   it("destaca 'Esse fim de semana' quando data=fim-de-semana está ativo", () => {

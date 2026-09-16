@@ -27,6 +27,7 @@ vi.mock("@/lib/analytics", async () => {
 });
 
 import { HomeContent } from "./home-content";
+import type { CarrosselZona } from "@/lib/zonas";
 
 function criarAtracao(overrides: Partial<Atracao>): Atracao {
   return {
@@ -53,19 +54,27 @@ const atracoes: Atracao[] = [
   criarAtracao({ slug: "bosque-barra", titulo: "Bosque da Barra", bairro: "Barra da Tijuca" }),
 ];
 
+const carrosseisZona: CarrosselZona[] = [
+  {
+    id: "zona-sul",
+    atracoes: [atracoes[0]],
+    total: 1,
+    bairros: ["Tijuca"],
+  },
+];
+
 let container: HTMLDivElement;
 let root: Root;
 
 function render(search = "") {
   mockUseSearchParams.mockReturnValue(new URLSearchParams(search));
   act(() => {
-    root = createRoot(container);
     root.render(
       <HomeContent
         atracoes={atracoes}
         bairros={["Tijuca", "Barra da Tijuca"]}
-        destaques={[]}
-        carrosseisZona={[]}
+        destaques={[atracoes[0]]}
+        carrosseisZona={carrosseisZona}
       />,
     );
   });
@@ -85,11 +94,21 @@ function getGridItems() {
   return container.querySelectorAll("ul li");
 }
 
+function temEditorial() {
+  return (
+    container.querySelector('section[aria-label="Destaques da semana"]') !==
+      null ||
+    container.querySelector('section[aria-label="Zona Sul"]') !== null
+  );
+}
+
 describe("HomeContent — card teaser Ver tudo (US-I56)", () => {
   beforeEach(() => {
     container = document.createElement("div");
     document.body.appendChild(container);
+    root = createRoot(container);
     Element.prototype.scrollIntoView = vi.fn();
+    window.scrollTo = vi.fn();
   });
 
   afterEach(() => {
@@ -154,5 +173,69 @@ describe("HomeContent — card teaser Ver tudo (US-I56)", () => {
     expect(getFiltrosSection()).not.toBeNull();
     expect(getGridItems().length).toBe(1);
     expect(Element.prototype.scrollIntoView).not.toHaveBeenCalled();
+  });
+});
+
+describe("HomeContent — substituir o miolo (US-I57)", () => {
+  beforeEach(() => {
+    container = document.createElement("div");
+    document.body.appendChild(container);
+    root = createRoot(container);
+    Element.prototype.scrollIntoView = vi.fn();
+    window.scrollTo = vi.fn();
+  });
+
+  afterEach(() => {
+    act(() => {
+      root.unmount();
+      document.body.removeChild(container);
+    });
+    vi.clearAllMocks();
+  });
+
+  it("clique com substituir=1 (menu lateral / Ver todas) esconde Destaques e carrosséis", () => {
+    render("categoria=teatro&substituir=1");
+
+    expect(temEditorial()).toBe(false);
+    expect(getTeaserButton()).toBeUndefined();
+    expect(getFiltrosSection()).not.toBeNull();
+    expect(getGridItems().length).toBe(atracoes.length);
+    expect(mockReplace).not.toHaveBeenCalled();
+    expect(window.scrollTo).toHaveBeenCalledWith({
+      top: 0,
+      behavior: "auto",
+    });
+  });
+
+  it("link direto/compartilhado com o mesmo filtro expande embaixo, sem esconder o editorial", () => {
+    render("categoria=teatro");
+
+    expect(temEditorial()).toBe(true);
+    expect(getFiltrosSection()).not.toBeNull();
+    expect(getGridItems().length).toBe(atracoes.length);
+    expect(mockReplace).not.toHaveBeenCalled();
+    expect(window.scrollTo).not.toHaveBeenCalled();
+  });
+
+  it("trocar de filtro depois de substituir não reexibe os carrosséis", () => {
+    render("categoria=teatro&substituir=1");
+    expect(temEditorial()).toBe(false);
+
+    render("bairro=Tijuca&substituir=1");
+
+    expect(temEditorial()).toBe(false);
+    expect(getGridItems().length).toBe(1);
+    expect(container.textContent).toContain("Peça do Circo");
+  });
+
+  it("Início / sem filtro ativo volta a mostrar Destaques e carrosséis", () => {
+    render("categoria=teatro&substituir=1");
+    expect(temEditorial()).toBe(false);
+
+    render("");
+
+    expect(temEditorial()).toBe(true);
+    expect(getTeaserButton()).not.toBeUndefined();
+    expect(getFiltrosSection()).toBeNull();
   });
 });

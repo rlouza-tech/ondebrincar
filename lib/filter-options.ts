@@ -41,6 +41,13 @@ export const DATA_OPTIONS = [
  * dropdown de categoria do HomeFilters abra sozinho ao chegar na home. */
 export const CATEGORIA_TRIGGER_PARAM = "abrirCategoria";
 
+/** Query param de uso único (US-I57): o clique veio do menu lateral ou de
+ * "Ver todas — Zona X", então o miolo da Home deve ser substituído pela
+ * listagem filtrada em vez de expandir embaixo dos carrosséis. Lido uma vez
+ * e removido da URL — link direto/compartilhado sem este param continua no
+ * comportamento da US-I56. */
+export const SUBSTITUIR_MIOLO_PARAM = "substituir";
+
 export const FILTER_PARAM_KEYS = [
   "bairro",
   "idade",

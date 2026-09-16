@@ -1,4 +1,7 @@
-import { CATEGORIA_TRIGGER_PARAM } from "@/lib/filter-options";
+import {
+  CATEGORIA_TRIGGER_PARAM,
+  SUBSTITUIR_MIOLO_PARAM,
+} from "@/lib/filter-options";
 
 export interface NavItemDef {
   key: string;
@@ -22,6 +25,7 @@ export function buildHref(
 ): string {
   const params = new URLSearchParams(isHome ? currentParams.toString() : "");
   params.delete(CATEGORIA_TRIGGER_PARAM);
+  params.delete(SUBSTITUIR_MIOLO_PARAM);
 
   for (const [key, value] of Object.entries(overrides)) {
     if (value === null) {
