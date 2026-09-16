@@ -151,6 +151,7 @@ export function HomeContent({ atracoes, bairros, destaques, carrosseisZona }: Ho
                   <AtracaoCardLink
                     atracao={atracao}
                     filterRef={searchParams.toString()}
+                    sourceSection="ver_todas"
                     sempreDisponivel={filtros.data !== undefined && !atracao.proximaData}
                   />
                 </li>

@@ -3,6 +3,7 @@
 // Todos os eventos definem o NSM: WAU Planejadores (usuários que disparam >= 1 evento de intenção)
 
 import type { Atracao, IndoorOutdoor } from "@/lib/sanity/types";
+import type { ZonaId } from "@/lib/zonas";
 
 declare global {
   interface Window {
@@ -80,6 +81,35 @@ export interface AddressClickParams {
 /** Disparado ao clicar no card teaser "Ver tudo" que revela a listagem completa da home (US-I56). */
 export interface VerTudoClickParams {
   results_count: number;
+}
+
+/**
+ * Seção da home de onde o card foi clicado (US-V11).
+ * `carrossel_<zona>` usa o slug da região (`zona-sul`, `zona-norte`, …).
+ */
+export type CardClickSourceSection =
+  | "destaques_semana"
+  | `carrossel_${ZonaId}`
+  | "ver_todas";
+
+/** Disparado ao clicar no Link de um card de atração na home — não na exibição (US-V11). */
+export interface CardClickParams {
+  attraction_id: string;
+  attraction_name: string;
+  category: string;
+  source_section: CardClickSourceSection;
+}
+
+export function buildCardClickParams(
+  atracao: Pick<Atracao, "slug" | "titulo" | "categoria">,
+  sourceSection: CardClickSourceSection,
+): CardClickParams {
+  return {
+    attraction_id: atracao.slug,
+    attraction_name: atracao.titulo,
+    category: atracao.categoria,
+    source_section: sourceSection,
+  };
 }
 
 /** Disparado ao clicar num card do anel de recomendação (US-I33). */

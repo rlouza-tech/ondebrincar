@@ -11,6 +11,14 @@ vi.mock("@/hooks/useAttractionView", () => ({
   useAttractionView: () => ({ current: null }),
 }));
 
+const { mockTrackEvent } = vi.hoisted(() => ({ mockTrackEvent: vi.fn() }));
+vi.mock("@/lib/analytics", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/analytics")>(
+    "@/lib/analytics",
+  );
+  return { ...actual, trackEvent: mockTrackEvent };
+});
+
 import { ZonaCarrossel } from "./ZonaCarrossel";
 
 function criarAtracao(overrides: Partial<Atracao>): Atracao {
@@ -105,5 +113,25 @@ describe("ZonaCarrossel — US-I47", () => {
     const texto = container.textContent ?? "";
     expect(texto).toContain("Ver todas — Zona Oeste");
     expect(texto).toContain("(1 no total)");
+  });
+
+  it("dispara card_click com source_section=carrossel_zona-sul no clique do card (US-V11)", () => {
+    render(carrosselZonaSul);
+    expect(mockTrackEvent).not.toHaveBeenCalled();
+
+    const cardLink = Array.from(container.querySelectorAll("a")).find((link) =>
+      link.getAttribute("href")?.startsWith("/atracao/"),
+    ) as HTMLAnchorElement;
+    act(() => {
+      cardLink.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+    });
+
+    expect(mockTrackEvent).toHaveBeenCalledTimes(1);
+    expect(mockTrackEvent).toHaveBeenCalledWith("card_click", {
+      attraction_id: "peca-circo",
+      attraction_name: "Peça do Circo",
+      category: "teatro",
+      source_section: "carrossel_zona-sul",
+    });
   });
 });

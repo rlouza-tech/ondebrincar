@@ -295,3 +295,38 @@ describe("HomeContent — menu inferior mobile substitui o miolo (US-I58)", () =
     expect(getTeaserButton()).toBeUndefined();
   });
 });
+
+describe("HomeContent — card_click na listagem (US-V11)", () => {
+  beforeEach(() => {
+    container = document.createElement("div");
+    document.body.appendChild(container);
+    root = createRoot(container);
+    Element.prototype.scrollIntoView = vi.fn();
+    window.scrollTo = vi.fn();
+  });
+
+  afterEach(() => {
+    act(() => {
+      root.unmount();
+      document.body.removeChild(container);
+    });
+    vi.clearAllMocks();
+  });
+
+  it("dispara card_click com source_section=ver_todas ao clicar num card da listagem", () => {
+    render("substituir=1");
+    expect(mockTrackEvent).not.toHaveBeenCalledWith("card_click", expect.anything());
+
+    const cardLink = container.querySelector("ul li a") as HTMLAnchorElement;
+    act(() => {
+      cardLink.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+    });
+
+    expect(mockTrackEvent).toHaveBeenCalledWith("card_click", {
+      attraction_id: "peca-circo",
+      attraction_name: "Peça do Circo",
+      category: "teatro",
+      source_section: "ver_todas",
+    });
+  });
+});

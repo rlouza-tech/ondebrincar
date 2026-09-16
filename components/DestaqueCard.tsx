@@ -3,12 +3,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { sanityImageUrl } from "@/lib/atracoes";
+import { buildCardClickParams, trackEvent, type CardClickSourceSection } from "@/lib/analytics";
 import { CATEGORIA_OPTIONS } from "@/lib/filter-options";
 import { useAttractionView } from "@/hooks/useAttractionView";
 import type { Atracao } from "@/lib/sanity/types";
 
 export interface DestaqueCardProps {
   atracao: Atracao;
+  sourceSection: CardClickSourceSection;
 }
 
 function categoriaLabel(categoria: string): string {
@@ -20,7 +22,7 @@ function categoriaLabel(categoria: string): string {
  * card padrão de listagem (340px de largura, imagem 240px — AtracaoCard tem imagem
  * proporcional a aspect-[4/3], sem largura fixa). Não reaproveita AtracaoCard (AC1).
  */
-export function DestaqueCard({ atracao }: DestaqueCardProps) {
+export function DestaqueCard({ atracao, sourceSection }: DestaqueCardProps) {
   const cardRef = useAttractionView(atracao, "listing");
   const meta = [
     categoriaLabel(atracao.categoria),
@@ -31,6 +33,9 @@ export function DestaqueCard({ atracao }: DestaqueCardProps) {
     <div ref={cardRef} className="w-[340px] shrink-0 snap-start">
       <Link
         href={`/atracao/${atracao.slug}`}
+        onClick={() => {
+          trackEvent("card_click", buildCardClickParams(atracao, sourceSection));
+        }}
         className="block overflow-hidden rounded-2xl border border-surface-muted bg-white transition-shadow hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
       >
         <div className="relative h-[240px] w-full bg-surface-card">

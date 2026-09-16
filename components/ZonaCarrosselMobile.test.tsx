@@ -11,6 +11,14 @@ vi.mock("@/hooks/useAttractionView", () => ({
   useAttractionView: () => ({ current: null }),
 }));
 
+const { mockTrackEvent } = vi.hoisted(() => ({ mockTrackEvent: vi.fn() }));
+vi.mock("@/lib/analytics", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/analytics")>(
+    "@/lib/analytics",
+  );
+  return { ...actual, trackEvent: mockTrackEvent };
+});
+
 import { ZonaCarrosselMobile } from "./ZonaCarrosselMobile";
 
 function criarAtracao(overrides: Partial<Atracao>): Atracao {
@@ -122,5 +130,24 @@ describe("ZonaCarrosselMobile — US-I50", () => {
     render(oitoAtracoesZonaSul);
     const botoes = container.querySelectorAll("button");
     expect(botoes.length).toBe(0);
+  });
+
+  it("dispara card_click com source_section=carrossel_zona-sul no clique do card (US-V11)", () => {
+    render(oitoAtracoesZonaSul);
+    expect(mockTrackEvent).not.toHaveBeenCalled();
+
+    const cardLink = Array.from(container.querySelectorAll("a")).find((link) =>
+      link.getAttribute("href")?.startsWith("/atracao/"),
+    ) as HTMLAnchorElement;
+    act(() => {
+      cardLink.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+    });
+
+    expect(mockTrackEvent).toHaveBeenCalledWith("card_click", {
+      attraction_id: "a1",
+      attraction_name: "Atração 1",
+      category: "teatro",
+      source_section: "carrossel_zona-sul",
+    });
   });
 });

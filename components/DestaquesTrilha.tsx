@@ -40,7 +40,7 @@ export function DestaquesTrilha({ destaques }: DestaquesTrilhaProps) {
           className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-surface-muted [&::-webkit-scrollbar]:h-2"
         >
           {destaques.map((atracao) => (
-            <DestaqueCard key={atracao.slug} atracao={atracao} />
+            <DestaqueCard key={atracao.slug} atracao={atracao} sourceSection="destaques_semana" />
           ))}
         </div>
       </div>

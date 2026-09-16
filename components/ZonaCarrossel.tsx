@@ -61,6 +61,7 @@ export function ZonaCarrossel({ carrossel }: ZonaCarrosselProps) {
               key={atracao.slug}
               atracao={atracao}
               className="w-[220px] shrink-0 snap-start"
+              sourceSection={`carrossel_${carrossel.id}`}
             />
           ))}
           <Link

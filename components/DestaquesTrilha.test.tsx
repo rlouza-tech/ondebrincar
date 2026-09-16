@@ -10,6 +10,14 @@ vi.mock("@/hooks/useAttractionView", () => ({
   useAttractionView: () => ({ current: null }),
 }));
 
+const { mockTrackEvent } = vi.hoisted(() => ({ mockTrackEvent: vi.fn() }));
+vi.mock("@/lib/analytics", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/analytics")>(
+    "@/lib/analytics",
+  );
+  return { ...actual, trackEvent: mockTrackEvent };
+});
+
 import { DestaquesTrilha } from "./DestaquesTrilha";
 
 function criarDestaque(overrides: Partial<Atracao>): Atracao {
@@ -107,5 +115,23 @@ describe("DestaquesTrilha — US-I43", () => {
     expect(texto).toContain("Teatro · Tijuca");
     expect(texto).toContain("Bosque da Barra");
     expect(texto).toContain("Parque · Grátis");
+  });
+
+  it("dispara card_click com source_section=destaques_semana no clique do card (US-V11)", () => {
+    render(tresDestaques);
+    expect(mockTrackEvent).not.toHaveBeenCalled();
+
+    const links = container.querySelectorAll("a");
+    act(() => {
+      links[0].dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+    });
+
+    expect(mockTrackEvent).toHaveBeenCalledTimes(1);
+    expect(mockTrackEvent).toHaveBeenCalledWith("card_click", {
+      attraction_id: "peca-circo",
+      attraction_name: "Peça do Circo",
+      category: "teatro",
+      source_section: "destaques_semana",
+    });
   });
 });

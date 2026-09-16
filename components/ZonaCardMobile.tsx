@@ -3,11 +3,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import { sanityImageUrl } from "@/lib/atracoes";
+import { buildCardClickParams, trackEvent, type CardClickSourceSection } from "@/lib/analytics";
 import { useAttractionView } from "@/hooks/useAttractionView";
 import type { Atracao } from "@/lib/sanity/types";
 
 export interface ZonaCardMobileProps {
   atracao: Atracao;
+  sourceSection: CardClickSourceSection;
 }
 
 /**
@@ -15,13 +17,16 @@ export interface ZonaCardMobileProps {
  * US-I47), mais compacto (42% da largura, imagem 110px, só título + bairro) — layout
  * validado em dispositivo real no Discovery de 19/08 e no protótipo v2.
  */
-export function ZonaCardMobile({ atracao }: ZonaCardMobileProps) {
+export function ZonaCardMobile({ atracao, sourceSection }: ZonaCardMobileProps) {
   const cardRef = useAttractionView(atracao, "listing");
 
   return (
     <div ref={cardRef} className="w-[42%] shrink-0 snap-start">
       <Link
         href={`/atracao/${atracao.slug}`}
+        onClick={() => {
+          trackEvent("card_click", buildCardClickParams(atracao, sourceSection));
+        }}
         className="block rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
       >
         <div className="relative h-[110px] w-full overflow-hidden rounded-xl bg-surface-card">

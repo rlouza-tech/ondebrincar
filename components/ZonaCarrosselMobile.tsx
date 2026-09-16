@@ -43,7 +43,11 @@ export function ZonaCarrosselMobile({ carrossel }: ZonaCarrosselMobileProps) {
       </div>
       <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden">
         {atracoesMobile.map((atracao) => (
-          <ZonaCardMobile key={atracao.slug} atracao={atracao} />
+          <ZonaCardMobile
+            key={atracao.slug}
+            atracao={atracao}
+            sourceSection={`carrossel_${carrossel.id}`}
+          />
         ))}
         <Link
           href={zonaVerTodasHref(carrossel.bairros)}

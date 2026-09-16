@@ -10,6 +10,14 @@ vi.mock("@/hooks/useAttractionView", () => ({
   useAttractionView: () => ({ current: null }),
 }));
 
+const { mockTrackEvent } = vi.hoisted(() => ({ mockTrackEvent: vi.fn() }));
+vi.mock("@/lib/analytics", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/analytics")>(
+    "@/lib/analytics",
+  );
+  return { ...actual, trackEvent: mockTrackEvent };
+});
+
 import { DestaquesTrilhaMobile } from "./DestaquesTrilhaMobile";
 
 function criarDestaque(overrides: Partial<Atracao>): Atracao {
@@ -112,5 +120,22 @@ describe("DestaquesTrilhaMobile — US-I49", () => {
   it("não renderiza as setinhas prev/next do desktop (Discovery 19/08, Grupo 2)", () => {
     render(quatroDestaques);
     expect(container.querySelector("button")).toBeNull();
+  });
+
+  it("dispara card_click com source_section=destaques_semana no clique do card (US-V11)", () => {
+    render(tresDestaques);
+    expect(mockTrackEvent).not.toHaveBeenCalled();
+
+    const links = container.querySelectorAll("a");
+    act(() => {
+      links[1].dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+    });
+
+    expect(mockTrackEvent).toHaveBeenCalledWith("card_click", {
+      attraction_id: "bosque-barra",
+      attraction_name: "Bosque da Barra",
+      category: "parque",
+      source_section: "destaques_semana",
+    });
   });
 });
