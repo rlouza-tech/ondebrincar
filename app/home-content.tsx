@@ -18,6 +18,7 @@ import {
   filtrosFromSearchParams,
   type Atracao,
 } from "@/lib/atracoes";
+import { SUBSTITUIR_MIOLO_PARAM } from "@/lib/filter-options";
 import type { CarrosselZona } from "@/lib/zonas";
 
 interface HomeContentProps {
@@ -42,16 +43,27 @@ export function HomeContent({ atracoes, bairros, destaques, carrosseisZona }: Ho
     [atracoes, filtros],
   );
 
-  // AC4 — chegando via link com filtro ativo ("Ver todas — Zona X" da US-I47,
-  // ShareSearchButton), a seção já entra expandida: o card teaser nunca renderiza.
+  // AC4 da US-I56 — chegando via link com filtro ativo (ShareSearchButton, URL
+  // colada), a seção já entra expandida: o card teaser nunca renderiza.
   const filtroAtivoNaUrl = countActiveFilters(searchParams) > 0;
+  // US-I57 — o sinal fica na URL. Removê-lo com router.replace perdia o estado
+  // no remount do Suspense e os carrosséis voltavam (o bug de "clico e nada").
+  const substituirMiolo =
+    searchParams.get(SUBSTITUIR_MIOLO_PARAM) === "1" && filtroAtivoNaUrl;
   const expandido = expandidoManual || filtroAtivoNaUrl;
+  const mostrarEditorial = !substituirMiolo;
 
   useEffect(() => {
     if (expandidoManual) {
       listagemRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [expandidoManual]);
+
+  useEffect(() => {
+    if (substituirMiolo) {
+      window.scrollTo({ top: 0, behavior: "auto" });
+    }
+  }, [substituirMiolo]);
 
   const contagemLabel =
     resultados.length === 1
@@ -80,23 +92,27 @@ export function HomeContent({ atracoes, bairros, destaques, carrosseisZona }: Ho
         </p>
       </div>
 
-      <div className="hidden lg:block">
-        <DestaquesTrilha destaques={destaques} />
-      </div>
-      <div className="lg:hidden">
-        <DestaquesTrilhaMobile destaques={destaques} />
-      </div>
+      {mostrarEditorial ? (
+        <>
+          <div className="hidden lg:block">
+            <DestaquesTrilha destaques={destaques} />
+          </div>
+          <div className="lg:hidden">
+            <DestaquesTrilhaMobile destaques={destaques} />
+          </div>
 
-      <div className="hidden lg:block lg:space-y-8">
-        {carrosseisZona.map((carrossel) => (
-          <ZonaCarrossel key={carrossel.id} carrossel={carrossel} />
-        ))}
-      </div>
-      <div className="space-y-8 lg:hidden">
-        {carrosseisZona.map((carrossel) => (
-          <ZonaCarrosselMobile key={carrossel.id} carrossel={carrossel} />
-        ))}
-      </div>
+          <div className="hidden lg:block lg:space-y-8">
+            {carrosseisZona.map((carrossel) => (
+              <ZonaCarrossel key={carrossel.id} carrossel={carrossel} />
+            ))}
+          </div>
+          <div className="space-y-8 lg:hidden">
+            {carrosseisZona.map((carrossel) => (
+              <ZonaCarrosselMobile key={carrossel.id} carrossel={carrossel} />
+            ))}
+          </div>
+        </>
+      ) : null}
 
       {expandido ? (
         <div ref={listagemRef} className="space-y-8">

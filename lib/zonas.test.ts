@@ -135,6 +135,8 @@ describe("montarCarrosseisZona (US-I47)", () => {
 describe("zonaVerTodasHref (AC5 — reaproveita filtro de bairro multi-select)", () => {
   it("monta a querystring com um bairro= por bairro da zona", () => {
     const href = zonaVerTodasHref(["Bangu", "Pedra de Guaratiba", "Realengo"]);
-    expect(href).toBe("/?bairro=Bangu&bairro=Pedra+de+Guaratiba&bairro=Realengo");
+    expect(href).toBe(
+      "/?bairro=Bangu&bairro=Pedra+de+Guaratiba&bairro=Realengo&substituir=1",
+    );
   });
 });

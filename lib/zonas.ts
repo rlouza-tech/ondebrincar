@@ -1,3 +1,4 @@
+import { SUBSTITUIR_MIOLO_PARAM } from "@/lib/filter-options";
 import type { Atracao } from "@/lib/sanity/types";
 
 /** Mesmos ids usados em `CARROSSEL_POOL` (US-I46) e nas opções do schema `configHome`. */
@@ -173,11 +174,14 @@ export function montarCarrosseisZona(
 /**
  * AC5 — "Ver todas — Zona X" reaproveita o filtro de bairro multi-select já existente
  * (`?bairro=X&bairro=Y`, via `HomeFilters.tsx`/`filtrarAtracoes`), sem feature nova.
+ * US-I57 — inclui `substituir=1` pra o miolo ser trocado pela listagem, em vez de
+ * expandir embaixo dos carrosséis (mesmo sinal do menu lateral).
  */
 export function zonaVerTodasHref(bairros: string[]): string {
   const params = new URLSearchParams();
   for (const bairro of bairros) {
     params.append("bairro", bairro);
   }
+  params.set(SUBSTITUIR_MIOLO_PARAM, "1");
   return `/?${params.toString()}`;
 }

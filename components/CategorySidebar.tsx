@@ -3,7 +3,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { CATEGORIA_OPTIONS } from "@/lib/filter-options";
+import { CATEGORIA_OPTIONS, SUBSTITUIR_MIOLO_PARAM } from "@/lib/filter-options";
 import { buildHref, type NavItemDef } from "@/lib/nav-links";
 import { cn } from "@/lib/cn";
 
@@ -19,13 +19,13 @@ const EXPLORAR_ITEMS: NavItemDef[] = [
   {
     key: "fim-de-semana",
     label: "Esse fim de semana",
-    overrides: { data: "fim-de-semana" },
+    overrides: { data: "fim-de-semana", [SUBSTITUIR_MIOLO_PARAM]: "1" },
     isActive: ({ data }) => data === "fim-de-semana",
   },
   {
     key: "gratis",
     label: "Grátis",
-    overrides: { preco: "gratuito" },
+    overrides: { preco: "gratuito", [SUBSTITUIR_MIOLO_PARAM]: "1" },
     isActive: ({ preco }) => preco === "gratuito",
   },
 ];
@@ -86,6 +86,7 @@ function CategorySidebarInner() {
                   <Link
                     href={buildHref(true, searchParams, {
                       categoria: active ? null : value,
+                      ...(active ? {} : { [SUBSTITUIR_MIOLO_PARAM]: "1" }),
                     })}
                     aria-current={active ? "page" : undefined}
                     className={cn(
