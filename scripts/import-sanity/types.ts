@@ -43,6 +43,14 @@ export interface SanityAtracaoDocInput {
   ai_model?: string;
   pipeline_failed: boolean;
   preco_a_partir?: boolean;
+  /** Motivos do quality-gate com categoria própria (US-S75). Só a pipeline escreve. */
+  abstain_reasons?: Array<{
+    _key: string;
+    code: string;
+    category: "conteudo_sensivel" | "qualidade_geral";
+  }>;
+  /** Flag queryável para preview, badge e lista do Studio (US-S75). */
+  has_conteudo_sensivel?: boolean;
 }
 
 export type ImportItemStatus = "created" | "updated" | "skipped" | "error";

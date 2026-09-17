@@ -7,6 +7,18 @@ Formato: [Unreleased] / [Sprint X] — adicionado, corrigido, mudado.
 
 ## [Unreleased]
 
+### Sprint 19
+
+#### US-S75 — Destaque de reasons de conteúdo sensível no quality-gate para revisão manual
+
+- **`lib/pipeline/abstain-reasons.ts`** (novo): cada reason do quality-gate ganha categoria própria (`conteudo_sensivel` vs `qualidade_geral`) e flag `has_conteudo_sensivel`. Fonte de verdade compartilhada entre pipeline, import e Studio.
+- **`scripts/pipeline-ia/quality-gate.ts`**: o resultado passa a expor `categorized_reasons` + `has_conteudo_sensivel` além da lista de strings (esta última segue igual no relatório JSON — destaque só no Studio).
+- **`scripts/import-sanity/mapper.ts`**: `abstain_reasons` deixa de ser descartado no import; persiste array de `{ code, category }` + a flag no documento Sanity.
+- **Sanity Studio**: preview com subtítulo `⚠ Conteúdo sensível`, badge `danger` no header, campo com banner vermelho vs. âmbar, e lista "🚨 Conteúdo sensível" no desk.
+- ADR: `docs/decisions/2026-09-17-us-s75-conteudo-sensivel-quality-gate.md`.
+
+---
+
 ### Sprint 6
 
 #### US-F1 — Botão "Salvar" sem feedback visual

@@ -1,3 +1,4 @@
+import { hasConteudoSensivel, toSanityAbstainReasons } from "@/lib/pipeline/abstain-reasons";
 import type { LinhaEnriquecida } from "./types";
 import type { SanityAtracaoDocInput } from "./types";
 
@@ -24,6 +25,12 @@ export function toSanityDoc(linha: LinhaEnriquecida): SanityAtracaoDocInput {
     ai_generated: linha.ai_generated,
     pipeline_failed: linha.pipeline_failed,
   };
+
+  if (linha.abstain_reasons.length > 0) {
+    doc.abstain_reasons = toSanityAbstainReasons(linha.abstain_reasons);
+    doc.has_conteudo_sensivel =
+      linha.has_conteudo_sensivel ?? hasConteudoSensivel(linha.abstain_reasons);
+  }
 
   if (linha.ai_model) {
     doc.ai_model = linha.ai_model;

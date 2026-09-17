@@ -1,4 +1,6 @@
 import { defineField, defineType } from "sanity";
+import { AbstainReasonsInput } from "../components/AbstainReasonsInput";
+import { prepareAtracaoPreview } from "./atracaoPreview";
 
 const categoriaOptions = [
   { title: "Teatro infantil", value: "teatro" },
@@ -327,6 +329,68 @@ export const atracao = defineType({
         "Status do fluxo editorial. Drafts criados pela pipeline IA começam como 'auto_ok' ou 'needs_human'. Curador revisa e marca 'human_approved' antes de publicar.",
     }),
     defineField({
+      name: "has_conteudo_sensivel",
+      title: "Conteúdo sensível",
+      type: "boolean",
+      readOnly: true,
+      hidden: true,
+      initialValue: false,
+      description:
+        "Flag queryável: true quando o quality-gate marcou motivo de conteúdo sensível. Usada pelo preview, badge e lista do Studio (US-S75). Só a pipeline escreve.",
+    }),
+    defineField({
+      name: "abstain_reasons",
+      title: "Motivos do quality-gate",
+      type: "array",
+      readOnly: true,
+      description:
+        "Motivos que levaram o quality-gate a marcar needs_human. Cada item tem categoria própria (conteúdo sensível vs qualidade geral). Motivos sensíveis aparecem destacados — não aprovar sem corrigir o texto (US-S75).",
+      hidden: ({ parent }) =>
+        !Array.isArray((parent as { abstain_reasons?: unknown[] } | undefined)?.abstain_reasons) ||
+        ((parent as { abstain_reasons?: unknown[] }).abstain_reasons?.length ?? 0) === 0,
+      // Sanity infere array de primitivos neste defineField; o of: object abaixo é o runtime real.
+      components: { input: AbstainReasonsInput as never },
+      of: [
+        {
+          type: "object",
+          name: "abstainReason",
+          title: "Motivo",
+          fields: [
+            defineField({
+              name: "code",
+              title: "Motivo",
+              type: "string",
+              readOnly: true,
+            }),
+            defineField({
+              name: "category",
+              title: "Categoria",
+              type: "string",
+              readOnly: true,
+              options: {
+                list: [
+                  { title: "Conteúdo sensível", value: "conteudo_sensivel" },
+                  { title: "Qualidade geral", value: "qualidade_geral" },
+                ],
+              },
+            }),
+          ],
+          preview: {
+            select: { code: "code", category: "category" },
+            prepare({ code, category }: { code?: string; category?: string }) {
+              return {
+                title: code,
+                subtitle:
+                  category === "conteudo_sensivel"
+                    ? "⚠ Conteúdo sensível"
+                    : "Qualidade geral",
+              };
+            },
+          },
+        },
+      ],
+    }),
+    defineField({
       name: "ai_generated",
       title: "Texto gerado por IA",
       type: "boolean",
@@ -449,8 +513,17 @@ export const atracao = defineType({
   preview: {
     select: {
       title: "nome",
-      subtitle: "bairro",
+      bairro: "bairro",
       media: "foto",
+      hasConteudoSensivel: "has_conteudo_sensivel",
+    },
+    prepare(value) {
+      return prepareAtracaoPreview({
+        title: value.title,
+        bairro: value.bairro,
+        media: value.media,
+        hasConteudoSensivel: Boolean(value.hasConteudoSensivel),
+      });
     },
   },
 });

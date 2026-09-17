@@ -4,6 +4,7 @@ import { visionTool } from "@sanity/vision";
 import { schemas } from "./sanity/schemas";
 import { structure } from "./sanity/structure";
 import { catalogoDashboardPlugin } from "./sanity/plugins/catalogoDashboard";
+import { conteudoSensivelBadge } from "./sanity/components/conteudoSensivelBadge";
 
 const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "missing-project-id";
 const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || "production";
@@ -29,5 +30,6 @@ export default defineConfig({
       }
       return prev;
     },
+    badges: (prev) => [...prev, conteudoSensivelBadge],
   },
 });

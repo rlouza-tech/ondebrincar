@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { AbstainReasonsInput } from "../../components/AbstainReasonsInput";
 import { atracao } from "../atracao";
 
 /**
@@ -273,3 +274,50 @@ describe("atracao schema — status duplicada (US-S64)", () => {
     ]);
   });
 });
+
+describe("atracao schema — conteúdo sensível (US-S75)", () => {
+  it("tem flag has_conteudo_sensivel booleana, read-only e oculta", () => {
+    const field = atracao.fields.find((f) => f.name === "has_conteudo_sensivel") as
+      | { type?: string; readOnly?: boolean; hidden?: boolean }
+      | undefined;
+    expect(field).toBeDefined();
+    expect(field?.type).toBe("boolean");
+    expect(field?.readOnly).toBe(true);
+    expect(field?.hidden).toBe(true);
+  });
+
+  it("tem abstain_reasons como array de objetos com code + category, não string solta", () => {
+    const field = atracao.fields.find((f) => f.name === "abstain_reasons") as
+      | {
+          type?: string;
+          readOnly?: boolean;
+          of?: Array<{
+            type?: string;
+            fields?: Array<{ name: string; type: string }>;
+          }>;
+        }
+      | undefined;
+    expect(field).toBeDefined();
+    expect(field?.type).toBe("array");
+    expect(field?.readOnly).toBe(true);
+    expect(field?.of?.[0]?.type).toBe("object");
+    const subNames = field?.of?.[0]?.fields?.map((f) => f.name) ?? [];
+    expect(subNames).toEqual(["code", "category"]);
+  });
+
+  it("abstain_reasons usa o input de destaque visual no Studio", () => {
+    const field = atracao.fields.find((f) => f.name === "abstain_reasons") as
+      | { components?: { input?: unknown } }
+      | undefined;
+    expect(field?.components?.input).toBe(AbstainReasonsInput);
+  });
+
+  it("preview seleciona has_conteudo_sensivel para destacar a ficha na lista", () => {
+    expect(atracao.preview?.select).toMatchObject({
+      title: "nome",
+      bairro: "bairro",
+      hasConteudoSensivel: "has_conteudo_sensivel",
+    });
+  });
+});
+
