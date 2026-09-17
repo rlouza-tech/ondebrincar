@@ -1,4 +1,8 @@
 import {
+  categorizeAbstainReasons,
+  hasConteudoSensivel,
+} from "@/lib/pipeline/abstain-reasons";
+import {
   inputListaDiasSemHorario,
   isProximaDataNoPassado,
   programacaoSinalizaLacunaHorario,
@@ -201,8 +205,12 @@ export function evaluate(
     reasons.push(`abstencao_campo_critico:${abstainCritical.join("|")}`);
   }
 
+  const categorized_reasons = categorizeAbstainReasons(reasons);
+
   return {
     status: reasons.length === 0 ? "auto_ok" : "needs_human",
     reasons,
+    categorized_reasons,
+    has_conteudo_sensivel: hasConteudoSensivel(reasons),
   };
 }

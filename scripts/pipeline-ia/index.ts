@@ -10,6 +10,7 @@ import { buildCostSummary, estimateCostUsd } from "./cost-log";
 import { enrichLinha, waitForRateLimit, QuotaExhaustedError } from "./gemini";
 import { appendPipelineRun, PIPELINE_RUNS_LOG_PATH } from "./pipeline-run-log";
 import { PROMPT_VERSION } from "./prompt";
+import { hasConteudoSensivel } from "@/lib/pipeline/abstain-reasons";
 import { evaluate } from "./quality-gate";
 import type {
   Categoria,
@@ -304,6 +305,9 @@ export function buildLinhaEnriquecida(
   },
 ): LinhaEnriquecida {
   const { categoria } = resolveCategoria(linha, resposta.categoria);
+  const abstain_reasons = Array.from(
+    new Set([...reasons, ...resposta.abstain_fields]),
+  );
   return {
     nome: normalizeAllCapsTitle(linha.nome),
     slug: buildSlug(linha),
@@ -333,9 +337,8 @@ export function buildLinhaEnriquecida(
     foto_url: "",
     aviso_operacional: resposta.aviso_operacional ?? null,
     review_status: status,
-    abstain_reasons: Array.from(
-      new Set([...reasons, ...resposta.abstain_fields]),
-    ),
+    abstain_reasons,
+    has_conteudo_sensivel: hasConteudoSensivel(abstain_reasons),
     confidence: resposta.confidence,
     processed_at: processedAt,
     source_url: linha.url_origem,

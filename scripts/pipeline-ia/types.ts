@@ -1,4 +1,7 @@
 import type { CostSummary } from "./cost-log";
+import type { CategorizedAbstainReason } from "@/lib/pipeline/abstain-reasons";
+
+export type { AbstainReasonCategory, CategorizedAbstainReason } from "@/lib/pipeline/abstain-reasons";
 
 export const CATEGORIAS_VALIDAS = [
   "teatro",
@@ -114,6 +117,8 @@ export interface LinhaEnriquecida {
   aviso_operacional: string | null;
   review_status: ReviewStatus;
   abstain_reasons: string[];
+  /** true quando ao menos uma reason é conteúdo sensível (US-S75). Ausente em CSVs antigos. */
+  has_conteudo_sensivel?: boolean;
   confidence: number;
   processed_at: string;
   source_url: string;
@@ -155,5 +160,13 @@ export interface PipelineReport {
 
 export interface QualityGateResult {
   status: ReviewStatus;
+  /** Codes brutos — o relatório da pipeline e o CSV seguem listando só isto. */
   reasons: string[];
+  /**
+   * Mesmos codes de `reasons`, cada um com categoria própria (US-S75).
+   * `conteudo_sensivel` vs `qualidade_geral` — não é só string solta na lista.
+   */
+  categorized_reasons: CategorizedAbstainReason[];
+  /** true quando ao menos uma reason é conteúdo sensível. */
+  has_conteudo_sensivel: boolean;
 }

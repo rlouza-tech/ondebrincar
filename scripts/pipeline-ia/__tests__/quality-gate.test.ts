@@ -192,6 +192,57 @@ describe("evaluate — persona interna (US-S71)", () => {
   });
 });
 
+describe("evaluate — categoria de reason (US-S75)", () => {
+  it("com motivo sensível (mencao_persona_interna, misturado com qualidade geral) → categoria própria + flag true", () => {
+    const result = evaluate(
+      baseInput(),
+      baseResposta({
+        categoria: "invalido" as RespostaGemini["categoria"],
+        mini_review:
+          "É um programa cultural divertido para o fim de semana, ideal para Daniel levar a filha e curtir juntos.",
+      }),
+      { referenceDate: new Date("2026-05-20T12:00:00.000Z") },
+    );
+
+    expect(result.status).toBe("needs_human");
+    expect(result.reasons).toContain("mencao_persona_interna");
+    expect(result.reasons).toContain("categoria_invalida");
+    expect(result.has_conteudo_sensivel).toBe(true);
+    expect(result.categorized_reasons).toEqual(
+      expect.arrayContaining([
+        { code: "mencao_persona_interna", category: "conteudo_sensivel" },
+        { code: "categoria_invalida", category: "qualidade_geral" },
+      ]),
+    );
+    const persona = result.categorized_reasons.find(
+      (item) => item.code === "mencao_persona_interna",
+    );
+    const categoria = result.categorized_reasons.find(
+      (item) => item.code === "categoria_invalida",
+    );
+    expect(persona?.category).toBe("conteudo_sensivel");
+    expect(categoria?.category).toBe("qualidade_geral");
+  });
+
+  it("sem motivo sensível (só qualidade geral) → todas qualidade_geral + flag false", () => {
+    const result = evaluate(
+      baseInput(),
+      baseResposta({
+        categoria: "invalido" as RespostaGemini["categoria"],
+      }),
+      { referenceDate: new Date("2026-05-20T12:00:00.000Z") },
+    );
+
+    expect(result.status).toBe("needs_human");
+    expect(result.reasons).toContain("categoria_invalida");
+    expect(result.reasons).not.toContain("mencao_persona_interna");
+    expect(result.has_conteudo_sensivel).toBe(false);
+    expect(
+      result.categorized_reasons.every((item) => item.category === "qualidade_geral"),
+    ).toBe(true);
+  });
+});
+
 describe("evaluate — faixa etária null (US-S20)", () => {
   it("idade_min e idade_max null, sem abstain_fields → não quebra e não sinaliza idade_min_maior_que_idade_max nem idade_fora_do_intervalo_0_18", () => {
     const result = evaluate(

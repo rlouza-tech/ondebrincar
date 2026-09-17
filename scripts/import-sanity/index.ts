@@ -4,6 +4,7 @@ import { createReadStream } from "node:fs";
 import { mkdir, readdir, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { parse } from "csv-parse";
+import { hasConteudoSensivel } from "@/lib/pipeline/abstain-reasons";
 import { hasSanityConfig, sanityClient, sanityWriteClient } from "@/lib/sanity/client";
 import { buildImagePrompt, buildImagePromptAnonymous } from "@/lib/prompts/image-adapter";
 import { generateImage } from "@/scripts/pipeline-ia/imagen";
@@ -167,6 +168,20 @@ function parseIntRequired(value: string, field: string): number {
   return parsed;
 }
 
+function parseHasConteudoSensivel(
+  raw: string | undefined,
+  reasons: string[],
+): boolean {
+  const trimmed = raw?.trim();
+  if (trimmed === "true") {
+    return true;
+  }
+  if (trimmed === "false") {
+    return false;
+  }
+  return hasConteudoSensivel(reasons);
+}
+
 export async function readEnrichedCSV(path: string): Promise<LinhaEnriquecida[]> {
   return new Promise((resolve, reject) => {
     const rows: LinhaEnriquecida[] = [];
@@ -181,6 +196,9 @@ export async function readEnrichedCSV(path: string): Promise<LinhaEnriquecida[]>
       )
       .on("data", (record: Record<string, string>) => {
         const abstainRaw = record.abstain_reasons ?? "";
+        const abstainReasons = abstainRaw
+          ? abstainRaw.split("|").filter(Boolean)
+          : [];
         rows.push({
           nome: record.nome ?? "",
           slug: record.slug ?? "",
@@ -205,9 +223,11 @@ export async function readEnrichedCSV(path: string): Promise<LinhaEnriquecida[]>
           foto_url: record.foto_url ?? "",
           endereco: record.endereco?.trim() || undefined,
           review_status: record.review_status as LinhaEnriquecida["review_status"],
-          abstain_reasons: abstainRaw
-            ? abstainRaw.split("|").filter(Boolean)
-            : [],
+          abstain_reasons: abstainReasons,
+          has_conteudo_sensivel: parseHasConteudoSensivel(
+            record.has_conteudo_sensivel,
+            abstainReasons,
+          ),
           confidence: parseIntRequired(record.confidence ?? "", "confidence"),
           processed_at: record.processed_at ?? "",
           source_url: record.source_url ?? "",

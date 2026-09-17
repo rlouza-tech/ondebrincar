@@ -95,6 +95,16 @@ export const structure = (S: StructureBuilder) =>
             .defaultOrdering([{ field: "_updatedAt", direction: "desc" }]),
         ),
 
+      // US-S75: lista própria para não misturar conteúdo sensível com qualidade geral
+      S.listItem()
+        .title("🚨 Conteúdo sensível")
+        .child(
+          S.documentList()
+            .title("Conteúdo sensível — has_conteudo_sensivel")
+            .filter('_type == "atracao" && has_conteudo_sensivel == true')
+            .defaultOrdering([{ field: "_updatedAt", direction: "desc" }]),
+        ),
+
       // ── ⏸ Fora do ar — publicadas, encerradas/em obras/esgotadas (US-O5) ─
       S.listItem()
         .title("⏸ Fora do ar")

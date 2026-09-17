@@ -183,4 +183,52 @@ describe("toSanityDoc", () => {
     const doc = toSanityDoc(baseLinha());
     expect(doc).not.toHaveProperty("local");
   });
+
+  it("persiste abstain_reasons com categoria própria e flag quando há motivo sensível (US-S75)", () => {
+    const doc = toSanityDoc(
+      baseLinha({
+        review_status: "needs_human",
+        abstain_reasons: ["mencao_persona_interna", "bairro_vazio"],
+        has_conteudo_sensivel: true,
+      }),
+    );
+
+    expect(doc.has_conteudo_sensivel).toBe(true);
+    expect(doc.abstain_reasons).toEqual([
+      {
+        _key: "mencao-persona-interna-0",
+        code: "mencao_persona_interna",
+        category: "conteudo_sensivel",
+      },
+      {
+        _key: "bairro-vazio-1",
+        code: "bairro_vazio",
+        category: "qualidade_geral",
+      },
+    ]);
+  });
+
+  it("persiste abstain_reasons só de qualidade geral com flag false (US-S75)", () => {
+    const doc = toSanityDoc(
+      baseLinha({
+        review_status: "needs_human",
+        abstain_reasons: ["bairro_vazio", "categoria_invalida"],
+        has_conteudo_sensivel: false,
+      }),
+    );
+
+    expect(doc.has_conteudo_sensivel).toBe(false);
+    expect(doc.abstain_reasons?.every((item) => item.category === "qualidade_geral")).toBe(
+      true,
+    );
+    expect(doc.abstain_reasons?.some((item) => item.category === "conteudo_sensivel")).toBe(
+      false,
+    );
+  });
+
+  it("omite abstain_reasons e has_conteudo_sensivel quando a lista está vazia", () => {
+    const doc = toSanityDoc(baseLinha({ abstain_reasons: [] }));
+    expect(doc).not.toHaveProperty("abstain_reasons");
+    expect(doc).not.toHaveProperty("has_conteudo_sensivel");
+  });
 });
