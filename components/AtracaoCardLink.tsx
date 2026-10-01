@@ -27,9 +27,11 @@ export interface AtracaoCardLinkProps {
   sempreDisponivel?: boolean;
   /** Seção da home que renderizou o card (US-V11). */
   sourceSection: CardClickSourceSection;
+  /** Índice do card na seção, 0-based (US-I54). */
+  position: number;
 }
 
-export function AtracaoCardLink({ atracao, className, filterRef, sempreDisponivel, sourceSection }: AtracaoCardLinkProps) {
+export function AtracaoCardLink({ atracao, className, filterRef, sempreDisponivel, sourceSection, position }: AtracaoCardLinkProps) {
   const [favorite, setFavorite] = useState(false);
   const cardRef = useAttractionView(atracao, "listing");
 
@@ -62,7 +64,7 @@ export function AtracaoCardLink({ atracao, className, filterRef, sempreDisponive
       <Link
         href={filterRef ? `/atracao/${atracao.slug}?ref=${encodeURIComponent(filterRef)}` : `/atracao/${atracao.slug}`}
         onClick={() => {
-          trackEvent("card_click", buildCardClickParams(atracao, sourceSection));
+          trackEvent("card_click", buildCardClickParams(atracao, sourceSection, position));
         }}
         className="block rounded-xl transition-shadow hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
       >

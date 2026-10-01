@@ -148,6 +148,7 @@ describe("ZonaCarrosselMobile — US-I50", () => {
       attraction_name: "Atração 1",
       category: "teatro",
       source_section: "carrossel_zona-sul",
+      position: 0,
     });
   });
 });

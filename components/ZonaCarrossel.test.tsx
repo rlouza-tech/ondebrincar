@@ -132,6 +132,7 @@ describe("ZonaCarrossel — US-I47", () => {
       attraction_name: "Peça do Circo",
       category: "teatro",
       source_section: "carrossel_zona-sul",
+      position: 0,
     });
   });
 });

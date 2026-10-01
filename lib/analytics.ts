@@ -98,17 +98,21 @@ export interface CardClickParams {
   attraction_name: string;
   category: string;
   source_section: CardClickSourceSection;
+  /** Índice do card dentro da seção, 0-based (US-I54). */
+  position: number;
 }
 
 export function buildCardClickParams(
   atracao: Pick<Atracao, "slug" | "titulo" | "categoria">,
   sourceSection: CardClickSourceSection,
+  position: number,
 ): CardClickParams {
   return {
     attraction_id: atracao.slug,
     attraction_name: atracao.titulo,
     category: atracao.categoria,
     source_section: sourceSection,
+    position,
   };
 }
 

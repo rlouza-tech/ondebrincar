@@ -42,11 +42,12 @@ export function ZonaCarrosselMobile({ carrossel }: ZonaCarrosselMobileProps) {
         <span className="text-xs font-semibold text-secondary">{carrossel.total} atrações</span>
       </div>
       <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden">
-        {atracoesMobile.map((atracao) => (
+        {atracoesMobile.map((atracao, index) => (
           <ZonaCardMobile
             key={atracao.slug}
             atracao={atracao}
             sourceSection={`carrossel_${carrossel.id}`}
+            position={index}
           />
         ))}
         <Link
