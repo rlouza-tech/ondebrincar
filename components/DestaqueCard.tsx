@@ -11,6 +11,8 @@ import type { Atracao } from "@/lib/sanity/types";
 export interface DestaqueCardProps {
   atracao: Atracao;
   sourceSection: CardClickSourceSection;
+  /** Índice do card na seção, 0-based (US-I54). */
+  position: number;
 }
 
 function categoriaLabel(categoria: string): string {
@@ -22,7 +24,7 @@ function categoriaLabel(categoria: string): string {
  * card padrão de listagem (340px de largura, imagem 240px — AtracaoCard tem imagem
  * proporcional a aspect-[4/3], sem largura fixa). Não reaproveita AtracaoCard (AC1).
  */
-export function DestaqueCard({ atracao, sourceSection }: DestaqueCardProps) {
+export function DestaqueCard({ atracao, sourceSection, position }: DestaqueCardProps) {
   const cardRef = useAttractionView(atracao, "listing");
   const meta = [
     categoriaLabel(atracao.categoria),
@@ -34,7 +36,7 @@ export function DestaqueCard({ atracao, sourceSection }: DestaqueCardProps) {
       <Link
         href={`/atracao/${atracao.slug}`}
         onClick={() => {
-          trackEvent("card_click", buildCardClickParams(atracao, sourceSection));
+          trackEvent("card_click", buildCardClickParams(atracao, sourceSection, position));
         }}
         className="block overflow-hidden rounded-2xl border border-surface-muted bg-white transition-shadow hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
       >

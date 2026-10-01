@@ -158,12 +158,13 @@ export function HomeContent({
             </p>
           ) : (
             <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {resultados.map((atracao) => (
+              {resultados.map((atracao, index) => (
                 <li key={atracao.slug}>
                   <AtracaoCardLink
                     atracao={atracao}
                     filterRef={searchParams.toString()}
                     sourceSection="ver_todas"
+                    position={index}
                     sempreDisponivel={filtros.data !== undefined && !atracao.proximaData}
                   />
                 </li>

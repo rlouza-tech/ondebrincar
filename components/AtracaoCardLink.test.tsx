@@ -39,10 +39,10 @@ const atracao: Atracao = {
 
 let container: HTMLDivElement;
 
-function render(sourceSection: "ver_todas" | "carrossel_zona-norte" = "ver_todas") {
+function render(sourceSection: "ver_todas" | "carrossel_zona-norte" = "ver_todas", position = 0) {
   act(() => {
     createRoot(container).render(
-      <AtracaoCardLink atracao={atracao} sourceSection={sourceSection} />,
+      <AtracaoCardLink atracao={atracao} sourceSection={sourceSection} position={position} />,
     );
   });
 }
@@ -81,6 +81,22 @@ describe("AtracaoCardLink — card_click (US-V11)", () => {
       attraction_name: "Peça do Circo",
       category: "teatro",
       source_section: "ver_todas",
+      position: 0,
+    });
+  });
+
+  it("envia position 0-based recebida do pai no card_click (US-I54)", () => {
+    render("carrossel_zona-norte", 3);
+    act(() => {
+      getCardLink().dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+    });
+
+    expect(mockTrackEvent).toHaveBeenCalledWith("card_click", {
+      attraction_id: "peca-circo",
+      attraction_name: "Peça do Circo",
+      category: "teatro",
+      source_section: "carrossel_zona-norte",
+      position: 3,
     });
   });
 

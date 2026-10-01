@@ -22,8 +22,8 @@ export function DestaquesTrilhaMobile({ destaques }: DestaquesTrilhaMobileProps)
     <section aria-label="Destaques da semana" className="space-y-3">
       <h2 className="font-display text-[19px] font-semibold text-ink">✨ Destaques da semana</h2>
       <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden">
-        {destaques.map((atracao) => (
-          <DestaqueCardMobile key={atracao.slug} atracao={atracao} sourceSection="destaques_semana" />
+        {destaques.map((atracao, index) => (
+          <DestaqueCardMobile key={atracao.slug} atracao={atracao} sourceSection="destaques_semana" position={index} />
         ))}
       </div>
     </section>

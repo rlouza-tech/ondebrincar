@@ -329,6 +329,7 @@ describe("HomeContent — card_click na listagem (US-V11)", () => {
       attraction_name: "Peça do Circo",
       category: "teatro",
       source_section: "ver_todas",
+      position: 0,
     });
   });
 });

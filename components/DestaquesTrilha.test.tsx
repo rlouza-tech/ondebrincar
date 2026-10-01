@@ -132,6 +132,20 @@ describe("DestaquesTrilha — US-I43", () => {
       attraction_name: "Peça do Circo",
       category: "teatro",
       source_section: "destaques_semana",
+      position: 0,
     });
+  });
+
+  it("envia position 1 ao clicar no segundo card dos destaques (US-I54)", () => {
+    render(tresDestaques);
+    const links = container.querySelectorAll("a");
+    act(() => {
+      links[1].dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+    });
+
+    expect(mockTrackEvent).toHaveBeenCalledWith(
+      "card_click",
+      expect.objectContaining({ source_section: "destaques_semana", position: 1 }),
+    );
   });
 });

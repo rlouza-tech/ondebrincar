@@ -10,6 +10,8 @@ import type { Atracao } from "@/lib/sanity/types";
 export interface ZonaCardMobileProps {
   atracao: Atracao;
   sourceSection: CardClickSourceSection;
+  /** Índice do card na seção, 0-based (US-I54). */
+  position: number;
 }
 
 /**
@@ -17,7 +19,7 @@ export interface ZonaCardMobileProps {
  * US-I47), mais compacto (42% da largura, imagem 110px, só título + bairro) — layout
  * validado em dispositivo real no Discovery de 19/08 e no protótipo v2.
  */
-export function ZonaCardMobile({ atracao, sourceSection }: ZonaCardMobileProps) {
+export function ZonaCardMobile({ atracao, sourceSection, position }: ZonaCardMobileProps) {
   const cardRef = useAttractionView(atracao, "listing");
 
   return (
@@ -25,7 +27,7 @@ export function ZonaCardMobile({ atracao, sourceSection }: ZonaCardMobileProps) 
       <Link
         href={`/atracao/${atracao.slug}`}
         onClick={() => {
-          trackEvent("card_click", buildCardClickParams(atracao, sourceSection));
+          trackEvent("card_click", buildCardClickParams(atracao, sourceSection, position));
         }}
         className="block rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
       >

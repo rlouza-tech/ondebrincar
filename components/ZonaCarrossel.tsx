@@ -56,12 +56,13 @@ export function ZonaCarrossel({ carrossel }: ZonaCarrosselProps) {
           ref={trackRef}
           className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-surface-muted [&::-webkit-scrollbar]:h-2"
         >
-          {carrossel.atracoes.map((atracao) => (
+          {carrossel.atracoes.map((atracao, index) => (
             <AtracaoCardLink
               key={atracao.slug}
               atracao={atracao}
               className="w-[220px] shrink-0 snap-start"
               sourceSection={`carrossel_${carrossel.id}`}
+              position={index}
             />
           ))}
           <Link

@@ -136,6 +136,7 @@ describe("DestaquesTrilhaMobile — US-I49", () => {
       attraction_name: "Bosque da Barra",
       category: "parque",
       source_section: "destaques_semana",
+      position: 1,
     });
   });
 });
