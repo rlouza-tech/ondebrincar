@@ -3,7 +3,8 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { CATEGORIA_OPTIONS, SUBSTITUIR_MIOLO_PARAM } from "@/lib/filter-options";
+import type { FilterDropdownOption } from "@/components/FilterDropdown";
+import { SUBSTITUIR_MIOLO_PARAM } from "@/lib/filter-options";
 import { buildHref, type NavItemDef } from "@/lib/nav-links";
 import { cn } from "@/lib/cn";
 
@@ -30,7 +31,11 @@ const EXPLORAR_ITEMS: NavItemDef[] = [
   },
 ];
 
-function CategorySidebarInner() {
+interface CategorySidebarProps {
+  categoriaOptions: readonly FilterDropdownOption[];
+}
+
+function CategorySidebarInner({ categoriaOptions }: CategorySidebarProps) {
   const searchParams = useSearchParams();
 
   const state = {
@@ -79,7 +84,7 @@ function CategorySidebarInner() {
             Categorias
           </p>
           <ul>
-            {CATEGORIA_OPTIONS.map(({ label, value }) => {
+            {categoriaOptions.map(({ label, value }) => {
               const active = state.categoria === value;
               return (
                 <li key={value}>
@@ -109,10 +114,10 @@ function CategorySidebarInner() {
   );
 }
 
-export function CategorySidebar() {
+export function CategorySidebar({ categoriaOptions }: CategorySidebarProps) {
   return (
     <Suspense fallback={null}>
-      <CategorySidebarInner />
+      <CategorySidebarInner categoriaOptions={categoriaOptions} />
     </Suspense>
   );
 }

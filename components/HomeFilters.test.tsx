@@ -15,16 +15,23 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => mockUseSearchParams(),
 }));
 
+import { CATEGORIA_OPTIONS } from "@/lib/filter-options";
+import type { FilterDropdownOption } from "./FilterDropdown";
 import { HomeFilters } from "./HomeFilters";
 
 let container: HTMLDivElement;
 let root: Root;
 
-function render(search = "") {
+function render(
+  search = "",
+  categoriaOptions: readonly FilterDropdownOption[] = CATEGORIA_OPTIONS,
+) {
   mockUseSearchParams.mockReturnValue(new URLSearchParams(search));
   act(() => {
     root = createRoot(container);
-    root.render(<HomeFilters bairros={[]} atracoes={[]} />);
+    root.render(
+      <HomeFilters bairros={[]} atracoes={[]} categoriaOptions={categoriaOptions} />,
+    );
   });
 }
 
@@ -76,5 +83,32 @@ describe("HomeFilters — gatilho abrirCategoria (US-I42)", () => {
     render("");
     expect(getListbox()).toBeNull();
     expect(mockReplace).not.toHaveBeenCalled();
+  });
+});
+
+describe("HomeFilters — categorias sem atração (US-I55)", () => {
+  beforeEach(() => {
+    container = document.createElement("div");
+    document.body.appendChild(container);
+  });
+
+  afterEach(() => {
+    act(() => {
+      root.unmount();
+      document.body.removeChild(container);
+    });
+    vi.clearAllMocks();
+  });
+
+  it("dropdown Tipo lista só as categorias recebidas", () => {
+    render("abrirCategoria=1", CATEGORIA_OPTIONS.filter((o) => o.value !== "festa-junina"));
+    const texto = getListbox()?.textContent ?? "";
+    expect(texto).toContain("Teatro");
+    expect(texto).not.toContain("Festa Junina");
+  });
+
+  it("URL com categoria vazia continua mostrando o filtro ativo na pílula, sem erro", () => {
+    render("categoria=festa-junina", CATEGORIA_OPTIONS.filter((o) => o.value !== "festa-junina"));
+    expect(container.textContent).toContain("Festa Junina");
   });
 });

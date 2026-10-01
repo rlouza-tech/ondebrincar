@@ -2,14 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { FilterDropdown } from "@/components/FilterDropdown";
+import { FilterDropdown, type FilterDropdownOption } from "@/components/FilterDropdown";
 import {
   FiltersBottomSheet,
   FiltersIcon,
 } from "@/components/FiltersBottomSheet";
 import { trackEvent, type FilterUsedParams } from "@/lib/analytics";
 import {
-  CATEGORIA_OPTIONS,
   CATEGORIA_TRIGGER_PARAM,
   DATA_OPTIONS,
   FAIXAS_ETARIAS,
@@ -26,6 +25,7 @@ import { cn } from "@/lib/cn";
 interface HomeFiltersProps {
   bairros: string[];
   atracoes: Atracao[];
+  categoriaOptions: readonly FilterDropdownOption[];
 }
 
 type PrimaryFilterKey = "idade" | "bairro" | "categoria" | "data";
@@ -39,7 +39,7 @@ const FILTER_TYPE_BY_PARAM: Record<string, FilterUsedParams["filter_type"]> = {
   data: "date",
 };
 
-export function HomeFilters({ bairros, atracoes }: HomeFiltersProps) {
+export function HomeFilters({ bairros, atracoes, categoriaOptions }: HomeFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -198,7 +198,7 @@ export function HomeFilters({ bairros, atracoes }: HomeFiltersProps) {
               ? getFilterDisplayLabel("categoria", categoriaAtiva)
               : ""
           }
-          options={CATEGORIA_OPTIONS}
+          options={categoriaOptions}
           isOpen={openDropdown === "categoria"}
           onOpenChange={(open) => handleDropdownOpen("categoria", open)}
           onSelect={(value) => toggleParam("categoria", value, categoriaAtiva)}

@@ -26,6 +26,7 @@ vi.mock("@/lib/analytics", async () => {
   return { ...actual, trackEvent: mockTrackEvent };
 });
 
+import { CATEGORIA_OPTIONS } from "@/lib/filter-options";
 import { HomeContent } from "./home-content";
 import type { CarrosselZona } from "@/lib/zonas";
 
@@ -75,6 +76,7 @@ function render(search = "") {
         bairros={["Tijuca", "Barra da Tijuca"]}
         destaques={[atracoes[0]]}
         carrosseisZona={carrosseisZona}
+        categoriaOptions={CATEGORIA_OPTIONS}
       />,
     );
   });

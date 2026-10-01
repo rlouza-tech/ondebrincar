@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  categoriasComAtracao,
   filtrarAtracoes,
   formatFaixaEtaria,
   getAtracaoBySlug,
@@ -334,5 +335,37 @@ describe("sanityImageUrl", () => {
 
   it("string vazia retorna sem alteração", () => {
     expect(sanityImageUrl("", 800)).toBe("");
+  });
+});
+
+describe("categoriasComAtracao — US-I55", () => {
+  const opcoes = [
+    { label: "Festa Junina", value: "festa-junina" },
+    { label: "Museu", value: "museu" },
+    { label: "Teatro", value: "teatro" },
+  ] as const;
+
+  it("esconde categoria sem nenhuma atração e mantém a ordem das opções", () => {
+    const resultado = categoriasComAtracao(
+      [{ categoria: "teatro" }, { categoria: "museu" }],
+      opcoes,
+    );
+    expect(resultado.map((o) => o.value)).toEqual(["museu", "teatro"]);
+  });
+
+  it("mostra a categoria de volta quando passa a ter ao menos 1 atração", () => {
+    expect(categoriasComAtracao([{ categoria: "museu" }], opcoes).map((o) => o.value)).not.toContain("festa-junina");
+    expect(
+      categoriasComAtracao([{ categoria: "museu" }, { categoria: "festa-junina" }], opcoes).map((o) => o.value),
+    ).toContain("festa-junina");
+  });
+
+  it("usa o mesmo normalizeCategoriaSlug do filtro (ex.: 'Teatro infantil' conta como teatro)", () => {
+    const resultado = categoriasComAtracao([{ categoria: "Teatro infantil" }], opcoes);
+    expect(resultado.map((o) => o.value)).toEqual(["teatro"]);
+  });
+
+  it("catálogo vazio não tem nenhuma categoria", () => {
+    expect(categoriasComAtracao([], opcoes)).toEqual([]);
   });
 });

@@ -6,6 +6,7 @@ import { ActiveFilters } from "@/components/ActiveFilters";
 import { AtracaoCardLink } from "@/components/AtracaoCardLink";
 import { DestaquesTrilha } from "@/components/DestaquesTrilha";
 import { DestaquesTrilhaMobile } from "@/components/DestaquesTrilhaMobile";
+import type { FilterDropdownOption } from "@/components/FilterDropdown";
 import { HomeFilters } from "@/components/HomeFilters";
 import { ShareSearchButton } from "@/components/ShareSearchButton";
 import { VerTudoTeaser } from "@/components/VerTudoTeaser";
@@ -29,9 +30,16 @@ interface HomeContentProps {
   bairros: string[];
   destaques: Atracao[];
   carrosseisZona: CarrosselZona[];
+  categoriaOptions: readonly FilterDropdownOption[];
 }
 
-export function HomeContent({ atracoes, bairros, destaques, carrosseisZona }: HomeContentProps) {
+export function HomeContent({
+  atracoes,
+  bairros,
+  destaques,
+  carrosseisZona,
+  categoriaOptions,
+}: HomeContentProps) {
   const searchParams = useSearchParams();
   const listagemRef = useRef<HTMLDivElement>(null);
   const [expandidoManual, setExpandidoManual] = useState(false);
@@ -128,7 +136,11 @@ export function HomeContent({ atracoes, bairros, destaques, carrosseisZona }: Ho
             {contagemLabel}
           </p>
 
-          <HomeFilters bairros={bairros} atracoes={atracoes} />
+          <HomeFilters
+            bairros={bairros}
+            atracoes={atracoes}
+            categoriaOptions={categoriaOptions}
+          />
 
           <ActiveFilters searchParams={searchParams} atracoes={atracoes} />
 

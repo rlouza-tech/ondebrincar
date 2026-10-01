@@ -221,6 +221,20 @@ export function formatPreco(atracao: Atracao): string {
   return atracao.precoAPartir ? `A partir de ${atracao.precoLabel}` : atracao.precoLabel;
 }
 
+/** US-I55 — opções de categoria que têm ao menos 1 atração no catálogo publicado.
+ * Fonte única do menu lateral (US-I44) e do dropdown "Tipo": ignora de propósito
+ * os outros filtros ativos (bairro/idade/data/preço) e compara pelo mesmo
+ * normalizeCategoriaSlug que filtrarAtracoes usa, pra lista e listagem concordarem. */
+export function categoriasComAtracao<T extends { value: string }>(
+  atracoes: ReadonlyArray<Pick<Atracao, "categoria">>,
+  opcoes: readonly T[],
+): T[] {
+  const presentes = new Set(
+    atracoes.map((atracao) => normalizeCategoriaSlug(atracao.categoria)),
+  );
+  return opcoes.filter((opcao) => presentes.has(normalizeCategoriaSlug(opcao.value)));
+}
+
 export interface FiltroBusca {
   bairros?: string[];
   idade?: number;
