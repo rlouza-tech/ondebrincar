@@ -5,10 +5,11 @@ import { CategorySidebar } from "@/components/CategorySidebar";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { HomeContent } from "@/app/home-content";
-import { getAllAtracoes } from "@/lib/atracoes";
+import { categoriasComAtracao, getAllAtracoes } from "@/lib/atracoes";
 import { carrosseisAtivosOrdenados } from "@/lib/carrosseis";
 import { getConfigHomeAtual } from "@/lib/config-home";
 import { getDestaquesSemana } from "@/lib/destaques";
+import { CATEGORIA_OPTIONS } from "@/lib/filter-options";
 import { montarCarrosseisZona, ZONA_ORDEM_PADRAO, type ZonaId } from "@/lib/zonas";
 
 interface HomePageProps {
@@ -60,12 +61,14 @@ export default async function HomePage() {
         .filter((id): id is ZonaId => id.startsWith("zona-"))
     : ZONA_ORDEM_PADRAO;
   const carrosseisZona = montarCarrosseisZona(atracoes, zonasAtivas);
+  // US-I55 — uma única lista de categorias com atração publicada, usada pelo menu lateral e pelo dropdown Tipo.
+  const categoriaOptions = categoriasComAtracao(atracoes, CATEGORIA_OPTIONS);
 
   return (
     <>
       <SiteHeader />
       <main className="mx-auto max-w-screen-lg px-4 pb-24 pt-8 sm:px-6 sm:pt-10 lg:grid lg:grid-cols-[230px_minmax(0,1fr)] lg:gap-10 lg:px-8 lg:pb-10">
-        <CategorySidebar />
+        <CategorySidebar categoriaOptions={categoriaOptions} />
         <Suspense
           fallback={
             <p className="text-sm text-secondary" aria-live="polite">
@@ -78,6 +81,7 @@ export default async function HomePage() {
             bairros={bairros}
             destaques={destaques}
             carrosseisZona={carrosseisZona}
+            categoriaOptions={categoriaOptions}
           />
         </Suspense>
       </main>

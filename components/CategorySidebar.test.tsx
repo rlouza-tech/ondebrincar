@@ -11,13 +11,15 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => mockUseSearchParams(),
 }));
 
+import { CATEGORIA_OPTIONS } from "@/lib/filter-options";
+import type { FilterDropdownOption } from "./FilterDropdown";
 import { CategorySidebar } from "./CategorySidebar";
 
 let container: HTMLDivElement;
 
-function render() {
+function render(categoriaOptions: readonly FilterDropdownOption[] = CATEGORIA_OPTIONS) {
   act(() => {
-    createRoot(container).render(<CategorySidebar />);
+    createRoot(container).render(<CategorySidebar categoriaOptions={categoriaOptions} />);
   });
 }
 
@@ -128,5 +130,20 @@ describe("CategorySidebar — US-I44", () => {
     setSearch("preco=gratuito");
     render();
     expect(getLinks()[2].getAttribute("aria-current")).toBe("page");
+  });
+
+  it("US-I55: só lista as categorias recebidas — categoria sem atração não aparece", () => {
+    setSearch("");
+    render(CATEGORIA_OPTIONS.filter((o) => o.value !== "festa-junina"));
+    const labels = getLinks().map((a) => a.textContent);
+    expect(labels).not.toContain("Festa Junina");
+    expect(labels).toContain("Museu");
+  });
+
+  it("US-I55: categoria ativa que não tem atração não quebra o menu (URL direta continua válida)", () => {
+    setSearch("categoria=festa-junina");
+    render(CATEGORIA_OPTIONS.filter((o) => o.value !== "festa-junina"));
+    expect(getLinks().map((a) => a.textContent)).not.toContain("Festa Junina");
+    expect(getLinks()[0].getAttribute("aria-current")).toBeNull();
   });
 });
