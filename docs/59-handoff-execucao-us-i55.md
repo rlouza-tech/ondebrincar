@@ -1,7 +1,7 @@
 # Handoff de execução — US-I55 (Ocultar categorias sem atração publicada)
 
 **Data:** 01/10/2026 · **Sprint 20** · **Repo:** `Cursor/` (site) · **Branch:** `feat/us-i55-ocultar-categorias-vazias` (a partir de `main` = `origin/main` em `606d38f`) · **SP:** 2
-**Status:** implementado e verificado localmente. **Sem commit, sem push, sem PR** (aguarda pedido do Rafa).
+**Status:** **Concluída** — PR [#206](https://github.com/rlouza-tech/ondebrincar/pull/206) mergeado (squash, `ab616b2`) em 01/10/2026; branch deletada; card no Notion em Concluída (Rafa). `.git/index.lock` removido com autorização do Rafa durante o commit.
 
 ## Total acumulado da Sprint 20
 
@@ -66,3 +66,9 @@ O schema Sanity (`sanity/schemas/atracao.ts`) tem a categoria **`show`** ("Show"
 | Notion 500 | Se o fetch falhar, tentar `notion-search` (traz o Resumo no `highlight`) e só então pedir o card ao Rafa; começar a leitura de código pela parte que não depende dos ACs | Claude | Próximas sessões de execução |
 | Corpo do card desatualizado | Limpar/atualizar o corpo do card US-I55 (e conferir se o Refinamento deixa o corpo coerente com o Resumo) | Rafa (card) / Claude (checar no Refinamento) | Antes do Sprint Close; próximo Refinamento |
 | Falta de medição prévia | Em stories que filtram/escondem dados, rodar a contagem real (GROQ/script somente leitura) antes de codar, para dimensionar o impacto e achar categorias órfãs como `show` | Claude | Início de stories de filtro/catálogo |
+
+## Fechamento da sessão e próximo passo
+
+- Sprint 20: **43 de 61 SP** com a I55 concluída.
+- **Próxima story: US-I54** (1 SP, Em Progresso no board). Atenção: `components/AtracaoCardLink.tsx` já dispara `card_click` (US-V11) no clique do card, com `sourceSection`. O card da I54 pede `home_card_click`, então há risco de sobreposição/duplicidade — a sessão deve conferir isso **antes de codar** e levar a decisão ao Rafa (DoR).
+- Pendente do Rafa: limpar o corpo do card US-I55 no Notion (texto antigo de "assumptions em aberto").
