@@ -56,9 +56,9 @@ export const structure = (S: StructureBuilder) =>
                 .title("⚠️ Data vencida — verificar (ainda no ar)")
                 .child(
                   S.documentList()
-                    .title("⚠️ Data vencida — publicadas, operando, data passada")
+                    .title("⚠️ Data vencida — operando (ou com proposta de encerramento), data passada")
                     .filter(
-                      '_type == "atracao" && !(_originalId in path("drafts.**")) && status == "operando" && defined(proxima_data) && ((defined(data_fim) && data_fim < $hoje) || (!defined(data_fim) && proxima_data < $hoje))',
+                      '_type == "atracao" && ((!(_originalId in path("drafts.**")) && status == "operando") || (_originalId in path("drafts.**") && status == "encerrada")) && ((defined(proxima_data) && ((defined(data_fim) && data_fim < $hoje) || (!defined(data_fim) && proxima_data < $hoje))) || (!defined(proxima_data) && defined(data_fim) && data_fim < $hoje))',
                     )
                     .params({ hoje: hoje() })
                     .defaultOrdering([{ field: "proxima_data", direction: "asc" }]),
