@@ -15,6 +15,9 @@ export const CATEGORIAS_VALIDAS = [
   "futebol",
   "restaurante",
   "festa-junina",
+  "natal",
+  "halloween",
+  "danca",
 ] as const;
 
 export const INDOOR_OUTDOOR_VALIDOS = ["indoor", "outdoor", "ambos"] as const;

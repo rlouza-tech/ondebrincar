@@ -15,6 +15,9 @@ const categoriaOptions = [
   { title: "Futebol", value: "futebol" },
   { title: "Restaurante", value: "restaurante" },
   { title: "Festa Junina", value: "festa-junina" },
+  { title: "Natal", value: "natal" },
+  { title: "Halloween", value: "halloween" },
+  { title: "Dança", value: "danca" },
 ];
 
 const bairroExamples = "Ex.: Tijuca, Leblon, Centro, São Cristóvão";
