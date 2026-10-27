@@ -112,7 +112,7 @@ export const structure = (S: StructureBuilder) =>
           S.documentList()
             .title("Fora do ar — publicadas e não operando")
             .filter(
-              '_type == "atracao" && !(_originalId in path("drafts.**")) && status in ["encerrada", "em_obras", "esgotada"]',
+              '_type == "atracao" && !(_originalId in path("drafts.**")) && status in ["encerrada", "cancelada", "em_obras", "esgotada"]',
             )
             .defaultOrdering([{ field: "nome", direction: "asc" }]),
         ),
@@ -165,6 +165,14 @@ export const structure = (S: StructureBuilder) =>
                   S.documentList()
                     .title("Encerrada")
                     .filter('_type == "atracao" && status == "encerrada"')
+                    .defaultOrdering([{ field: "nome", direction: "asc" }]),
+                ),
+              S.listItem()
+                .title("Cancelada")
+                .child(
+                  S.documentList()
+                    .title("Cancelada")
+                    .filter('_type == "atracao" && status == "cancelada"')
                     .defaultOrdering([{ field: "nome", direction: "asc" }]),
                 ),
               S.listItem()

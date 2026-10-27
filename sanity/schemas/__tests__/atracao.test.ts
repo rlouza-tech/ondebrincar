@@ -267,6 +267,7 @@ describe("atracao schema — status duplicada (US-S64)", () => {
     expect(values).toEqual([
       "operando",
       "encerrada",
+      "cancelada",
       "em_obras",
       "esgotada",
       "rejeitado",

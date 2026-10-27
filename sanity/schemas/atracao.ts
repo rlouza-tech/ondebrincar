@@ -222,6 +222,7 @@ export const atracao = defineType({
         list: [
           { title: "Operando", value: "operando" },
           { title: "Encerrada", value: "encerrada" },
+          { title: "Cancelada", value: "cancelada" },
           { title: "Em obras", value: "em_obras" },
           { title: "Esgotada", value: "esgotada" },
           { title: "⛔ Rejeitada (fora de escopo)", value: "rejeitado" },
