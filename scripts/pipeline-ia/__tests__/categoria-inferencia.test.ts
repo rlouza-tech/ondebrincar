@@ -75,11 +75,48 @@ describe("inferirCategoriaPorKeyword", () => {
 
     it("infere teatro por 'espetáculo' (com acento no input)", () => {
       const result = inferirCategoriaPorKeyword(
-        "Espetáculo de Dança Contemporânea",
+        "Espetáculo Infantil de Palhaços",
         "Artes",
         "Teatro Claro",
       );
       expect(result).toBe("teatro");
+    });
+  });
+
+  // --- US-I60: natal, halloween, danca (vencem teatro/evento) ---
+
+  describe("natal, halloween e danca (US-I60)", () => {
+    it("infere natal para 'Sonho de Natal' mesmo com origem Evento", () => {
+      expect(inferirCategoriaPorKeyword("Sonho de Natal", "Evento", "BarraShopping")).toBe("natal");
+    });
+
+    it("infere natal para 'Papai Noel' e 'Natalino'", () => {
+      expect(inferirCategoriaPorKeyword("Papai Noel no Taquara Plaza", "Evento", "Taquara Plaza")).toBe("natal");
+      expect(inferirCategoriaPorKeyword("Musical Natalino", "Teatro", "Teatro X")).toBe("natal");
+    });
+
+    it("infere halloween para fichas do Recreio", () => {
+      expect(inferirCategoriaPorKeyword("Halloween Kids", "Evento", "Recreio Shopping")).toBe("halloween");
+    });
+
+    it("infere danca e vence teatro para 'Espetáculo de Dança'", () => {
+      expect(
+        inferirCategoriaPorKeyword("Espetáculo de Dança Contemporânea", "Artes", "Teatro Claro"),
+      ).toBe("danca");
+      expect(inferirCategoriaPorKeyword("Outubro em Dança", "Evento", "Centro Cultural")).toBe("danca");
+      expect(inferirCategoriaPorKeyword("Cypher do Passinho", "Evento", "Praça")).toBe("danca");
+    });
+
+    it("não casa dentro de outra palavra ('Natalia', 'baleia')", () => {
+      expect(inferirCategoriaPorKeyword("Oficina da Natalia", "Oficina", "Estúdio")).toBe("atividade-extra");
+      expect(inferirCategoriaPorKeyword("A Baleia Azul", "Teatro", "Teatro Y")).toBe("teatro");
+    });
+
+    it("natal, halloween e danca aparecem antes de teatro nas regras", () => {
+      const idxTeatro = KEYWORD_RULES.findIndex((r) => r.categoria === "teatro");
+      for (const cat of ["natal", "halloween", "danca"] as const) {
+        expect(KEYWORD_RULES.findIndex((r) => r.categoria === cat)).toBeLessThan(idxTeatro);
+      }
     });
   });
 

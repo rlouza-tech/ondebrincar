@@ -34,6 +34,9 @@ const CATEGORIA_LABEL: Record<string, string> = {
   futebol: "Futebol",
   restaurante: "Restaurante",
   "festa-junina": "Festa junina",
+  natal: "Natal",
+  halloween: "Halloween",
+  danca: "Dança",
 };
 
 // ── Agregação ──────────────────────────────────────────────────────────────────
@@ -294,6 +297,9 @@ function gerarCSV(items: AtracaoRaw[]): void {
     futebol: "Futebol",
     restaurante: "Restaurante",
     "festa-junina": "Festa junina",
+    natal: "Natal",
+    halloween: "Halloween",
+    danca: "Dança",
   };
 
   const escape = (v: string | number | null | undefined): string => {

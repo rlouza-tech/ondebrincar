@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { CATEGORIA_OPTIONS } from "./filter-options";
 import {
   categoriasComAtracao,
   filtrarAtracoes,
@@ -335,6 +336,31 @@ describe("sanityImageUrl", () => {
 
   it("string vazia retorna sem alteração", () => {
     expect(sanityImageUrl("", 800)).toBe("");
+  });
+});
+
+describe("categorias natal, halloween e danca — US-I60", () => {
+  const novas = ["natal", "halloween", "danca"] as const;
+
+  it("existem no menu (CATEGORIA_OPTIONS) com label", () => {
+    for (const slug of novas) {
+      expect(CATEGORIA_OPTIONS.find((o) => o.value === slug)?.label).toBeTruthy();
+    }
+  });
+
+  it("ficam ocultas quando vazias e aparecem com 1 atração (US-I55)", () => {
+    const vazio = categoriasComAtracao([{ categoria: "museu" }], CATEGORIA_OPTIONS).map((o) => o.value);
+    for (const slug of novas) expect(vazio).not.toContain(slug);
+
+    const comNovas = categoriasComAtracao(
+      novas.map((categoria) => ({ categoria })),
+      CATEGORIA_OPTIONS,
+    ).map((o) => o.value);
+    expect(comNovas).toEqual(["danca", "halloween", "natal"]);
+  });
+
+  it("normalizeCategoriaSlug preserva os slugs novos", () => {
+    for (const slug of novas) expect(normalizeCategoriaSlug(slug)).toBe(slug);
   });
 });
 

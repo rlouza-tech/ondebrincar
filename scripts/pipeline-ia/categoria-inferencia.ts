@@ -42,14 +42,30 @@ export const KEYWORD_RULES: KeywordRule[] = [
     categoria: "festa-junina",
   },
   {
+    // US-I60: sazonais e Dança vencem "teatro"/"evento" (decisão do Rafa, 24/10/2026:
+    // categoria única, a ficha pode perder "teatro" ou "evento").
+    // Espaços nas bordas = palavra inteira (o texto é cercado por espaços em
+    // inferirCategoriaPorKeyword): evita "Natalia", "baleia".
+    keywords: [" natal ", " natalino", " natalina", " papai noel "],
+    categoria: "natal",
+  },
+  {
+    keywords: ["halloween", "dia das bruxas"],
+    categoria: "halloween",
+  },
+  {
+    keywords: [" danca", " dancante", " ballet ", " bale ", " passinho "],
+    categoria: "danca",
+  },
+  {
     keywords: ["futebol", "soccer"],
     categoria: "futebol",
   },
   {
     // Teatro é o caso mais frequente de categoria_origem não canônica:
-    // "Teatro Infantil" → "teatro". Inclui circo, ballet, dança e ópera
+    // "Teatro Infantil" → "teatro". Inclui circo e ópera
     // (todos se encaixam em espetáculos com sessão e ingresso).
-    keywords: ["teatro", "espetaculo", "musical", "circo", "ballet", "bale", "opera", "danca", "peca infantil", "peca de teatro"],
+    keywords: ["teatro", "espetaculo", "musical", "circo", "opera", "peca infantil", "peca de teatro"],
     categoria: "teatro",
   },
   {
@@ -124,9 +140,9 @@ export function inferirCategoriaPorKeyword(
   categoriaOrigem: string,
   venue: string,
 ): Categoria | null {
-  const combinedText = normalizeForSearch(
+  const combinedText = ` ${normalizeForSearch(
     [nome, categoriaOrigem, venue].join(" "),
-  );
+  )} `;
 
   for (const rule of KEYWORD_RULES) {
     for (const keyword of rule.keywords) {

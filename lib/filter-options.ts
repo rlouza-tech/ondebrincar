@@ -10,10 +10,13 @@ export const FAIXAS_ETARIAS = [
 export const CATEGORIA_OPTIONS = [
   { label: "Atividade extra", value: "atividade-extra" },
   { label: "Colônia de Férias", value: "colonia-de-ferias" },
+  { label: "Dança", value: "danca" },
   { label: "Evento", value: "evento" },
   { label: "Festa Junina", value: "festa-junina" },
   { label: "Futebol", value: "futebol" },
+  { label: "Halloween", value: "halloween" },
   { label: "Museu", value: "museu" },
+  { label: "Natal", value: "natal" },
   { label: "Parque", value: "parque" },
   { label: "Pracinha", value: "pracinha" },
   { label: "Praia", value: "praia" },

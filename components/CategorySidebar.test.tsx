@@ -44,7 +44,7 @@ describe("CategorySidebar — US-I44", () => {
     vi.clearAllMocks();
   });
 
-  it("renderiza os 3 atalhos de Explorar seguidos das 11 categorias, em ordem alfabética", () => {
+  it("renderiza os 3 atalhos de Explorar seguidos das 14 categorias, em ordem alfabética", () => {
     setSearch();
     render();
     const labels = getLinks().map((link) => link.textContent);
@@ -54,10 +54,13 @@ describe("CategorySidebar — US-I44", () => {
       "Grátis",
       "Atividade extra",
       "Colônia de Férias",
+      "Dança",
       "Evento",
       "Festa Junina",
       "Futebol",
+      "Halloween",
       "Museu",
+      "Natal",
       "Parque",
       "Pracinha",
       "Praia",

@@ -39,6 +39,12 @@ const CENA_BASE: Record<Categoria, string> = {
     "restaurante familiar acolhedor com mesas redondas coloridas, cadeiras alegres, decoração com ilustrações infantis nas paredes, balcão iluminado ao fundo, ambiente festivo e convidativo",
   "festa-junina":
     "festa junina ao ar livre com bandeirolas coloridas triangulares cruzando o espaço, fogueira decorativa ao centro, barracas de comida típica, crianças com roupas xadrez e chapéu de palha dançando quadrilha",
+  natal:
+    "cenário de Natal acolhedor com árvore enfeitada de luzes e bolas coloridas, presentes embrulhados ao pé da árvore, flocos de neve de papel pendurados, guirlandas vermelhas e verdes, crianças com gorros natalinos olhando encantadas",
+  halloween:
+    "festa de Halloween divertida e nada assustadora, abóboras sorridentes com velinhas, morcegos e teias de papel colorido, crianças fantasiadas de bruxinha, fantasminha e vampiro fofo, luzes laranja e roxas",
+  danca:
+    "estúdio de dança luminoso com piso de madeira e espelhos grandes, crianças com sapatilhas e roupas coloridas em movimento, fitas e tecidos esvoaçantes, luz natural entrando pelas janelas, clima leve e alegre",
 };
 
 /**
