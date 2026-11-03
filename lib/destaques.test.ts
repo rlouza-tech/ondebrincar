@@ -102,6 +102,13 @@ describe("getDestaquesSemana (US-I43) — front-end lê a curadoria do Sanity", 
     expect(resultado).toEqual([]);
   });
 
+  it("lê com cache de 60 s, não no-store (US-O31)", async () => {
+    mockHasSanityConfig.mockReturnValue(true);
+    mockFetch.mockResolvedValue(null);
+    await getDestaquesSemana();
+    expect(mockFetch.mock.calls[0][2]).toEqual({ next: { revalidate: 60 } });
+  });
+
   it("retorna [] quando o fetch falha, sem propagar o erro", async () => {
     mockHasSanityConfig.mockReturnValue(true);
     mockFetch.mockRejectedValue(new Error("timeout"));
