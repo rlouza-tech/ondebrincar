@@ -95,6 +95,20 @@ export const structure = (S: StructureBuilder) =>
             .defaultOrdering([{ field: "_updatedAt", direction: "desc" }]),
         ),
 
+      // ── 🛰️ Pipeline — últimas 10 rodadas dos Agentes (US-S5) ──────────
+      // O corte em 10 vai na consulta (documentos antigos não são apagados).
+      // Acesso às fichas da rodada: "Precisa revisão humana", acima.
+      S.listItem()
+        .title("🛰️ Pipeline")
+        .child(
+          S.documentList()
+            .title("Pipeline — últimas 10 rodadas")
+            .filter(
+              '_type == "rodadaPipeline" && _id in *[_type == "rodadaPipeline"] | order(inicio desc)[0...10]._id',
+            )
+            .defaultOrdering([{ field: "inicio", direction: "desc" }]),
+        ),
+
       // US-S75: lista própria para não misturar conteúdo sensível com qualidade geral
       S.listItem()
         .title("🚨 Conteúdo sensível")
