@@ -9,6 +9,9 @@ import {
 } from "@/lib/sanity/queries";
 import type { Atracao, SanityRecomendacaoDocument, TipoProgramacao } from "@/lib/sanity/types";
 
+/** US-O34 — mesmo prazo da ficha: recomendações regeram junto com ela. */
+export const REVALIDATE_RECOMENDACOES = { next: { revalidate: 20 } } as const;
+
 export type EixoRecomendacao = "tema" | "bairro";
 
 export interface Recomendacao {
@@ -188,17 +191,16 @@ async function fetchCandidatas(atracao: Atracao): Promise<{
   if (hasSanityConfig()) {
     try {
       const [temaDocs, bairroDocs] = await Promise.all([
-        sanityClient.fetch<SanityRecomendacaoDocument[]>(recomendacoesPorTema, {
-          categoria: atracao.categoria,
-          slug: atracao.slug,
-          hoje,
-        }),
-        sanityClient.fetch<SanityRecomendacaoDocument[]>(recomendacoesPorBairro, {
-          bairro: atracao.bairro,
-          slug: atracao.slug,
-          inicio,
-          fim,
-        }),
+        sanityClient.fetch<SanityRecomendacaoDocument[]>(
+          recomendacoesPorTema,
+          { categoria: atracao.categoria, slug: atracao.slug, hoje },
+          REVALIDATE_RECOMENDACOES,
+        ),
+        sanityClient.fetch<SanityRecomendacaoDocument[]>(
+          recomendacoesPorBairro,
+          { bairro: atracao.bairro, slug: atracao.slug, inicio, fim },
+          REVALIDATE_RECOMENDACOES,
+        ),
       ]);
 
       // US-I35 — só busca fallback de permanentes quando a origem também é permanente.
@@ -206,14 +208,16 @@ async function fetchCandidatas(atracao: Atracao): Promise<{
       let bairroPermanenteDocs: SanityRecomendacaoDocument[] = [];
       if (atracao.tipoProgramacao === "permanente") {
         [temaPermanenteDocs, bairroPermanenteDocs] = await Promise.all([
-          sanityClient.fetch<SanityRecomendacaoDocument[]>(recomendacoesPermanentesPorTema, {
-            categoria: atracao.categoria,
-            slug: atracao.slug,
-          }),
-          sanityClient.fetch<SanityRecomendacaoDocument[]>(recomendacoesPermanentesPorBairro, {
-            bairro: atracao.bairro,
-            slug: atracao.slug,
-          }),
+          sanityClient.fetch<SanityRecomendacaoDocument[]>(
+            recomendacoesPermanentesPorTema,
+            { categoria: atracao.categoria, slug: atracao.slug },
+            REVALIDATE_RECOMENDACOES,
+          ),
+          sanityClient.fetch<SanityRecomendacaoDocument[]>(
+            recomendacoesPermanentesPorBairro,
+            { bairro: atracao.bairro, slug: atracao.slug },
+            REVALIDATE_RECOMENDACOES,
+          ),
         ]);
       }
 

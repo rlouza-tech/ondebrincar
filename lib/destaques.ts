@@ -62,7 +62,7 @@ export async function getDestaquesSemana(): Promise<Atracao[]> {
     const doc = await sanityClient.fetch<SanityDestaquesSemanaDocument | null>(
       destaquesSemanaAtual,
       {},
-      { next: { revalidate: 60 } },
+      { next: { revalidate: 20 } },
     );
     if (!doc) return [];
     return doc.atracoes.map(mapSanityAtracao);

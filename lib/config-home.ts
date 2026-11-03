@@ -15,7 +15,7 @@ export async function getConfigHomeAtual(): Promise<SanityConfigHomeDocument | n
     return await sanityClient.fetch<SanityConfigHomeDocument | null>(
       configHomeAtual,
       {},
-      { next: { revalidate: 60 } },
+      { next: { revalidate: 20 } },
     );
   } catch {
     return null;

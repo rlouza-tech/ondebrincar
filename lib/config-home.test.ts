@@ -31,11 +31,11 @@ describe("getConfigHomeAtual (US-I47) — lê o painel de curadoria da US-I46", 
     expect(resultado).toBeNull();
   });
 
-  it("lê com cache de 60 s, não no-store (US-O31)", async () => {
+  it("lê com cache de 20 s, não no-store (US-O31, US-O34)", async () => {
     mockHasSanityConfig.mockReturnValue(true);
     mockFetch.mockResolvedValue(null);
     await getConfigHomeAtual();
-    expect(mockFetch.mock.calls[0][2]).toEqual({ next: { revalidate: 60 } });
+    expect(mockFetch.mock.calls[0][2]).toEqual({ next: { revalidate: 20 } });
   });
 
   it("retorna null quando o fetch falha, sem propagar o erro", async () => {

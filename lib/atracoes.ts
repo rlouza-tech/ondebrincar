@@ -101,7 +101,7 @@ async function fetchSanityAtracoes(): Promise<Atracao[]> {
     const documents = await sanityClient.fetch<SanityAtracaoDocument[]>(
       atracoesAtivas,
       { hoje },
-      { next: { revalidate: 60 } },
+      { next: { revalidate: 20 } },
     );
     return documents.map(mapSanityAtracao);
   } catch {
@@ -120,7 +120,7 @@ export async function getAtracaoBySlug(slug: string): Promise<Atracao | undefine
       const document = await sanityClient.fetch<SanityAtracaoDocument | null>(
         atracaoBySlug,
         { slug },
-        { next: { revalidate: 60 } },
+        { next: { revalidate: 20 } },
       );
 
       if (document) {
