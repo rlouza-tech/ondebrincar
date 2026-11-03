@@ -9,8 +9,8 @@ import {
 } from "@/lib/sanity/queries";
 import type { Atracao, SanityRecomendacaoDocument, TipoProgramacao } from "@/lib/sanity/types";
 
-/** US-O34 — mesmo prazo da ficha: recomendações regeram junto com ela. */
-export const REVALIDATE_RECOMENDACOES = { next: { revalidate: 20 } } as const;
+/** US-O34 — mesmo prazo da ficha (60 s): recomendações regeram junto com ela. */
+export const REVALIDATE_RECOMENDACOES = { next: { revalidate: 60 } } as const;
 
 export type EixoRecomendacao = "tema" | "bairro";
 

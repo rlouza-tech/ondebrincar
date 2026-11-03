@@ -13,8 +13,10 @@ export function hasSanityConfig(): boolean {
 
 /**
  * US-O34 — leituras públicas (só documentos publicados) pela CDN da Sanity, que tem cota
- * própria (1.000.000) separada da cota de API (250.000). O atraso da CDN medido na US-O35 foi
- * ~1,3 s. Rascunho nunca passa por aqui: use `sanityPreviewClient`.
+ * própria (1.000.000) separada da cota de API (250.000). Custo conhecido: uma consulta já
+ * guardada na CDN só é renovada após o `s-maxage` de 60 s dela (medido: ~50 s), e esse prazo
+ * se soma ao `revalidate` do Next — uma edição pode levar mais de 1 minuto para aparecer
+ * (docs/121 dos Agentes). Rascunho nunca passa por aqui: use `sanityPreviewClient`.
  */
 export const sanityClient = createClient({
   projectId: sanityConfig.projectId || "missing-project-id",
