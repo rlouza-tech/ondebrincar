@@ -18,6 +18,7 @@ const categoriaOptions = [
   { title: "Natal", value: "natal" },
   { title: "Halloween", value: "halloween" },
   { title: "Dança", value: "danca" },
+  { title: "Esportes", value: "esportes" },
 ];
 
 const bairroExamples = "Ex.: Tijuca, Leblon, Centro, São Cristóvão";

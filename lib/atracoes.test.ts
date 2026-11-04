@@ -364,6 +364,28 @@ describe("categorias natal, halloween e danca — US-I60", () => {
   });
 });
 
+describe("categoria esportes — US-A40", () => {
+  it("existe no menu com label e convive com futebol", () => {
+    expect(CATEGORIA_OPTIONS.find((o) => o.value === "esportes")?.label).toBe("Esportes");
+    expect(CATEGORIA_OPTIONS.find((o) => o.value === "futebol")?.label).toBe("Futebol");
+  });
+
+  it("fica oculta quando vazia e aparece com 1 atração (US-I55)", () => {
+    const vazio = categoriasComAtracao([{ categoria: "futebol" }], CATEGORIA_OPTIONS).map((o) => o.value);
+    expect(vazio).toEqual(["futebol"]);
+
+    const com = categoriasComAtracao(
+      [{ categoria: "esportes" }, { categoria: "futebol" }],
+      CATEGORIA_OPTIONS,
+    ).map((o) => o.value);
+    expect(com).toEqual(["esportes", "futebol"]);
+  });
+
+  it("normalizeCategoriaSlug preserva esportes", () => {
+    expect(normalizeCategoriaSlug("esportes")).toBe("esportes");
+  });
+});
+
 describe("categoriasComAtracao — US-I55", () => {
   const opcoes = [
     { label: "Festa Junina", value: "festa-junina" },

@@ -37,6 +37,7 @@ const CATEGORIA_LABEL: Record<string, string> = {
   natal: "Natal",
   halloween: "Halloween",
   danca: "Dança",
+  esportes: "Esportes",
 };
 
 // ── Agregação ──────────────────────────────────────────────────────────────────
@@ -300,6 +301,7 @@ function gerarCSV(items: AtracaoRaw[]): void {
     natal: "Natal",
     halloween: "Halloween",
     danca: "Dança",
+    esportes: "Esportes",
   };
 
   const escape = (v: string | number | null | undefined): string => {

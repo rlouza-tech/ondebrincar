@@ -11,6 +11,7 @@ export const CATEGORIA_OPTIONS = [
   { label: "Atividade extra", value: "atividade-extra" },
   { label: "Colônia de Férias", value: "colonia-de-ferias" },
   { label: "Dança", value: "danca" },
+  { label: "Esportes", value: "esportes" },
   { label: "Evento", value: "evento" },
   { label: "Festa Junina", value: "festa-junina" },
   { label: "Futebol", value: "futebol" },
