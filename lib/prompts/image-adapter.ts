@@ -45,6 +45,8 @@ const CENA_BASE: Record<Categoria, string> = {
     "festa de Halloween divertida e nada assustadora, abóboras sorridentes com velinhas, morcegos e teias de papel colorido, crianças fantasiadas de bruxinha, fantasminha e vampiro fofo, luzes laranja e roxas",
   danca:
     "estúdio de dança luminoso com piso de madeira e espelhos grandes, crianças com sapatilhas e roupas coloridas em movimento, fitas e tecidos esvoaçantes, luz natural entrando pelas janelas, clima leve e alegre",
+  esportes:
+    "quadra poliesportiva ensolarada com crianças praticando esportes variados como vôlei, basquete, corrida e atletismo, cones e bolas coloridas espalhados, uniformes alegres, professores animados incentivando, clima de brincadeira e superação",
 };
 
 /**

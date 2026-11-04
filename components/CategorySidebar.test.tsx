@@ -55,6 +55,7 @@ describe("CategorySidebar — US-I44", () => {
       "Atividade extra",
       "Colônia de Férias",
       "Dança",
+      "Esportes",
       "Evento",
       "Festa Junina",
       "Futebol",
