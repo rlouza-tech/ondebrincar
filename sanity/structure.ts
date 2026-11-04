@@ -213,6 +213,15 @@ export const structure = (S: StructureBuilder) =>
                     .filter('_type == "atracao" && status == "rejeitado"')
                     .defaultOrdering([{ field: "nome", direction: "asc" }]),
                 ),
+              // US-O30: published e drafts, mais recentes primeiro, para achar e reverter
+              S.listItem()
+                .title("🔁 Duplicada")
+                .child(
+                  S.documentList()
+                    .title("🔁 Duplicada")
+                    .filter('_type == "atracao" && status == "duplicada"')
+                    .defaultOrdering([{ field: "_updatedAt", direction: "desc" }]),
+                ),
             ]),
         ),
     ]);
