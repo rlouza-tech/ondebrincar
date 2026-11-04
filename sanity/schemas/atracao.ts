@@ -1,6 +1,7 @@
 import { defineField, defineType } from "sanity";
 import { AbstainReasonsInput } from "../components/AbstainReasonsInput";
 import { prepareAtracaoPreview } from "./atracaoPreview";
+import { obrigatorioSalvoDescarte } from "./validacaoDescarte";
 
 const categoriaOptions = [
   { title: "Teatro infantil", value: "teatro" },
@@ -184,7 +185,7 @@ export const atracao = defineType({
       title: "Bairro",
       type: "string",
       description: `Bairro da atração. ${bairroExamples}. Futuramente pode virar referência para o schema Bairro.`,
-      validation: (Rule) => Rule.required().min(2).max(80),
+      validation: (Rule) => Rule.min(2).max(80).custom(obrigatorioSalvoDescarte),
     }),
     defineField({
       name: "endereco",
@@ -215,7 +216,7 @@ export const atracao = defineType({
         ],
         layout: "radio",
       },
-      validation: (Rule) => Rule.required(),
+      validation: (Rule) => Rule.custom(obrigatorioSalvoDescarte),
     }),
     defineField({
       name: "status",
@@ -259,7 +260,7 @@ export const atracao = defineType({
       },
       description: "Como o usuário deve entender a frequência da atração.",
       initialValue: "permanente",
-      validation: (Rule) => Rule.required(),
+      validation: (Rule) => Rule.custom(obrigatorioSalvoDescarte),
     }),
     defineField({
       name: "programacao_texto",
@@ -267,7 +268,7 @@ export const atracao = defineType({
       type: "string",
       description:
         "Frase humano-legível. Ex.: 'Sábados e domingos 16h e 18h', 'Diariamente 9h-18h', 'Em cartaz até 30/jun'. Max 200 chars.",
-      validation: (Rule) => Rule.required().min(5).max(200),
+      validation: (Rule) => Rule.min(5).max(200).custom(obrigatorioSalvoDescarte),
     }),
     defineField({
       name: "proxima_data",
@@ -289,7 +290,7 @@ export const atracao = defineType({
       type: "text",
       description: "Descrição objetiva, vinda do produtor/scraping. Até cerca de 1000 caracteres.",
       rows: 5,
-      validation: (Rule) => Rule.required().min(20).max(1000),
+      validation: (Rule) => Rule.min(20).max(1000).custom(obrigatorioSalvoDescarte),
     }),
     defineField({
       name: "mini_review",
