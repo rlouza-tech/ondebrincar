@@ -125,6 +125,36 @@ export const atracao = defineType({
           }),
     }),
     defineField({
+      name: "idade_origem",
+      title: "Origem da idade recomendada",
+      type: "string",
+      readOnly: true,
+      options: {
+        list: [
+          { title: "Fonte (lida do texto da fonte)", value: "fonte" },
+          { title: "Derivado de Livre (0 a 18, US-A102)", value: "derivado_livre" },
+        ],
+      },
+      description:
+        "De onde veio a idade recomendada quando a pipeline criou a ficha: 'fonte' (lida do texto) ou 'derivado_livre' (classificação Livre convertida em 0 a 18). Só a pipeline escreve, uma vez, na criação. Vazio nas fichas anteriores à US-A126. Para saber se a idade foi ajustada à mão, compare a idade recomendada atual com o valor original do Extrator (campos abaixo) (US-A126).",
+    }),
+    defineField({
+      name: "idade_valor_extrator_min",
+      title: "Idade mínima gravada pelo Extrator",
+      type: "number",
+      readOnly: true,
+      description:
+        "Valor original de idade_recomendada_min no momento da criação da ficha. Registra o que o Extrator gravou, antes de qualquer ajuste no Studio. Só a pipeline escreve, uma vez (US-A126).",
+    }),
+    defineField({
+      name: "idade_valor_extrator_max",
+      title: "Idade máxima gravada pelo Extrator",
+      type: "number",
+      readOnly: true,
+      description:
+        "Valor original de idade_recomendada_max no momento da criação da ficha. Registra o que o Extrator gravou, antes de qualquer ajuste no Studio. Só a pipeline escreve, uma vez (US-A126).",
+    }),
+    defineField({
       name: "duracao_min",
       title: "Duração (min)",
       type: "number",
