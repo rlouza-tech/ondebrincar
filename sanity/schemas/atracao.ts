@@ -1,6 +1,7 @@
 import { defineField, defineType } from "sanity";
 import { AbstainReasonsInput } from "../components/AbstainReasonsInput";
 import { prepareAtracaoPreview } from "./atracaoPreview";
+import { avisoIdadeDerivadaLivre } from "./avisoIdadeDerivada";
 import { obrigatorioSalvoDescarte } from "./validacaoDescarte";
 
 const categoriaOptions = [
@@ -99,7 +100,10 @@ export const atracao = defineType({
       type: "number",
       description:
         "Idade mínima recomendada pro filtro público de idade. Vem da classificação oficial (idade_min) quando explícita na fonte, ou de inferência por contexto (curadoria) quando a fonte não classifica. Vazio = \"A confirmar\" no site (US-S77).",
-      validation: (Rule) => Rule.integer().min(0).max(18),
+      validation: (Rule) => [
+        Rule.integer().min(0).max(18),
+        Rule.custom(avisoIdadeDerivadaLivre).warning(),
+      ],
     }),
     defineField({
       name: "idade_recomendada_max",
@@ -107,7 +111,7 @@ export const atracao = defineType({
       type: "number",
       description:
         "Idade máxima recomendada pro filtro público de idade. Vem da classificação oficial (idade_max) quando explícita na fonte, ou de inferência por contexto (curadoria) quando a fonte não classifica. Vazio = \"A confirmar\" no site (US-S77).",
-      validation: (Rule) =>
+      validation: (Rule) => [
         Rule.integer()
           .min(0)
           .max(18)
@@ -123,6 +127,8 @@ export const atracao = defineType({
               ? true
               : "Idade recomendada máxima deve ser maior ou igual à idade recomendada mínima.";
           }),
+        Rule.custom(avisoIdadeDerivadaLivre).warning(),
+      ],
     }),
     defineField({
       name: "idade_origem",
