@@ -322,3 +322,30 @@ describe("atracao schema — conteúdo sensível (US-S75)", () => {
   });
 });
 
+
+describe("atracao schema — origem da idade recomendada (US-A126)", () => {
+  const nomes = atracao.fields.map((f) => f.name);
+
+  it("tem idade_origem e os valores originais do Extrator, todos somente leitura", () => {
+    for (const nome of ["idade_origem", "idade_valor_extrator_min", "idade_valor_extrator_max"]) {
+      const field = atracao.fields.find((f) => f.name === nome);
+      expect(field, nome).toBeDefined();
+      expect(field?.readOnly, nome).toBe(true);
+    }
+  });
+
+  it("idade_origem aceita só fonte e derivado_livre (sem 'rafa' nem 'estimado')", () => {
+    const field = atracao.fields.find((f) => f.name === "idade_origem");
+    const lista = (field?.options as { list?: Array<{ value: string }> } | undefined)?.list ?? [];
+    expect(lista.map((o) => o.value)).toEqual(["fonte", "derivado_livre"]);
+  });
+
+  it("os campos ficam logo depois das idades recomendadas", () => {
+    const i = nomes.indexOf("idade_recomendada_max");
+    expect(nomes.slice(i + 1, i + 4)).toEqual([
+      "idade_origem",
+      "idade_valor_extrator_min",
+      "idade_valor_extrator_max",
+    ]);
+  });
+});
