@@ -18,7 +18,15 @@ export const destaquesSemana = defineType({
       type: "array",
       description:
         "3 a 4 atrações, na ordem em que aparecem na trilha. Arraste para reordenar.",
-      of: [{ type: "reference", to: [{ type: "atracao" }] }],
+      of: [
+        {
+          type: "reference",
+          to: [{ type: "atracao" }],
+          // US-I62: o seletor só lista fichas no ar. Age só na hora de escolher;
+          // referências já gravadas continuam exibidas.
+          options: { filter: 'status == "operando"' },
+        },
+      ],
       validation: (Rule) => Rule.required().min(3).max(4).unique(),
     }),
     defineField({

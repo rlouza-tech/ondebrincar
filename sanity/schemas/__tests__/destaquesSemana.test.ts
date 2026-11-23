@@ -24,4 +24,18 @@ describe("destaquesSemana schema (US-I51)", () => {
     expect(field?.type).toBe("datetime");
     expect(typeof field?.validation).toBe("function");
   });
+
+  it("seletor de atracoes filtra só status operando (US-I62)", () => {
+    const field = destaquesSemana.fields.find((f) => f.name === "atracoes") as
+      | { of?: Array<{ options?: { filter?: string } }> }
+      | undefined;
+    expect(field?.of?.[0]?.options?.filter).toBe('status == "operando"');
+  });
+
+  it("mantém validação de 3 a 4 atrações únicas (US-I62)", () => {
+    const field = destaquesSemana.fields.find((f) => f.name === "atracoes") as
+      | { validation?: unknown }
+      | undefined;
+    expect(typeof field?.validation).toBe("function");
+  });
 });
