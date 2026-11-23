@@ -12,7 +12,7 @@ Sem código de produção e sem gravação no Sanity.
 2. **O achado de 31/07 estava incompleto: o sitemap NÃO filtra por status.** `app/sitemap.ts` chama `getAtracaoSlugs()` (query `todosSlugs`, sem filtro), não `getAtracaoSlugsAtivos()`. A troca veio no commit `8d49bd4` (09/06, "badge de categoria", US-I5), sem relação com o assunto. Hoje o sitemap público lista 726 fichas, incluindo 65 rejeitadas e 64 duplicadas.
 3. **A página encerrada recebe tráfego.** No GA4 (60 dias), 124 páginas de fichas `encerrada` somam **1.291 visualizações (56% das 2.303 em páginas de ficha com 3+ views)**; as `operando` somam 981. Ressalva: parte dessas visualizações aconteceu quando a ficha ainda estava operando; o GA4 por página não separa isso.
 4. **Recomendação:** combinação por status (tabela abaixo). Para `encerrada`, **a hipótese do Rafa vale**: manter a página no ar com aviso "Evento encerrado" e recomendações de alternativas. Rejeitada vira 404 real. Duplicada redireciona para a canônica quando existe, senão 404. O sitemap volta a listar só `operando`.
-5. **Derivada para a S25:** 2 stories, **5 SP** (US-O37 com 3 SP e US-O38 com 2 SP, IDs provisórios, ver §7).
+5. **Derivada para a Sprint 30:** 2 stories, **5 SP** (US-O37 com 3 SP e US-O38 com 2 SP, IDs provisórios, ver §7).
 
 ---
 
@@ -88,15 +88,15 @@ Observação: `cancelada` não estava na lista de status do card (que listava s�
 **Abordagem E (combinação por status)**, com a hipótese do Rafa como tratamento de `encerrada`/`esgotada`/`em_obras`.
 
 1. **rejeitado → 404 real.** Nunca deveria ser público; 0 views confirmam que não há custo.
-2. **duplicada → 308 para a canônica** quando `canonical_id` existe; **404 caso contrário** (63 de 64 não têm `canonical_id` hoje). Só 6 duplicadas têm tráfego (31 views em 60d): na S25, listar essas 6 para o Rafa preencher a canônica (ação de 5 min), em vez de backfill automático.
+2. **duplicada → 308 para a canônica** quando `canonical_id` existe; **404 caso contrário** (63 de 64 não têm `canonical_id` hoje). Só 6 duplicadas têm tráfego (31 views em 60d): na Sprint 30, listar essas 6 para o Rafa preencher a canônica (ação de 5 min), em vez de backfill automático.
 3. **encerrada / esgotada / em_obras → 200 com aviso** no topo da ficha, `Atenção` visual, botão de compra/ingresso escondido ou desabilitado quando encerrada, bloco "O que fazer agora" (recomendações a partir de hoje) e JSON-LD coerente (`EventCancelled`/removido, nunca `EventScheduled` vencido).
 4. **cancelada → 200 com aviso + noindex** (hoje sem fichas; deixa o tratamento pronto).
 5. **Sitemap:** voltar a usar `slugsAtivos` (só `operando`). É a correção mais barata e de maior efeito imediato; reverte a regressão de 09/06.
 6. **GA4:** `attraction_view` passa a levar `ficha_status` (ex.: `operando`, `encerrada`), para separar a métrica "fichas vistas" de visualizações de ficha morta. Sem isso, o relatório principal e o Top 5 de atrações misturam as duas.
 
-### Decisão em aberto (do Rafa): noindex nas encerradas?
+### Decisão do Rafa (23/11): encerradas ficam visíveis para o Google, avaliamos depois
 
-Recomendo **começar indexável** (sem noindex) nas encerradas por 2 motivos: (i) a hipótese do Rafa é justamente aproveitar o tráfego residual; (ii) evento recorrente reaproveita a mesma URL. Risco a monitorar: 445 páginas vencidas no índice, crescendo ~100/mês, podem diluir o rastreio. **Gatilho para reavaliar:** se o Search Console (aba "Páginas") mostrar encerradas ocupando a maioria das páginas indexadas ou se a cobertura "Rastreada, mas não indexada" crescer, aplicar `robots: { index: false, follow: true }` nas encerradas com data vencida há mais de N dias (N a decidir; sugestão 30). Isso é uma linha em `generateMetadata`, então o custo de mudar de ideia é baixo.
+Decidido: **começar indexável** (sem noindex) nas encerradas por 2 motivos: (i) a hipótese do Rafa é justamente aproveitar o tráfego residual; (ii) evento recorrente reaproveita a mesma URL. Risco a monitorar: 445 páginas vencidas no índice, crescendo ~100/mês, podem diluir o rastreio. **Gatilho para reavaliar:** se o Search Console (aba "Páginas") mostrar encerradas ocupando a maioria das páginas indexadas ou se a cobertura "Rastreada, mas não indexada" crescer, aplicar `robots: { index: false, follow: true }` nas encerradas com data vencida há mais de N dias (N a decidir; sugestão 30). Isso é uma linha em `generateMetadata`, então o custo de mudar de ideia é baixo.
 
 ---
 
@@ -113,7 +113,7 @@ Recomendo **começar indexável** (sem noindex) nas encerradas por 2 motivos: (i
 
 ---
 
-## 6. Como medir o efeito (para a S25)
+## 6. Como medir o efeito (para a Sprint 30)
 
 - **Sitemap:** `curl .../sitemap.xml | grep -c "<loc>"` deve ir de 727 para ~147 (operando + home). Conferir no Search Console em 7 dias.
 - **404 e redirect:** nenhum slug rejeitado responde 200 (script de verificação lendo o Sanity); 6 duplicadas com views conferidas manualmente.
@@ -123,7 +123,7 @@ Recomendo **começar indexável** (sem noindex) nas encerradas por 2 motivos: (i
 
 ---
 
-## 7. Stories derivadas (S25) — esboço
+## 7. Stories derivadas (criadas na Sprint 30 em 23/11) — esboço
 
 > IDs provisórios; numerar no refinamento. Sem assumption de arquitetura em aberto, exceto o "noindex nas encerradas" (decisão do Rafa no §3, com default definido).
 
