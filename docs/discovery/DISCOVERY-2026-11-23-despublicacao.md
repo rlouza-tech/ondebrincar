@@ -153,7 +153,7 @@ Decidido: **começar indexável** (sem noindex) nas encerradas por 2 motivos: (i
 **Fora de escopo:** noindex em encerradas (só se o gatilho disparar); mudar status de fichas.
 **Como medir:** ver §6.
 
-**Soma:** 5 SP, contra ~2,4 SP esperados pela razão histórica de ~1,2 SP derivado por SP de spike (S19 a S23). Está acima, mas O37 é pequena e de alto valor imediato (sitemap). Se a S25 apertar, O38 pode seguir depois.
+**Soma:** 5 SP, contra ~2,4 SP esperados pela razão histórica de ~1,2 SP derivado por SP de spike (S19 a S23). Está acima, mas O37 é pequena e de alto valor imediato (sitemap). Se a Sprint 30 apertar, O38 pode seguir depois.
 
 ---
 
